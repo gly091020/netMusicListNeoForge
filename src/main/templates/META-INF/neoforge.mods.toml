@@ -32,7 +32,8 @@ displayName = "${mod_name}" #mandatory
 authors = "${mod_authors}" #optional
 
 # The description text for the mod (multi line!) (#mandatory)
-description = '''${mod_description}'''
+description = '''添加了一种可以方便播放多首歌曲的道具
+背着一背包的唱片到处跑可不是一种好习惯'''
 
 # The [[mixins]] block allows you to declare your mixin config to FML so that it gets loaded.
 [[mixins]]
@@ -77,3 +78,10 @@ side = "BOTH"
 # stop your mod loading on the server for example.
 #[features."${mod_id}"]
 #openGLVersion="[3.2,)"
+
+[[dependencies."${mod_id}"]]
+modId = "netmusic"
+mandatory = true
+versionRange = "[1.0.0,)"
+ordering = "NONE"
+side = "BOTH"
