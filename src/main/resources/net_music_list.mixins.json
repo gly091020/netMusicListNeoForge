@@ -1,0 +1,25 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.gly091020.netMusicListNeoforge.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "refmap": "net_music_list.refmap.json",
+  "mixins": [
+    "AbstractContainerMenuMixin",
+    "CanBurnerCDListComputerMixin",
+    "CanPlayListMixin",
+    "MusicPlayerBackpackMixin",
+    "PlayListIsOKMixin",
+    "PlayModeMixin",
+    "PlayNextSongMixin"
+  ],
+  "client": [
+    "CanBurnerCDListMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  }
+}
