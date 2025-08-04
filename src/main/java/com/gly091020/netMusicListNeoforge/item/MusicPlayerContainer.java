@@ -2,7 +2,6 @@ package com.gly091020.netMusicListNeoforge.item;
 
 import com.github.tartaricacid.netmusic.init.InitItems;
 import com.gly091020.netMusicListNeoforge.NetMusicList;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.Container;

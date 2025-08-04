@@ -311,7 +311,13 @@ public class MusicSelectionScreen extends Screen {
                     a.append(artist);
                     a.append("、");
                 }
-                l.add(String.format("%s —— %s", a, info.songName));
+                var t = "";
+                if(info.readOnly){
+                    t = Component.translatable("gui.net_music_list.read_only").getString();
+                }else if(info.vip){
+                    t = Component.translatable("gui.net_music_list.vip").getString();
+                }
+                l.add(String.format("%s —— %s %s", a, info.songName, t));
             }
         }
         if(index < 0 || index > musicList.size()){

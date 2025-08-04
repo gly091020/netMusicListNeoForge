@@ -5,7 +5,6 @@ import com.github.tartaricacid.netmusic.init.InitItems;
 import com.github.tartaricacid.netmusic.item.ItemMusicCD;
 import com.gly091020.netMusicListNeoforge.NetMusicList;
 import com.gly091020.netMusicListNeoforge.packet.PlayerPlayMusicCTSPacket;
-import com.gly091020.netMusicListNeoforge.packet.PlayerPlayMusicSTCPacket;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
@@ -33,6 +32,7 @@ public class NetMusicPlayerItem extends Item{
                                             @NotNull Player player, @NotNull SlotAccess access) {
         if(action == ClickAction.SECONDARY && !getContainer(stack).isEmpty()){
             access.set(getContainer(stack).removeItem(0, 1));
+            stack.set(NetMusicList.MUSIC_PLAYER_TICK, -1);
             return true;
         }
         if(action == ClickAction.PRIMARY && ItemMusicCD.getSongInfo(stack1) != null){
@@ -50,6 +50,7 @@ public class NetMusicPlayerItem extends Item{
             return;
         }
         var info = ItemMusicCD.getSongInfo(i);
+        if(info == null){return;}
         if(info.vip && player.level().isClientSide){
             player.sendSystemMessage(Component.translatable("message.netmusic.music_player.need_vip")
                     .withStyle(ChatFormatting.RED));
@@ -75,7 +76,7 @@ public class NetMusicPlayerItem extends Item{
         }
         tooltipComponents.add(Component.translatable("item.net_music_player.tip", t));
         var i = getContainer(stack).getItem(0);
-        i.getItem().appendHoverText(stack, context, tooltipComponents, tooltipFlag);
+        i.getItem().appendHoverText(i, context, tooltipComponents, tooltipFlag);
     }
 
     @Override
