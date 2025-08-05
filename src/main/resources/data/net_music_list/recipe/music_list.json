@@ -12,7 +12,7 @@
         }
     ],
     "result": {
-        "item": "net_music_list:music_list",
+        "id": "net_music_list:music_list",
         "count": 1
     }
 }

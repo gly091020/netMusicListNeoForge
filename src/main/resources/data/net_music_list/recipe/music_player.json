@@ -26,7 +26,7 @@
         ]
     },
     "result": {
-        "item": "net_music_list:music_player",
+        "id": "net_music_list:music_player",
         "count": 1
     }
 }
