@@ -101,4 +101,8 @@ public class PlayerNetMusicSound extends AbstractTickableSoundInstance {
             }
         }, Util.backgroundExecutor());
     }
+
+    public void stopMusic(){
+        stop();
+    }
 }

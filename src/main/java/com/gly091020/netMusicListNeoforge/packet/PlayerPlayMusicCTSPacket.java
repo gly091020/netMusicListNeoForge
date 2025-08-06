@@ -9,7 +9,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 
-public record PlayerPlayMusicCTSPacket(int playerID, String url, int timeSecond, String songName, int slot) implements CustomPacketPayload {
+public record PlayerPlayMusicCTSPacket(int playerID, String url, int timeSecond, String songName, int slot, String uuid) implements CustomPacketPayload {
     public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(NetMusicList.ModID,
             "player_play_music_cts_packet");
     public static Type<PlayerPlayMusicCTSPacket> TYPE = new Type<>(ID);
@@ -24,21 +24,10 @@ public record PlayerPlayMusicCTSPacket(int playerID, String url, int timeSecond,
             PlayerPlayMusicCTSPacket::songName,
             ByteBufCodecs.INT,
             PlayerPlayMusicCTSPacket::slot,
+            ByteBufCodecs.STRING_UTF8,
+            PlayerPlayMusicCTSPacket::uuid,
             PlayerPlayMusicCTSPacket::new
     );
-    public void encode(FriendlyByteBuf buf) {
-        buf.writeInt(playerID);
-        buf.writeUtf(url);
-        buf.writeInt(timeSecond);
-        buf.writeUtf(songName);
-        buf.writeInt(slot);
-    }
-
-    public static PlayerPlayMusicCTSPacket decode(FriendlyByteBuf buf) {
-        return new PlayerPlayMusicCTSPacket(
-                buf.readInt(), buf.readUtf(), buf.readInt(), buf.readUtf(), buf.readInt()
-        );
-    }
 
     @Override
     public @NotNull Type<? extends CustomPacketPayload> type() {

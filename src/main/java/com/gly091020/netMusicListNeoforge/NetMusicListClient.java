@@ -1,0 +1,33 @@
+package com.gly091020.netMusicListNeoforge;
+
+import com.gly091020.netMusicListNeoforge.client.MusicListLayer;
+import net.minecraft.resources.ResourceLocation;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.client.event.InputEvent;
+import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
+import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
+
+@Mod(value = NetMusicList.ModID, dist = Dist.CLIENT)
+public class NetMusicListClient {
+
+}
+
+@EventBusSubscriber(modid = NetMusicList.ModID, value = Dist.CLIENT)
+class EventHandler{
+    @SubscribeEvent
+    public static void onRegisterGuiLayers(RegisterGuiLayersEvent event) {
+        event.registerAbove(VanillaGuiLayers.HOTBAR, ResourceLocation.fromNamespaceAndPath(NetMusicList.ModID, "music_list_layer"),
+                new MusicListLayer());
+    }
+
+    @SubscribeEvent
+    public static void onMouseScroll(InputEvent.MouseScrollingEvent event) {
+        if(MusicListLayer.isRender){
+            MusicListLayer.onMouseScroll(event);
+            event.setCanceled(true);
+        }
+    }
+}

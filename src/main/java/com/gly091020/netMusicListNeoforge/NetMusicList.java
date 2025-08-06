@@ -41,6 +41,9 @@ public class NetMusicList {
     public static final Supplier<DataComponentType<Integer>> MUSIC_PLAYER_TICK = COMPONENTS.registerComponentType("music_player_tick", builder ->
             builder.persistent(Codec.INT)
     );
+    public static final Supplier<DataComponentType<String>> MUSIC_PLAYER_UUID = COMPONENTS.registerComponentType("music_player_uuid", builder ->
+            builder.persistent(Codec.STRING)
+    );
 
     public NetMusicList(IEventBus modEventBus) {
         ITEMS.register(modEventBus);

@@ -4,9 +4,15 @@ package com.gly091020.netMusicListNeoforge.item;
 import com.github.tartaricacid.netmusic.init.InitItems;
 import com.github.tartaricacid.netmusic.item.ItemMusicCD;
 import com.gly091020.netMusicListNeoforge.NetMusicList;
+import com.gly091020.netMusicListNeoforge.client.MusicListLayer;
+import com.gly091020.netMusicListNeoforge.item.component.MusicListComponent;
 import com.gly091020.netMusicListNeoforge.packet.PlayerPlayMusicCTSPacket;
+import com.gly091020.netMusicListNeoforge.packet.StopMusicCTSPacket;
+import com.gly091020.netMusicListNeoforge.packet.UpdatePlayerMusicPacket;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.SlotAccess;
 import net.minecraft.world.entity.player.Player;
@@ -20,6 +26,7 @@ import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.UUID;
 
 public class NetMusicPlayerItem extends Item{
     public NetMusicPlayerItem() {
@@ -44,7 +51,7 @@ public class NetMusicPlayerItem extends Item{
         return super.overrideOtherStackedOnMe(stack, stack1, slot, action, player, access);
     }
 
-    private static void playSound(ItemStack stack, Player player, int slot){
+    public static void playSound(ItemStack stack, Player player, int slot){
         var i = getContainer(stack).getItem(0);
         if(!i.is(InitItems.MUSIC_CD.get()) && !i.is(NetMusicList.MUSIC_LIST_ITEM.get())){
             return;
@@ -58,7 +65,7 @@ public class NetMusicPlayerItem extends Item{
         }
         stack.set(NetMusicList.MUSIC_PLAYER_TICK, info.songTime * 20);
         if(!player.level().isClientSide){return;}
-        PacketDistributor.sendToServer(new PlayerPlayMusicCTSPacket(player.getId(), info.songUrl, info.songTime, info.songName, slot));
+        PacketDistributor.sendToServer(new PlayerPlayMusicCTSPacket(player.getId(), info.songUrl, info.songTime, info.songName, slot, stack.getOrDefault(NetMusicList.MUSIC_PLAYER_UUID, UUID.randomUUID().toString())));
     }
 
     public static MusicPlayerContainer getContainer(ItemStack stack){
@@ -113,5 +120,35 @@ public class NetMusicPlayerItem extends Item{
             return;
         }
         stack.set(NetMusicList.MUSIC_PLAYER_TICK, t);
+    }
+
+    @Override
+    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand usedHand) {
+        if(!level.isClientSide){
+            return super.use(level, player, usedHand);
+        }
+        if(MusicListLayer.isRender){
+            var container = getContainer(player.getItemInHand(usedHand));
+            var item = container.getItem(0);
+            var c = item.getOrDefault(NetMusicList.MUSIC_LIST_COMPONENT, MusicListComponent.getDefault());
+            if(MusicListLayer.index != c.index()){
+                item.set(NetMusicList.MUSIC_LIST_COMPONENT, new MusicListComponent(c.songList(), c.playMode(), MusicListLayer.index));
+                container.setItem(0, item);
+                var uuid = player.getItemInHand(usedHand).get(NetMusicList.MUSIC_PLAYER_UUID);
+                if(uuid != null){
+                    PacketDistributor.sendToServer(new StopMusicCTSPacket(uuid));
+                }
+                var uuid1 = UUID.randomUUID().toString();
+                player.getItemInHand(usedHand).set(NetMusicList.MUSIC_PLAYER_UUID, uuid1);
+                var slot = player.getInventory().findSlotMatchingItem(player.getItemInHand(usedHand));
+                playSound(player.getItemInHand(usedHand), player, slot);
+                PacketDistributor.sendToServer(new UpdatePlayerMusicPacket(MusicListLayer.index,
+                        slot, player.getItemInHand(usedHand).get(NetMusicList.MUSIC_PLAYER_UUID)));
+            }
+            MusicListLayer.isRender = false;
+            return InteractionResultHolder.success(player.getMainHandItem());
+        }
+        MusicListLayer.isRender = true;
+        return InteractionResultHolder.success(player.getMainHandItem());
     }
 }
