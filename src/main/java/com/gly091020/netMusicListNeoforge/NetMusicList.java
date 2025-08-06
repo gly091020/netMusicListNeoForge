@@ -9,11 +9,13 @@ import com.mojang.serialization.Codec;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.server.packs.repository.FolderRepositorySource;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.event.AddPackFindersEvent;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -50,6 +52,7 @@ public class NetMusicList {
         COMPONENTS.register(modEventBus);
         modEventBus.addListener(this::addItemsToCreativeTab);
         modEventBus.addListener(PacketRegistry::registry);
+        modEventBus.addListener(this::addPack);
     }
 
     private void addItemsToCreativeTab(BuildCreativeModeTabContentsEvent event) {
@@ -65,5 +68,9 @@ public class NetMusicList {
                     CreativeModeTab.TabVisibility.PARENT_AND_SEARCH_TABS
             );
         }
+    }
+
+    private void addPack(AddPackFindersEvent event) {
+        event.addRepositorySource(new MP3Pack());
     }
 }

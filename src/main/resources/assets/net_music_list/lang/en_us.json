@@ -18,5 +18,7 @@
   "gui.net_music_list.vip": "(VIP)",
   "item.net_music_player.name": "Portable Music Player",
   "item.net_music_player.tip": "§a▍ §7Content: §6%s",
-  "item.net_music_player.empty": "Empty"
+  "item.net_music_player.empty": "Empty",
+  "title.net_music_list.mp3": "Playlist: MP3 Resource Pack",
+  "description.net_music_list.mp3": "Provided by N44, models replaced with MP3"
 }

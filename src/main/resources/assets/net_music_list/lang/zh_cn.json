@@ -18,5 +18,7 @@
   "gui.net_music_list.vip": "(VIP)",
   "item.net_music_player.name": "随身播放器",
   "item.net_music_player.tip": "§a▍ §7内容: §6%s",
-  "item.net_music_player.empty": "空"
+  "item.net_music_player.empty": "空",
+  "title.net_music_list.mp3": "播放列表：MP3资源包",
+  "description.net_music_list.mp3": "由N44提供，将模型换成MP3"
 }
