@@ -10,10 +10,14 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.Level;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -180,23 +184,28 @@ public class NetMusicListItem extends ItemMusicCD {
 
     @Override
     public @NotNull InteractionResult useOn(UseOnContext context) {
-        if(context.getPlayer() == null){return InteractionResult.PASS;}
-        var stack = context.getPlayer().getMainHandItem();
-        if(!stack.is(NetMusicList.MUSIC_LIST_ITEM.get())){
-            return InteractionResult.PASS;
-        }
+        var stack = context.getItemInHand();
         if(context.getLevel().getBlockState(context.getClickedPos()).is(InitBlocks.MUSIC_PLAYER.get())){
             if(getSongInfoList(stack).isEmpty()){return InteractionResult.PASS;}
             if(getSongIndex(stack) >= getSongInfoList(stack).size()){
                 setSongIndex(stack, getSongInfoList(stack).size() - 1);
             }
-            return InteractionResult.PASS;
+            return InteractionResult.SUCCESS;
         }
-        if(context.getLevel().isClientSide){
+        return InteractionResult.PASS;
+    }
+
+    @Override
+    public @NotNull InteractionResultHolder<ItemStack> use(@NotNull Level level, @NotNull Player player, @NotNull InteractionHand usedHand) {
+        var stack = player.getItemInHand(usedHand);
+        if(!stack.is(NetMusicList.MUSIC_LIST_ITEM.get())){
+            return InteractionResultHolder.pass(stack);
+        }
+        if(level.isClientSide){
             var l = getSongInfoList(stack);
             MusicSelectionScreen.open(l, getPlayMode(stack), getSongIndex(stack));
         }
-        return InteractionResult.SUCCESS;
+        return InteractionResultHolder.success(stack);
     }
 
     @Override

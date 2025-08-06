@@ -10,7 +10,12 @@ import com.gly091020.netMusicListNeoforge.packet.PlayerPlayMusicCTSPacket;
 import com.gly091020.netMusicListNeoforge.packet.StopMusicCTSPacket;
 import com.gly091020.netMusicListNeoforge.packet.UpdatePlayerMusicPacket;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.Entity;
@@ -128,6 +133,7 @@ public class NetMusicPlayerItem extends Item{
             return super.use(level, player, usedHand);
         }
         if(MusicListLayer.isRender){
+            Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.EXPERIENCE_ORB_PICKUP, 1));
             var container = getContainer(player.getItemInHand(usedHand));
             var item = container.getItem(0);
             var c = item.getOrDefault(NetMusicList.MUSIC_LIST_COMPONENT, MusicListComponent.getDefault());
