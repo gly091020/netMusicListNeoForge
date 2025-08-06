@@ -17,15 +17,6 @@ public record DeleteMusicDataPacket(int index) implements CustomPacketPayload {
             DeleteMusicDataPacket::index,
             DeleteMusicDataPacket::new
     );
-    public void encode(FriendlyByteBuf buf) {
-        buf.writeInt(index);
-    }
-
-    public static DeleteMusicDataPacket decode(FriendlyByteBuf buf) {
-        return new DeleteMusicDataPacket(
-                buf.readInt()
-        );
-    }
 
     @Override
     public @NotNull Type<? extends CustomPacketPayload> type() {

@@ -21,17 +21,6 @@ public record MusicListDataPacket(int index, PlayMode playMode) implements Custo
             MusicListDataPacket::playMode,
             MusicListDataPacket::new
     );
-    public void encode(FriendlyByteBuf buf) {
-        buf.writeInt(index);
-        buf.writeInt(playMode.ordinal());
-    }
-
-    public static MusicListDataPacket decode(FriendlyByteBuf buf) {
-        return new MusicListDataPacket(
-                buf.readInt(),
-                PlayMode.values()[buf.readInt()]
-        );
-    }
 
     @Override
     public @NotNull Type<? extends CustomPacketPayload> type() {

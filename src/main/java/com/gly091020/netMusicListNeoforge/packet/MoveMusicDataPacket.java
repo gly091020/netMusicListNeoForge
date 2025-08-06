@@ -20,14 +20,6 @@ public record MoveMusicDataPacket(int fromIndex, int toIndex) implements CustomP
             MoveMusicDataPacket::toIndex,
             MoveMusicDataPacket::new
     );
-    public void encode(FriendlyByteBuf buf) {
-        buf.writeInt(fromIndex);
-        buf.writeInt(toIndex);
-    }
-
-    public static MoveMusicDataPacket decode(FriendlyByteBuf buf) {
-        return new MoveMusicDataPacket(buf.readInt(), buf.readInt());
-    }
 
     @Override
     public @NotNull Type<? extends CustomPacketPayload> type() {
