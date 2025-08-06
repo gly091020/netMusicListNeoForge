@@ -16,7 +16,6 @@ import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 import static com.gly091020.netMusicListNeoforge.NetMusicList.MUSIC_LIST_ITEM;
