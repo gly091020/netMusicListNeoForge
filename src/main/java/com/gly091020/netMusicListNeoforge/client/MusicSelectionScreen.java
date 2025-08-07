@@ -282,7 +282,7 @@ public class MusicSelectionScreen extends Screen {
         }
 
         @Override
-        protected void renderListBackground(GuiGraphics guiGraphics) {
+        protected void renderListBackground(@NotNull GuiGraphics guiGraphics) {
             super.renderListBackground(guiGraphics);
         }
 
