@@ -174,13 +174,13 @@ public class MusicSelectionScreen extends Screen {
                 }
             }
         }
-        var x = left + 80;
-        var y = top + 8;
+        var x = left + 50;
+        var y = top + 3;
         guiGraphics.pose().pushPose();
-        guiGraphics.pose().translate(x + 27, y + 3, 0);
+        guiGraphics.pose().translate(x + 55, y + 3, 0);
         guiGraphics.pose().mulPose(Axis.ZP.rotationDegrees(pointerRotation));
-        guiGraphics.pose().translate(-x - 27, -y - 3, 0);
-        guiGraphics.blit(BACKGROUND_TEXTURE, x, y, 32, 29, 449, 0, 63, 58, 512, 256);
+        guiGraphics.pose().translate(-x - 55, -y - 3, 0);
+        guiGraphics.blit(BACKGROUND_TEXTURE, x, y, 64, 58, 0, 256 - 69, 69, 66, 512, 256);
         guiGraphics.pose().popPose();
     }
 
