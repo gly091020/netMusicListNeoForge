@@ -1,8 +1,10 @@
 package com.gly091020.netMusicListNeoforge;
 
 import com.gly091020.netMusicListNeoforge.client.MusicListLayer;
+import com.gly091020.netMusicListNeoforge.packet.PacketRegistry;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
@@ -12,7 +14,9 @@ import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 
 @Mod(value = NetMusicList.ModID, dist = Dist.CLIENT)
 public class NetMusicListClient {
-
+    public NetMusicListClient(IEventBus modEventBus) {
+        modEventBus.addListener(PacketRegistry::registryClient);
+    }
 }
 
 @EventBusSubscriber(modid = NetMusicList.ModID, value = Dist.CLIENT)

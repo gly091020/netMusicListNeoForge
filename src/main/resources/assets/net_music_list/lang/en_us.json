@@ -20,5 +20,7 @@
   "item.net_music_player.tip": "§a▍ §7Content: §6%s",
   "item.net_music_player.empty": "Empty",
   "title.net_music_list.mp3": "Playlist: MP3 Resource Pack",
-  "description.net_music_list.mp3": "Provided by N44, models replaced with MP3"
+  "description.net_music_list.mp3": "Provided by N44, models replaced with MP3",
+  "command.net_music_list.success": "Successfully imported %s",
+  "command.net_music_list.fail": "Import failed, please check your network connection"
 }

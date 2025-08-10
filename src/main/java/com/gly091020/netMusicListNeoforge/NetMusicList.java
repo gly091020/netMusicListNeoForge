@@ -4,7 +4,6 @@ import com.github.tartaricacid.netmusic.init.InitItems;
 import com.gly091020.netMusicListNeoforge.item.NetMusicListItem;
 import com.gly091020.netMusicListNeoforge.item.NetMusicPlayerItem;
 import com.gly091020.netMusicListNeoforge.item.component.MusicListComponent;
-import com.gly091020.netMusicListNeoforge.packet.PacketRegistry;
 import com.mojang.serialization.Codec;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -50,7 +49,6 @@ public class NetMusicList {
         ITEMS.register(modEventBus);
         COMPONENTS.register(modEventBus);
         modEventBus.addListener(this::addItemsToCreativeTab);
-        modEventBus.addListener(PacketRegistry::registry);
         modEventBus.addListener(this::addPack);
     }
 

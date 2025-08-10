@@ -19,6 +19,8 @@ import net.minecraft.client.sounds.SoundBufferLibrary;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Player;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.NotNull;
 
 import javax.sound.sampled.UnsupportedAudioFileException;
@@ -26,6 +28,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.concurrent.CompletableFuture;
 
+@OnlyIn(Dist.CLIENT)
 public class PlayerNetMusicSound extends AbstractTickableSoundInstance {
     final Player player;
     final URL url;

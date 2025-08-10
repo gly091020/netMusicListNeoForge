@@ -8,12 +8,11 @@
     "AbstractContainerMenuMixin",
     "CanBurnerCDListComputerMixin",
     "CanPlayListMixin",
+    "CommandMixin",
     "MusicPlayerBackpackMixin",
     "PlayListIsOKMixin",
     "PlayModeMixin",
-    "PlayNextSongMixin"
-  ],
-  "client": [
+    "PlayNextSongMixin",
     "CanBurnerCDListMixin"
   ],
   "injectors": {
