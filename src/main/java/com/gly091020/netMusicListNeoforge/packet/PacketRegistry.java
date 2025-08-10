@@ -53,33 +53,33 @@ public class PacketRegistry {
         CHANNEL.commonToServer(
                 DeleteMusicDataPacket.TYPE,
                 DeleteMusicDataPacket.STREAM_CODEC,
-                (packet, content) -> {}
+                ServerHandler::handleServerDeleteMusicDataPacket
         );
         CHANNEL.commonToServer(
                 MusicListDataPacket.TYPE,
                 MusicListDataPacket.STREAM_CODEC,
-                (packet, content) -> {}
+                ServerHandler::handleServerMusicListDataPacket
         );
 
         CHANNEL.commonToServer(MoveMusicDataPacket.TYPE,
                 MoveMusicDataPacket.STREAM_CODEC,
-                (packet, content) -> {}
+                ServerHandler::handleServerMoveMusicDataPacket
         );
 
         CHANNEL.commonToServer(
                 PlayerPlayMusicCTSPacket.TYPE,
                 PlayerPlayMusicCTSPacket.STREAM_CODEC,
-                (packet, content) -> {}
+                ServerHandler::handleServerPlayerPlayPacket
         );
         CHANNEL.commonToServer(
                 StopMusicCTSPacket.TYPE,
                 StopMusicCTSPacket.STREAM_CODEC,
-                (packet, content) -> {}
+                ServerHandler::handleStopMusicCTSPacket
         );
         CHANNEL.commonToServer(
                 UpdatePlayerMusicPacket.TYPE,
                 UpdatePlayerMusicPacket.STREAM_CODEC,
-                (packet, content) -> {}
+                ServerHandler::handleUpdatePlayerMusicPacket
         );
         CHANNEL.commonToClient(
                 StopMusicSTCPacket.TYPE,
