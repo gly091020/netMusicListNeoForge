@@ -4,7 +4,7 @@ import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 
 public class PacketRegistry {
     public static void registryServer(final RegisterPayloadHandlersEvent event){
-        var CHANNEL = event.registrar("1.2");
+        var CHANNEL = event.registrar("1.3");
         CHANNEL.commonToServer(
                 DeleteMusicDataPacket.TYPE,
                 DeleteMusicDataPacket.STREAM_CODEC,
@@ -49,7 +49,7 @@ public class PacketRegistry {
     }
 
     public static void registryClient(final RegisterPayloadHandlersEvent event){
-        var CHANNEL = event.registrar("1.2");
+        var CHANNEL = event.registrar("1.3");
         CHANNEL.commonToServer(
                 DeleteMusicDataPacket.TYPE,
                 DeleteMusicDataPacket.STREAM_CODEC,

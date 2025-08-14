@@ -67,7 +67,7 @@ public class NetMusicPlayerItem extends Item{
         }
         stack.set(NetMusicList.MUSIC_PLAYER_TICK, info.songTime * 20);
         if(!player.level().isClientSide){return;}
-        PacketDistributor.sendToServer(new PlayerPlayMusicCTSPacket(player.getId(), info.songUrl, info.songTime, info.songName, slot, stack.getOrDefault(NetMusicList.MUSIC_PLAYER_UUID, UUID.randomUUID().toString())));
+        PacketDistributor.sendToServer(new PlayerPlayMusicCTSPacket(player.getId(), info.songUrl, info, slot, stack.getOrDefault(NetMusicList.MUSIC_PLAYER_UUID, UUID.randomUUID().toString())));
     }
 
     public static MusicPlayerContainer getContainer(ItemStack stack){
@@ -104,6 +104,9 @@ public class NetMusicPlayerItem extends Item{
     }
 
     public static void nextMusic(ItemStack stack, Player player, int slot){
+        // todo:下一首功能只能循环播放
+        // 这个bug还是让有缘人来改吧
+        // 能跑就别动
         var i = getContainer(stack).getItem(0);
         if(i.is(NetMusicList.MUSIC_LIST_ITEM.get())){
             NetMusicListItem.nextMusic(i);

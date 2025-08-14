@@ -15,7 +15,7 @@ import static com.gly091020.netMusicListNeoforge.NetMusicList.MUSIC_PLAYER_ITEM;
 
 public class ServerHandler {
     public static void handleServerPlayerPlayPacket(PlayerPlayMusicCTSPacket packet, IPayloadContext handler){
-        PacketDistributor.sendToAllPlayers(new PlayerPlayMusicSTCPacket(packet.playerID(), packet.url(), packet.timeSecond(), packet.songName(), packet.slot(), packet.uuid()));
+        PacketDistributor.sendToAllPlayers(new PlayerPlayMusicSTCPacket(packet.playerID(), packet.playUrl(), packet.info(), packet.slot(), packet.uuid()));
     }
 
     public static void handleStopMusicCTSPacket(StopMusicCTSPacket packet, IPayloadContext context){

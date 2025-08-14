@@ -6,6 +6,7 @@ import com.github.tartaricacid.netmusic.init.InitItems;
 import com.github.tartaricacid.netmusic.init.InitSounds;
 import com.github.tartaricacid.netmusic.item.ItemMusicCD;
 import com.gly091020.netMusicListNeoforge.NetMusicList;
+import com.gly091020.netMusicListNeoforge.client.MusicInfoHud;
 import com.gly091020.netMusicListNeoforge.item.NetMusicListItem;
 import com.gly091020.netMusicListNeoforge.item.NetMusicPlayerItem;
 import net.minecraft.Util;
@@ -91,6 +92,10 @@ public class PlayerNetMusicSound extends AbstractTickableSoundInstance {
                 }
             }
         }
+//        if(isStopped() && player == Minecraft.getInstance().player &&
+//                MusicInfoHud.getInfo() == NetMusicListItem.getSongInfo(itemStack)){
+//            MusicInfoHud.clearInfo();
+//        }
     }
 
     @Override

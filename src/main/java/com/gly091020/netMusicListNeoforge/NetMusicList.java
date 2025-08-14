@@ -1,6 +1,7 @@
 package com.gly091020.netMusicListNeoforge;
 
 import com.github.tartaricacid.netmusic.init.InitItems;
+import com.gly091020.netMusicListNeoforge.etched.EtchedRegistry;
 import com.gly091020.netMusicListNeoforge.item.NetMusicListItem;
 import com.gly091020.netMusicListNeoforge.item.NetMusicPlayerItem;
 import com.gly091020.netMusicListNeoforge.item.component.MusicListComponent;
@@ -12,6 +13,7 @@ import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.event.AddPackFindersEvent;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
@@ -50,6 +52,9 @@ public class NetMusicList {
         COMPONENTS.register(modEventBus);
         modEventBus.addListener(this::addItemsToCreativeTab);
         modEventBus.addListener(this::addPack);
+        if(ModList.get().isLoaded("etched")){
+            EtchedRegistry.registry();
+        }
     }
 
     private void addItemsToCreativeTab(BuildCreativeModeTabContentsEvent event) {

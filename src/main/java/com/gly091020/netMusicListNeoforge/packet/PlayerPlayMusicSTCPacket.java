@@ -1,5 +1,6 @@
 package com.gly091020.netMusicListNeoforge.packet;
 
+import com.github.tartaricacid.netmusic.item.ItemMusicCD;
 import com.gly091020.netMusicListNeoforge.NetMusicList;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -8,7 +9,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 
-public record PlayerPlayMusicSTCPacket(int playerID, String url, int timeSecond, String songName, int slot, String uuid) implements CustomPacketPayload {
+public record PlayerPlayMusicSTCPacket(int playerID, String playUrl, ItemMusicCD.SongInfo info, int slot, String uuid) implements CustomPacketPayload {
     public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(NetMusicList.ModID,
             "player_play_music_stc_packet");
     public static Type<PlayerPlayMusicSTCPacket> TYPE = new Type<>(ID);
@@ -16,11 +17,9 @@ public record PlayerPlayMusicSTCPacket(int playerID, String url, int timeSecond,
             ByteBufCodecs.INT,
             PlayerPlayMusicSTCPacket::playerID,
             ByteBufCodecs.STRING_UTF8,
-            PlayerPlayMusicSTCPacket::url,
-            ByteBufCodecs.INT,
-            PlayerPlayMusicSTCPacket::timeSecond,
-            ByteBufCodecs.STRING_UTF8,
-            PlayerPlayMusicSTCPacket::songName,
+            PlayerPlayMusicSTCPacket::playUrl,
+            ItemMusicCD.SongInfo.STREAM_CODEC,
+            PlayerPlayMusicSTCPacket::info,
             ByteBufCodecs.INT,
             PlayerPlayMusicSTCPacket::slot,
             ByteBufCodecs.STRING_UTF8,

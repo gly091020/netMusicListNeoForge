@@ -1,5 +1,6 @@
 package com.gly091020.netMusicListNeoforge;
 
+import com.gly091020.netMusicListNeoforge.client.MusicInfoHud;
 import com.gly091020.netMusicListNeoforge.client.MusicListLayer;
 import com.gly091020.netMusicListNeoforge.packet.PacketRegistry;
 import net.minecraft.resources.ResourceLocation;
@@ -25,6 +26,8 @@ class EventHandler{
     public static void onRegisterGuiLayers(RegisterGuiLayersEvent event) {
         event.registerAbove(VanillaGuiLayers.HOTBAR, ResourceLocation.fromNamespaceAndPath(NetMusicList.ModID, "music_list_layer"),
                 new MusicListLayer());
+        event.registerAbove(VanillaGuiLayers.HOTBAR, ResourceLocation.fromNamespaceAndPath(NetMusicList.ModID, "music_info_layer"),
+                new MusicInfoHud());
     }
 
     @SubscribeEvent

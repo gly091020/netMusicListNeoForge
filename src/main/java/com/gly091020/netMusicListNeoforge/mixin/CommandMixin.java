@@ -6,6 +6,7 @@ import com.github.tartaricacid.netmusic.api.pojo.NetEaseMusicList;
 import com.github.tartaricacid.netmusic.command.NetMusicCommand;
 import com.github.tartaricacid.netmusic.item.ItemMusicCD;
 import com.gly091020.netMusicListNeoforge.NetMusicList;
+import com.gly091020.netMusicListNeoforge.etched.EtchedRegistry;
 import com.gly091020.netMusicListNeoforge.item.NetMusicListItem;
 import com.google.gson.Gson;
 import com.mojang.brigadier.arguments.BoolArgumentType;
@@ -17,6 +18,7 @@ import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
+import net.neoforged.fml.ModList;
 import net.neoforged.fml.loading.FMLEnvironment;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -33,6 +35,10 @@ public class CommandMixin {
         if(FMLEnvironment.dist == Dist.DEDICATED_SERVER){return;}
         cir.getReturnValue().then(Commands.literal("music_list_to_item").then(Commands.argument("id",
                 LongArgumentType.longArg()).executes(CommandMixin::netMusicListNeoForge$toItem)));
+        if(ModList.get().isLoaded("etched")) {
+            cir.getReturnValue().then(Commands.literal("id_to_etched_item").then(Commands.argument("id",
+                    LongArgumentType.longArg()).executes(EtchedRegistry::idToItem)));
+        }
     }
 
     @Unique
