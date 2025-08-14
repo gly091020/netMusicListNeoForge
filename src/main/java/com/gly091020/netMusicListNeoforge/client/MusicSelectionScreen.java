@@ -2,17 +2,23 @@ package com.gly091020.netMusicListNeoforge.client;
 
 import com.github.tartaricacid.netmusic.item.ItemMusicCD;
 import com.gly091020.netMusicListNeoforge.NetMusicList;
+import com.gly091020.netMusicListNeoforge.NetMusicListUtil;
 import com.gly091020.netMusicListNeoforge.PlayMode;
 import com.gly091020.netMusicListNeoforge.packet.DeleteMusicDataPacket;
 import com.gly091020.netMusicListNeoforge.packet.MoveMusicDataPacket;
 import com.gly091020.netMusicListNeoforge.packet.MusicListDataPacket;
+import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ObjectSelectionList;
+import net.minecraft.client.gui.components.PlayerSkinWidget;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.entity.player.PlayerRenderer;
+import net.minecraft.client.resources.PlayerSkin;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
@@ -28,6 +34,9 @@ public class MusicSelectionScreen extends Screen {
     private final List<String> musicList;
     private static final ResourceLocation BACKGROUND_TEXTURE = ResourceLocation.fromNamespaceAndPath(NetMusicList.ModID,
             "textures/gui/bg.png");
+    private static final ResourceLocation GLY091020 = ResourceLocation.fromNamespaceAndPath(NetMusicList.ModID,
+            "textures/gui/gly091020.png");
+    private static ResourceLocation PLAYER_HAND = null;
     private static final ResourceLocation BUTTON_TEXTURE = ResourceLocation.fromNamespaceAndPath(NetMusicList.ModID, "button/button");
     private final int backgroundWidth = 321;
     private final int backgroundHeight = 161;
@@ -154,7 +163,17 @@ public class MusicSelectionScreen extends Screen {
         guiGraphics.pose().translate(x + (float) size / 2, y + (float) size / 2, 0);
         guiGraphics.pose().mulPose(Axis.ZP.rotationDegrees(CDRotation));
         guiGraphics.pose().translate(-x - (float) size / 2, -y - (float) size / 2, 0);
-        guiGraphics.blit(BACKGROUND_TEXTURE, x, y, size, size, 322, 0, 128, 128, 512, 256);
+        if(NetMusicListUtil.isGLY()){
+            guiGraphics.blit(GLY091020, x, y, size, size, 0, 0, 256, 256, 256, 256);
+        }
+        else if(NetMusicListUtil.isN44()) {
+            if(PLAYER_HAND == null){
+                PLAYER_HAND = Minecraft.getInstance().getSkinManager().getInsecureSkin(Minecraft.getInstance().getGameProfile()).texture();
+            }
+            guiGraphics.blit(PLAYER_HAND, x, y, size, size, 8, 8, 8, 8, 64, 64);
+        }else{
+            guiGraphics.blit(BACKGROUND_TEXTURE, x, y, size, size, 322, 0, 128, 128, 512, 256);
+        }
         guiGraphics.pose().popPose();
     }
 

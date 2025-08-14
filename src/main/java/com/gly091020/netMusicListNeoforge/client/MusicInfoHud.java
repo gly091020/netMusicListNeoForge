@@ -14,6 +14,9 @@ import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 public class MusicInfoHud implements LayeredDraw.Layer{
+    private static final ResourceLocation DEFAULT_TEXTURE = ResourceLocation.fromNamespaceAndPath(NetMusicList.ModID,
+            "textures/gui/default.png");
+
     private static ItemMusicCD.SongInfo info;
     private static ResourceLocation icon;
     private static long id;
@@ -32,6 +35,8 @@ public class MusicInfoHud implements LayeredDraw.Layer{
         var font = Minecraft.getInstance().font;
         if(icon != null){
             guiGraphics.blit(icon, left, top, 0, 0, 40, 40, 40, 40);
+        }else{
+            guiGraphics.blit(DEFAULT_TEXTURE, left, top, 0, 0, 40, 40, 40, 40);
         }
         var text = "";
         if(info.transName.isEmpty()){
@@ -57,14 +62,15 @@ public class MusicInfoHud implements LayeredDraw.Layer{
             }
 
             var tickWidth = 100;
-            guiGraphics.fill(left + 50, top + font.lineHeight + 2, left + 50 + tickWidth, top + font.lineHeight + 4, 0xFFAAAAAA);
-            guiGraphics.fill(left + 50, top + font.lineHeight + 2, (int) (left + 50 + tickWidth * Math.clamp((count - tick / 20f) / count, 0, 1)), top + font.lineHeight + 4, 0xFFFFFFFF);
+            guiGraphics.fill(left + 50, top + font.lineHeight + 4, left + 50 + tickWidth, top + font.lineHeight + 6, 0xFFAAAAAA);
+            guiGraphics.fill(left + 50, top + font.lineHeight + 4, (int) (left + 50 + tickWidth * Math.clamp((count - tick / 20f) / count, 0, 1)), top + font.lineHeight + 6, 0xFFFFFFFF);
+            guiGraphics.drawString(font, String.format("%s/%s", NetMusicListUtil.secondsToMinutesSeconds((int) (count - (tick / 20f))), NetMusicListUtil.secondsToMinutesSeconds(count)), left + 50 + tickWidth + 5, top + font.lineHeight + 1, 0xFFFFFFFF);
 
             if(lyric != null){
                 var lyricPart = lyric.getLyric(Math.clamp(count - tick / 20f, 0, Float.MAX_VALUE));
-                guiGraphics.drawString(font, lyricPart.getA(), left + 50, 5 + top + font.lineHeight + 1, 0xFFFFFFFF);
+                guiGraphics.drawString(font, lyricPart.getA(), left + 50, top + (font.lineHeight * 2 + 1), 0xFFFFFFFF);
                 if (lyricPart.getB() != null && !lyricPart.getB().isEmpty()) {
-                    guiGraphics.drawString(font, lyricPart.getB(), left + 50, 5 + top + (font.lineHeight + 1) * 2, 0xFFFFFFFF);
+                    guiGraphics.drawString(font, lyricPart.getB(), left + 50, top + (font.lineHeight + 1) * 3, 0xFFFFFFFF);
                 }
             }
         }

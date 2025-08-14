@@ -19,15 +19,14 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class NetMusicListUtil {
     public static final Gson GSON = new Gson();
+    public static final UUID _5112151111121 = UUID.fromString("91bd580f-5f17-4e30-872f-2e480dd9a220");
+    public static final UUID N44 = UUID.fromString("5a33e9b0-35bc-44ed-9b4e-03e3e180a3d2");
     @OnlyIn(Dist.CLIENT)
     public static void playSound(SoundEvent event){
         Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(event, 1));
@@ -109,6 +108,17 @@ public class NetMusicListUtil {
         }
     }
 
+    public static String secondsToMinutesSeconds(int totalSeconds) {
+        if (totalSeconds < 0) {
+            return "00:00";
+        }
+
+        int minutes = totalSeconds / 60;
+        int seconds = totalSeconds % 60;
+
+        return String.format("%02d:%02d", minutes, seconds);
+    }
+
     @SuppressWarnings("all")
     public static Lyric getLyric(String json){
         var data = (Map<String, Object>)GSON.fromJson(json, new TypeToken<Map<String, Object>>(){}.getType());
@@ -152,5 +162,13 @@ public class NetMusicListUtil {
             return new Pair<>(totalSeconds, text.trim());
         }
         return null;
+    }
+
+    public static boolean isGLY(){
+        return Objects.equals(Minecraft.getInstance().getGameProfile().getId(), _5112151111121);
+    }
+
+    public static boolean isN44(){
+        return Objects.equals(Minecraft.getInstance().getGameProfile().getId(), N44);
     }
 }
