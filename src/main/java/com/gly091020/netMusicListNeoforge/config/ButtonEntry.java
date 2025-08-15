@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 public class ButtonEntry extends AbstractConfigListEntry<Object> {
-    private Component fieldName;
+    private final Component fieldName;
     private final Button button;
     public ButtonEntry(Component fieldName, Button.OnPress onPress){
         super(fieldName, false);
