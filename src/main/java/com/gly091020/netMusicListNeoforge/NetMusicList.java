@@ -8,7 +8,6 @@ import com.gly091020.netMusicListNeoforge.item.NetMusicPlayerItem;
 import com.gly091020.netMusicListNeoforge.item.component.MusicListComponent;
 import com.mojang.serialization.Codec;
 import me.shedaniel.autoconfig.AutoConfig;
-import me.shedaniel.autoconfig.annotation.Config;
 import me.shedaniel.autoconfig.serializer.Toml4jConfigSerializer;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.BuiltInRegistries;

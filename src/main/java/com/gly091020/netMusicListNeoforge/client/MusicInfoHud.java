@@ -13,6 +13,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Objects;
+
 public class MusicInfoHud implements LayeredDraw.Layer{
     private static final ResourceLocation DEFAULT_TEXTURE = ResourceLocation.fromNamespaceAndPath(NetMusicList.ModID,
             "textures/gui/default.png");
@@ -33,11 +35,7 @@ public class MusicInfoHud implements LayeredDraw.Layer{
         if(info == null){return;}
 
         var font = Minecraft.getInstance().font;
-        if(icon != null){
-            guiGraphics.blit(icon, left, top, 0, 0, 40, 40, 40, 40);
-        }else{
-            guiGraphics.blit(DEFAULT_TEXTURE, left, top, 0, 0, 40, 40, 40, 40);
-        }
+        guiGraphics.blit(Objects.requireNonNullElse(icon, DEFAULT_TEXTURE), left, top, 0, 0, 40, 40, 40, 40);
         var text = "";
         if(info.transName.isEmpty()){
             text = info.songName;

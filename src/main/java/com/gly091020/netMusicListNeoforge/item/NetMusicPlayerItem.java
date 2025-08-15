@@ -13,7 +13,6 @@ import com.gly091020.netMusicListNeoforge.packet.StopMusicCTSPacket;
 import com.gly091020.netMusicListNeoforge.packet.UpdatePlayerMusicPacket;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
-import net.minecraft.sounds.Music;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
@@ -79,7 +78,7 @@ public class NetMusicPlayerItem extends Item{
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
+    public void appendHoverText(@NotNull ItemStack stack, @NotNull TooltipContext context, @NotNull List<Component> tooltipComponents, @NotNull TooltipFlag tooltipFlag) {
         Component t;
         var c = getContainer(stack);
         if(c.isEmpty()){
@@ -133,7 +132,7 @@ public class NetMusicPlayerItem extends Item{
     }
 
     @Override
-    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand usedHand) {
+    public @NotNull InteractionResultHolder<ItemStack> use(Level level, @NotNull Player player, @NotNull InteractionHand usedHand) {
         if(!level.isClientSide){
             return super.use(level, player, usedHand);
         }

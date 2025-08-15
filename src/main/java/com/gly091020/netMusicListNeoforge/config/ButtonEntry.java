@@ -1,6 +1,5 @@
 package com.gly091020.netMusicListNeoforge.config;
 
-import me.shedaniel.clothconfig2.api.AbstractConfigEntry;
 import me.shedaniel.clothconfig2.api.AbstractConfigListEntry;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -13,7 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 public class ButtonEntry extends AbstractConfigListEntry<Object> {
-    private Component fieldName = Component.empty();
+    private Component fieldName;
     private final Button button;
     public ButtonEntry(Component fieldName, Button.OnPress onPress){
         super(fieldName, false);
@@ -33,10 +32,6 @@ public class ButtonEntry extends AbstractConfigListEntry<Object> {
     @Override
     public void setRequiresRestart(boolean b) {
 
-    }
-
-    public void setFieldName(Component fieldName) {
-        this.fieldName = fieldName;
     }
 
     @Override
