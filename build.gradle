@@ -124,6 +124,7 @@ dependencies {
     implementation "curse.maven:net-music-978569:6838604"
     implementation "curse.maven:touhou-little-maid-355044:6657437"
     implementation "curse.maven:etched-491890:5998004"
+    implementation "curse.maven:cloth-config-348521:5623420"
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.

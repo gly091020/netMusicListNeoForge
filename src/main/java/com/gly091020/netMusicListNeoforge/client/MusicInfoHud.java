@@ -23,12 +23,12 @@ public class MusicInfoHud implements LayeredDraw.Layer{
     private static NetMusicListUtil.Lyric lyric;
     private static ItemStack stack;
     private static int slot;
+    private static int left = 10;
+    private static int top = 10;
 
     private static Thread thread;
     @Override
     public void render(@NotNull GuiGraphics guiGraphics, @NotNull DeltaTracker deltaTracker) {
-        final int left = 10;
-        final int top = 10;
         if(Minecraft.getInstance().options.hideGui){return;}
         if(info == null){return;}
 
@@ -80,7 +80,13 @@ public class MusicInfoHud implements LayeredDraw.Layer{
         return info;
     }
 
+    public static void setPos(int x, int y){
+        left = x;
+        top = y;
+    }
+
     public static void setInfo(ItemMusicCD.SongInfo info, @NotNull ItemStack playerStack, int slot){
+        if(!NetMusicList.CONFIG.musicHUD){return;}
         MusicInfoHud.info = info;
         MusicInfoHud.slot = slot;
         if(thread != null){

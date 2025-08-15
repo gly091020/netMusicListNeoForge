@@ -22,5 +22,16 @@
   "title.net_music_list.mp3": "Playlist: MP3 Resource Pack",
   "description.net_music_list.mp3": "Provided by N44, models replaced with MP3",
   "command.net_music_list.success": "Successfully imported %s",
-  "command.net_music_list.fail": "Import failed, please check your network connection"
+  "command.net_music_list.fail": "Import failed, please check your network connection",
+  "config.net_music_list.title": "Network Music Player: Playlist Settings",
+  "config.net_music_list.enable_etched": "Enable etched support",
+  "config.net_music_list.enable_etched.error": "This feature is already included in Etched Extension.",
+  "config.net_music_list.old_gui": "Enable legacy interface",
+  "config.net_music_list.music_hud": "Enable song info HUD",
+  "config.net_music_list.set_hud_pos": "HUD Position Settings",
+  "config.net_music_list.hud.reset": "Reset Position",
+  "config.net_music_list.hud.close": "Save and Exit",
+  "config.net_music_list.hud.net_save": "Exit Without Saving",
+  "config.net_music_list.hud.title": "Drag mouse to adjust HUD position",
+  "config.net_music_list.hud.text": "I am HUD"
 }

@@ -1,9 +1,13 @@
 package com.gly091020.netMusicListNeoforge;
 
 import com.github.tartaricacid.netmusic.item.ItemMusicCD;
+import com.gly091020.netMusicListNeoforge.client.MusicInfoHud;
+import com.gly091020.netMusicListNeoforge.config.NetMusicListConfig;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.mojang.blaze3d.platform.NativeImage;
+import me.shedaniel.autoconfig.AutoConfig;
+import me.shedaniel.autoconfig.serializer.Toml4jConfigSerializer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.DynamicTexture;
@@ -11,6 +15,7 @@ import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.sounds.SoundEvent;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.fml.ModList;
 import oshi.util.tuples.Pair;
 
 import javax.annotation.Nullable;
@@ -170,5 +175,17 @@ public class NetMusicListUtil {
 
     public static boolean isN44(){
         return Objects.equals(Minecraft.getInstance().getGameProfile().getId(), N44);
+    }
+
+    public static boolean hasEtchedExtension(){
+        //喜报：你的模组功能又撞车了
+        return ModList.get().isLoaded("etched_extension");
+    }
+
+    public static void reloadConfig(){
+        AutoConfig.getConfigHolder(NetMusicListConfig.class).setConfig(NetMusicList.CONFIG);
+        AutoConfig.getConfigHolder(NetMusicListConfig.class).save();
+        NetMusicList.CONFIG = AutoConfig.getConfigHolder(NetMusicListConfig.class).get();
+        MusicInfoHud.setPos(NetMusicList.CONFIG.x, NetMusicList.CONFIG.y);
     }
 }

@@ -1,11 +1,15 @@
 package com.gly091020.netMusicListNeoforge;
 
 import com.github.tartaricacid.netmusic.init.InitItems;
+import com.gly091020.netMusicListNeoforge.config.NetMusicListConfig;
 import com.gly091020.netMusicListNeoforge.etched.EtchedRegistry;
 import com.gly091020.netMusicListNeoforge.item.NetMusicListItem;
 import com.gly091020.netMusicListNeoforge.item.NetMusicPlayerItem;
 import com.gly091020.netMusicListNeoforge.item.component.MusicListComponent;
 import com.mojang.serialization.Codec;
+import me.shedaniel.autoconfig.AutoConfig;
+import me.shedaniel.autoconfig.annotation.Config;
+import me.shedaniel.autoconfig.serializer.Toml4jConfigSerializer;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -13,8 +17,10 @@ import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.neoforged.neoforge.event.AddPackFindersEvent;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.registries.DeferredHolder;
@@ -47,7 +53,11 @@ public class NetMusicList {
             builder.persistent(Codec.STRING)
     );
 
-    public NetMusicList(IEventBus modEventBus) {
+    public static NetMusicListConfig CONFIG;
+
+    public NetMusicList(IEventBus modEventBus, ModContainer container) {
+        AutoConfig.register(NetMusicListConfig.class, Toml4jConfigSerializer::new);
+        CONFIG = AutoConfig.getConfigHolder(NetMusicListConfig.class).get();
         ITEMS.register(modEventBus);
         COMPONENTS.register(modEventBus);
         modEventBus.addListener(this::addItemsToCreativeTab);
@@ -55,6 +65,10 @@ public class NetMusicList {
         if(ModList.get().isLoaded("etched")){
             EtchedRegistry.registry();
         }
+        container.registerExtensionPoint(IConfigScreenFactory.class, (mc, parent) ->
+            NetMusicListConfig.getConfigScreen(parent)
+        );
+        NetMusicListUtil.reloadConfig();
     }
 
     private void addItemsToCreativeTab(BuildCreativeModeTabContentsEvent event) {

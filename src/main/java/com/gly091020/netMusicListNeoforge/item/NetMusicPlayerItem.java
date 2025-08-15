@@ -5,6 +5,7 @@ import com.github.tartaricacid.netmusic.init.InitItems;
 import com.github.tartaricacid.netmusic.item.ItemMusicCD;
 import com.gly091020.netMusicListNeoforge.NetMusicList;
 import com.gly091020.netMusicListNeoforge.NetMusicListUtil;
+import com.gly091020.netMusicListNeoforge.client.MusicInfoHud;
 import com.gly091020.netMusicListNeoforge.client.MusicListLayer;
 import com.gly091020.netMusicListNeoforge.item.component.MusicListComponent;
 import com.gly091020.netMusicListNeoforge.packet.PlayerPlayMusicCTSPacket;
@@ -12,6 +13,7 @@ import com.gly091020.netMusicListNeoforge.packet.StopMusicCTSPacket;
 import com.gly091020.netMusicListNeoforge.packet.UpdatePlayerMusicPacket;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.Music;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
@@ -63,6 +65,8 @@ public class NetMusicPlayerItem extends Item{
         if(info.vip && player.level().isClientSide){
             player.sendSystemMessage(Component.translatable("message.netmusic.music_player.need_vip")
                     .withStyle(ChatFormatting.RED));
+            stack.set(NetMusicList.MUSIC_PLAYER_TICK, 0);
+            MusicInfoHud.clearInfo();
             return;
         }
         stack.set(NetMusicList.MUSIC_PLAYER_TICK, info.songTime * 20);

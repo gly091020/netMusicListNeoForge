@@ -6,6 +6,7 @@ import com.github.tartaricacid.netmusic.api.pojo.NetEaseMusicList;
 import com.github.tartaricacid.netmusic.command.NetMusicCommand;
 import com.github.tartaricacid.netmusic.item.ItemMusicCD;
 import com.gly091020.netMusicListNeoforge.NetMusicList;
+import com.gly091020.netMusicListNeoforge.NetMusicListUtil;
 import com.gly091020.netMusicListNeoforge.etched.EtchedRegistry;
 import com.gly091020.netMusicListNeoforge.item.NetMusicListItem;
 import com.google.gson.Gson;
@@ -35,7 +36,7 @@ public class CommandMixin {
         if(FMLEnvironment.dist == Dist.DEDICATED_SERVER){return;}
         cir.getReturnValue().then(Commands.literal("music_list_to_item").then(Commands.argument("id",
                 LongArgumentType.longArg()).executes(CommandMixin::netMusicListNeoForge$toItem)));
-        if(ModList.get().isLoaded("etched")) {
+        if(ModList.get().isLoaded("etched") && !NetMusicListUtil.hasEtchedExtension()) {
             cir.getReturnValue().then(Commands.literal("id_to_etched_item").then(Commands.argument("id",
                     LongArgumentType.longArg()).executes(EtchedRegistry::idToItem)));
         }
