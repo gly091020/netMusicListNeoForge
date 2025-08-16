@@ -16,10 +16,8 @@ import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.IEventBus;
-import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.Mod;
-import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.neoforged.neoforge.event.AddPackFindersEvent;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.registries.DeferredHolder;
@@ -54,7 +52,7 @@ public class NetMusicList {
 
     public static NetMusicListConfig CONFIG;
 
-    public NetMusicList(IEventBus modEventBus, ModContainer container) {
+    public NetMusicList(IEventBus modEventBus) {
         AutoConfig.register(NetMusicListConfig.class, Toml4jConfigSerializer::new);
         CONFIG = AutoConfig.getConfigHolder(NetMusicListConfig.class).get();
         ITEMS.register(modEventBus);
@@ -64,10 +62,6 @@ public class NetMusicList {
         if(ModList.get().isLoaded("etched")){
             EtchedRegistry.registry();
         }
-        container.registerExtensionPoint(IConfigScreenFactory.class, (mc, parent) ->
-            NetMusicListConfig.getConfigScreen(parent)
-        );
-        NetMusicListUtil.reloadConfig();
     }
 
     private void addItemsToCreativeTab(BuildCreativeModeTabContentsEvent event) {

@@ -36,6 +36,7 @@ public class NetMusicListUtil {
         Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(event, 1));
     }
 
+    @OnlyIn(Dist.CLIENT)
     public static long getIdFromInfo(ItemMusicCD.SongInfo info) throws IllegalAccessException {
         var s = info.songUrl;
         String[] parts = s.split("[?&]id=");  // 为 什 么 要 用 这 种 代 码
@@ -48,6 +49,7 @@ public class NetMusicListUtil {
         return Long.parseLong(idPart.replace(".mp3", ""));
     }
 
+    @OnlyIn(Dist.CLIENT)
     @SuppressWarnings("all")
     public static URL getIconUrl(String json) throws Exception{
         var data = (Map<String, Object>)GSON.fromJson(json, new TypeToken<Map<String, Object>>(){}.getType());
@@ -57,6 +59,7 @@ public class NetMusicListUtil {
         return new URL((String) ((Map<String, Object>)album).get("picUrl"));
     }
 
+    @OnlyIn(Dist.CLIENT)
     public static AbstractTexture getTextureFromURL(URL imageUrl) throws IOException {
         try (InputStream stream = imageUrl.openConnection().getInputStream()) {
             BufferedImage bufferedImage = ImageIO.read(stream);
@@ -181,6 +184,7 @@ public class NetMusicListUtil {
         return ModList.get().isLoaded("etched_extension");
     }
 
+    @OnlyIn(Dist.CLIENT)
     public static void reloadConfig(){
         AutoConfig.getConfigHolder(NetMusicListConfig.class).setConfig(NetMusicList.CONFIG);
         AutoConfig.getConfigHolder(NetMusicListConfig.class).save();
