@@ -22,4 +22,5 @@ public class NetMusicListConfig implements ConfigData {
     public boolean glowingText = false;
 
     public boolean oldGUI = false;
+    public boolean noVIP = false;
 }

@@ -2,31 +2,39 @@ package com.gly091020.netMusicListNeoforge.client;
 
 import com.github.tartaricacid.netmusic.item.ItemMusicCD;
 import com.gly091020.netMusicListNeoforge.NetMusicList;
+import com.gly091020.netMusicListNeoforge.config.ConfigScreenGetter;
 import com.gly091020.netMusicListNeoforge.packet.DeleteMusicDataPacket;
 import com.gly091020.netMusicListNeoforge.packet.MoveMusicDataPacket;
 import com.gly091020.netMusicListNeoforge.packet.MusicListDataPacket;
 import com.gly091020.netMusicListNeoforge.util.NetMusicListUtil;
 import com.gly091020.netMusicListNeoforge.util.PlayMode;
 import com.mojang.math.Axis;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ObjectSelectionList;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.neoforged.neoforge.network.PacketDistributor;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.Random;
 
 public class MusicSelectionScreen extends Screen {
-    private final List<String> musicList;
+    private final List<ItemMusicCD.SongInfo> musicList;
     private static final ResourceLocation BACKGROUND_TEXTURE = ResourceLocation.fromNamespaceAndPath(NetMusicList.ModID,
             "textures/gui/bg.png");
     private static final ResourceLocation GLY091020 = ResourceLocation.fromNamespaceAndPath(NetMusicList.ModID,
@@ -50,7 +58,7 @@ public class MusicSelectionScreen extends Screen {
 
     private float pointerRotation = 0;
 
-    public MusicSelectionScreen(List<String> musicList, PlayMode mode, Integer index) {
+    public MusicSelectionScreen(List<ItemMusicCD.SongInfo> musicList, PlayMode mode, Integer index) {
         super(Component.translatable("gui.net_music_list.title"));
         this.musicList = musicList;
         this.mode = mode;
@@ -69,10 +77,10 @@ public class MusicSelectionScreen extends Screen {
         listWidget = new MusicListWidget();
 
         // 添加所有音乐条目
-        for (String music : musicList) {
+        for (ItemMusicCD.SongInfo music : musicList) {
             listWidget.addMusicEntry(music);
         }
-        listWidget.addMusicEntry(Component.translatable("gui.net_music_list.add").getString());
+        listWidget.addEntry(new AddMusicEntry());
 
         listWidget.setSelected(listWidget.children().get(index));
         this.addRenderableWidget(listWidget);
@@ -98,6 +106,7 @@ public class MusicSelectionScreen extends Screen {
                 top + 133, button -> moveMusic(true), true);
         downButton = new MoveButton(left + 4 + 44 + 3,
                 top + 133, button -> moveMusic(false), false);
+        Button settingButton = new SettingButton(left + backgroundWidth + 3, top);
 
         deleteButton.active = canDelete();
         upButton.active = canMove(true);
@@ -106,6 +115,7 @@ public class MusicSelectionScreen extends Screen {
         this.addRenderableWidget(deleteButton);
         this.addRenderableWidget(upButton);
         this.addRenderableWidget(downButton);
+        this.addRenderableWidget(settingButton);
 
         lastScroll = (float) listWidget.getScrollAmount();
         nowSpeed = 0;
@@ -203,6 +213,9 @@ public class MusicSelectionScreen extends Screen {
         super.render(context, mouseX, mouseY, delta);
         renderCD(context, delta);
         renderPointer(context, delta);
+        for(MusicListEntry entry: listWidget.children()){
+            if(entry.hovered)entry.renderTooltip(context, mouseX, mouseY);
+        }
     }
 
     @Override
@@ -290,32 +303,55 @@ public class MusicSelectionScreen extends Screen {
     }
 
     private class MusicListEntry extends ObjectSelectionList.Entry<MusicListEntry> {
-        private final String musicName;
+        private Component musicName;
+        private final ItemMusicCD.SongInfo info;
+        private boolean hovered = false;
 
-        public MusicListEntry(String musicName) {
-            this.musicName = musicName;
+        public MusicListEntry(ItemMusicCD.SongInfo info) {
+            this.info = info;
+            if(info.artists.isEmpty()){
+                musicName = Component.literal(info.songName);
+            } else {
+                var a = new StringBuilder();
+                for(String artist: info.artists){
+                    a.append(artist);
+                    a.append("、");
+                }
+                var t = Component.empty();
+                if(info.vip){
+                    t.append(Component.translatable("gui.net_music_list.vip").withStyle(ChatFormatting.RED));
+                }
+                if(info.readOnly){
+                    t.append(Component.translatable("gui.net_music_list.read_only").withStyle(ChatFormatting.YELLOW));
+                }
+                var AT = a.toString();
+                musicName = Component.literal(info.songName).append(t).append(" —— ").append(AT.substring(0, AT.length() - 1));
+            }
         }
 
         @Override
         public @NotNull Component getNarration() {
-            return Component.literal(musicName);
+            return musicName;
         }
 
         @Override
         public void render(@NotNull GuiGraphics context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+            this.hovered = hovered;
             // 渲染背景
             if (hovered) {
                 context.fill(x, y, x + entryWidth - 4, y + entryHeight, 0x80FFFFFF);
             }
 
             // 渲染文本
+            context.enableScissor(x, y, x + entryWidth - 10, y + entryHeight);
             context.drawString(
                     font,
-                    font.plainSubstrByWidth(musicName, entryWidth - 10),
+                    musicName,
                     x + 5,
                     y + (entryHeight - 10) / 2 + 1,
                     0xFFFFFF
             );
+            context.disableScissor();
         }
 
         @Override
@@ -327,6 +363,69 @@ public class MusicSelectionScreen extends Screen {
             updateButton();
             return true;
         }
+
+        public ItemMusicCD.SongInfo getInfo() {
+            return info;
+        }
+
+        public void renderTooltip(GuiGraphics guiGraphics, int mouseX, int mouseY){
+            var pose = guiGraphics.pose();
+            pose.pushPose();
+            var tooltip = new ArrayList<Component>();
+            ItemMusicCD.SongInfo info = getInfo();
+            if (info != null) {
+                var component1 = Component.literal(info.songName);
+                if(info.vip)component1.append(Component.translatable("gui.net_music_list.vip").withStyle(ChatFormatting.RED));
+                if(info.readOnly)component1.append(Component.translatable("gui.net_music_list.read_only").withStyle(ChatFormatting.YELLOW));
+                tooltip.add(component1);
+
+                if (StringUtils.isNoneBlank(info.transName)) {
+                    String var10000 = I18n.get("tooltips.netmusic.cd.trans_name");
+                    String text = "§a▍ §7" + var10000 + ": §6" + info.transName;
+                    tooltip.add(Component.literal(text));
+                }
+
+                if (info.artists != null && !info.artists.isEmpty()) {
+                    String artistNames = StringUtils.join(info.artists, " | ");
+                    String var12 = I18n.get("tooltips.netmusic.cd.artists");
+                    String text = "§a▍ §7" + var12 + ": §3" + artistNames;
+                    tooltip.add(Component.literal(text));
+                }
+
+                String var13 = I18n.get("tooltips.netmusic.cd.time");
+                String text = "§a▍ §7" + var13 + ": §5" + getSongTime(info.songTime);
+                tooltip.add(Component.literal(text));
+            } else {
+                tooltip.add(Component.translatable("tooltips.netmusic.cd.empty").withStyle(ChatFormatting.RED));
+            }
+            guiGraphics.renderTooltip(font, tooltip, Optional.empty(), mouseX, mouseY);
+            pose.popPose();
+        }
+
+        public void setMusicName(Component musicName) {
+            this.musicName = musicName;
+        }
+    }
+
+    private class AddMusicEntry extends MusicListEntry{
+        public AddMusicEntry() {
+            super(new ItemMusicCD.SongInfo("", "", 0, true));
+            setMusicName(Component.translatable("gui.net_music_list.add"));
+        }
+
+        @Override
+        public void renderTooltip(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+
+        }
+    }
+
+    private String getSongTime(int songTime) {
+        int min = songTime / 60;
+        int sec = songTime % 60;
+        String minStr = min <= 9 ? "0" + min : "" + min;
+        String secStr = sec <= 9 ? "0" + sec : "" + sec;
+        String format = Language.getInstance().getOrDefault("tooltips.netmusic.cd.time.format");
+        return String.format(format, minStr, secStr);
     }
 
     public void sendPackage(){
@@ -353,8 +452,13 @@ public class MusicSelectionScreen extends Screen {
             return this.width - 16;
         }
 
-        public void addMusicEntry(String musicName) {
-            this.addEntry(new MusicListEntry(musicName));
+        public void addMusicEntry(ItemMusicCD.SongInfo info) {
+            this.addEntry(new MusicListEntry(info));
+        }
+
+        @Override
+        public int addEntry(@NotNull MusicListEntry entry) {
+            return super.addEntry(entry);
         }
 
         @Override
@@ -380,7 +484,7 @@ public class MusicSelectionScreen extends Screen {
                     k = this.getY();
                 }
                 guiGraphics.blitSprite(ResourceLocation.fromNamespaceAndPath(NetMusicList.ModID,
-                        "bar/bar"), l - 1, k, 5, i1);
+                        "bar/bar"), l - 1, k, 5, i1);// todo:添加选中时的详细信息tooltip
             }
         }
 
@@ -408,31 +512,7 @@ public class MusicSelectionScreen extends Screen {
             OldMusicSelectionScreen.open(musicList, mode, index);
             return;
         }
-        var l = new ArrayList<String>();
-        for(ItemMusicCD.SongInfo info: musicList){
-            if(info.artists.isEmpty()){
-                l.add(info.songName);
-            } else {
-                var a = new StringBuilder();
-                for(String artist: info.artists){
-                    a.append(artist);
-                    a.append("、");
-                }
-                var t = "";
-                if(info.readOnly){
-                    t = Component.translatable("gui.net_music_list.read_only").getString();
-                }else if(info.vip){
-                    t = Component.translatable("gui.net_music_list.vip").getString();
-                }
-                var AT = a.toString();
-                l.add(String.format("%s%s —— %s", info.songName, t, AT.substring(0, AT.length() - 1)));
-            }
-        }
-        if(index < 0 || index > musicList.size()){
-            NetMusicList.LOGGER.error("错误的索引：{}", index);
-            return;
-        }
-        Minecraft.getInstance().setScreen(new MusicSelectionScreen(l, mode, index));
+        Minecraft.getInstance().setScreen(new MusicSelectionScreen(musicList, mode, index));
     }
 
     public static class PlayModeButton extends Button{
@@ -455,6 +535,55 @@ public class MusicSelectionScreen extends Screen {
             context.blitSprite(BUTTON_TEXTURE, this.getX(), this.getY(), this.getWidth(), this.getHeight());
             context.blit(BACKGROUND_TEXTURE, this.getX(), this.getY(),
                     x, 162, this.width, this.height, 512, 256);
+        }
+    }
+
+    public static class SettingButton extends Button{
+        public static final Random random = new Random();
+        protected SettingButton(int x, int y) {
+            super(x, y, 22, 22, Component.literal("⚙"), button -> {
+                if(hasShiftDown()){
+                    NetMusicList.CONFIG.debug = !NetMusicList.CONFIG.debug;
+                    NetMusicListUtil.reloadConfig();
+                }else{
+                    Minecraft.getInstance().setScreen(ConfigScreenGetter.getConfigScreen(Minecraft.getInstance().screen));
+                }
+            }, Button.DEFAULT_NARRATION);
+        }
+
+        @Override
+        protected void renderWidget(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+            if(NetMusicList.CONFIG.debug){
+                setTooltip(Tooltip.create(Component.translatable("text.net_music_list.debug_mode").withStyle(ChatFormatting.RED)));
+            }else{
+                setTooltip(null);
+            }
+            super.renderWidget(guiGraphics, mouseX, mouseY, partialTick);
+            // 其实这个方法绘制9切贴图比13个参数好多了
+            guiGraphics.blitSprite(BUTTON_TEXTURE, this.getX(), this.getY(), this.getWidth(), this.getHeight());
+        }
+
+        @Override
+        public void renderString(@NotNull GuiGraphics guiGraphics, @NotNull Font font, int color) {
+            if(NetMusicList.CONFIG.debug)color = 16733525;
+            var pose = guiGraphics.pose();
+            pose.pushPose();
+            if(isHovered)
+                pose.rotateAround(Axis.ZP.rotationDegrees((System.currentTimeMillis() % 36000) / 2.0f),
+                        getX() + width / 2f + 0.25f, getY() + height / 2f + 0.25f, 0);
+            if(NetMusicList.CONFIG.debug && NetMusicListUtil.isGLY()){
+                // GLY特有的突然发电
+                pose.translate(random.nextFloat() * 3, random.nextFloat() * 3, 30);
+                pose.scale(1, 1, 5);
+                pose.rotateAround(Axis.ZP.rotationDegrees((System.currentTimeMillis() % 36000) / 2.0f * random.nextFloat()),
+                        getX() + width / 2f + 0.25f, getY() + height / 2f + 0.25f, 0);
+                pose.rotateAround(Axis.XP.rotationDegrees((System.currentTimeMillis() % 36000) / 2.0f * random.nextFloat()),
+                        getX() + width / 2f + 0.25f, getY() + height / 2f + 0.25f, 0);
+                pose.rotateAround(Axis.YP.rotationDegrees((System.currentTimeMillis() % 36000) / 2.0f * random.nextFloat()),
+                        getX() + width / 2f + 0.25f, getY() + height / 2f + 0.25f, 0);
+            }
+            super.renderString(guiGraphics, font, color);
+            pose.popPose();
         }
     }
 

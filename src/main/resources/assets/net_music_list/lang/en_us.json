@@ -33,6 +33,7 @@
   "config.net_music_list.set_hud_pos": "Song Info HUD Position Adjustment",
   "key.net_music_list.toggle_music_speed_up": "Accelerate Scrolling",
   "key.net_music_list.toggle_music_transform": "(Song Selection) Show Translation",
+  "key.net_music_list.switch_music": "Switch Music",
   "config.net_music_list.hud.text": "I am HUD",
   "config.net_music_list.hud.title": "HUD Position Settings",
   "config.net_music_list.hud.reset": "Reset",
@@ -51,6 +52,7 @@
   "config.net_music_list.config.music_info_hud.title": "Music Info HUD",
   "config.net_music_list.config.cache.title": "Cache Related",
   "config.net_music_list.old_gui": "Enable legacy interface",
+  "config.net_music_list.no_vip": "Play VIP songs without restriction",
 
   "patchouli.net_music_list.title": "Net Music: Playlist Manual",
   "patchouli.net_music_list.description": "Net Music: Basic usage guide for playlists",
@@ -75,6 +77,7 @@
   "manual.net_music_list.cover2": "Very easy to understand!",
   "key.net_music_list.toggle_music_fast_stop": "Music Emergency Stop",
   "text.net_music_list.fast_stoping": "Emergency stopping music...",
+  "text.net_music_list.debug_mode": "Warning: You are currently in debug mode.",
 
   "block.net_music_list.ender_music_player": "Ender Music Player",
   "block.net_music_list.ender_music_player.add_player": "Added player %s",

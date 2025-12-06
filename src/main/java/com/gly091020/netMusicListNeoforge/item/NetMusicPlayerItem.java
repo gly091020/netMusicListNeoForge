@@ -63,7 +63,7 @@ public class NetMusicPlayerItem extends Item{
         }
         var info = ItemMusicCD.getSongInfo(i);
         if(info == null)return;
-        if(!NetMusicListUtil.hasLoginNeed() && info.vip && player.level().isClientSide){
+        if(!NetMusicList.CONFIG.noVIP && !NetMusicListUtil.hasLoginNeed() && info.vip && player.level().isClientSide){
             player.sendSystemMessage(Component.translatable("message.netmusic.music_player.need_vip")
                     .withStyle(ChatFormatting.RED));
             return;
@@ -135,6 +135,14 @@ public class NetMusicPlayerItem extends Item{
         playSound(stack, player, slot);
     }
 
+    public static void switchMusic(ItemStack stack, Player player, int slot, int index){
+        var i = getContainer(stack).getItem(0);
+        if(i.is(NetMusicList.MUSIC_LIST_ITEM.get())){
+            NetMusicListItem.setSongIndex(i, index);
+        }
+        playSound(stack, player, slot);
+    }
+
     @Override
     public void inventoryTick(@NotNull ItemStack stack, @NotNull Level level, @NotNull Entity entity, int slot, boolean b) {
         super.inventoryTick(stack, level, entity, slot, b);
@@ -179,6 +187,7 @@ public class NetMusicPlayerItem extends Item{
             return InteractionResultHolder.success(player.getMainHandItem());
         }
         MusicListLayer.isRender = true;
+        MusicListLayer.slot = player.getInventory().findSlotMatchingItem(player.getMainHandItem());
         return InteractionResultHolder.success(player.getMainHandItem());
     }
 

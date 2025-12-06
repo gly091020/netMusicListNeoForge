@@ -1,8 +1,12 @@
 package com.gly091020.netMusicListNeoforge.client;
 
+import com.github.tartaricacid.netmusic.network.NetworkHandler;
 import com.gly091020.netMusicListNeoforge.NetMusicList;
 import com.gly091020.netMusicListNeoforge.hud.MusicInfoHud;
 import com.gly091020.netMusicListNeoforge.hud.MusicListLayer;
+import com.gly091020.netMusicListNeoforge.item.NetMusicListItem;
+import com.gly091020.netMusicListNeoforge.item.NetMusicPlayerItem;
+import com.gly091020.netMusicListNeoforge.packet.UpdatePlayerMusicPacket;
 import com.gly091020.netMusicListNeoforge.sounds.PlayerNetMusicSound;
 import com.gly091020.netMusicListNeoforge.util.CacheManager;
 import com.gly091020.netMusicListNeoforge.util.NetMusicListKeyMapping;
@@ -68,6 +72,7 @@ public class ClientEventHandler {
         soundFix();
         fastStop();
         CacheManager.tick();
+        tickKey();
     }
 
     @SubscribeEvent
@@ -113,4 +118,51 @@ public class ClientEventHandler {
                 NetMusicList.MANUAL
         );
     }
+
+    private static void tickKey(){
+        if (Minecraft.getInstance().screen != null) {
+            wasSwitchMusicPressed = false;
+            return;
+        }
+        var player = Minecraft.getInstance().player;
+        if(player == null)return;
+
+        boolean isPressed = NetMusicListKeyMapping.SWITCH_MUSIC.isDown();
+
+        if (isPressed && !wasSwitchMusicPressed) {
+
+            for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
+                if(player.getInventory().getItem(i).is(NetMusicList.MUSIC_PLAYER_ITEM.get())){
+                    MusicListLayer.isRender = true;
+                    MusicListLayer.slot = i;
+                    break;
+                }
+            }
+        }
+
+        if (!isPressed && wasSwitchMusicPressed) {
+            if(MusicListLayer.isRender){
+                MusicListLayer.isRender = false;
+                NetMusicListUtil.playSound(SoundEvents.EXPERIENCE_ORB_PICKUP);
+                var slot = MusicListLayer.slot;
+                var musicPlayer = player.getInventory().getItem(slot);
+                if(!musicPlayer.is(NetMusicList.MUSIC_PLAYER_ITEM.get()))return;
+                var container = NetMusicPlayerItem.getContainer(musicPlayer);
+                var item = container.getItem(0);
+                var index = NetMusicListItem.getSongIndex(item);
+                if(MusicListLayer.index != index){
+                    NetMusicListItem.setSongIndex(item, MusicListLayer.index);
+                    container.setItem(0, item);
+                    NetMusicPlayerItem.playSound(musicPlayer, player, slot);
+                    NetworkHandler.sendToServer(new UpdatePlayerMusicPacket(MusicListLayer.index,
+                            slot));
+                }
+                MusicListLayer.isRender = false;
+            }
+        }
+
+        wasSwitchMusicPressed = isPressed;
+    }
+
+    private static boolean wasSwitchMusicPressed = false; // 用一个全局变量的方法感觉一点也不优雅
 }

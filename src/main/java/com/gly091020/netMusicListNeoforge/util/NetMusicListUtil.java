@@ -280,9 +280,6 @@ public class NetMusicListUtil {
 
     public static void reloadConfig(){
         var holder = AutoConfig.getConfigHolder(NetMusicListConfig.class);
-        if(CONFIG.maxImportList < 100 && !CONFIG.debug){
-            CONFIG.maxImportList = 300;
-        }
         holder.setConfig(CONFIG);
         holder.save();
         if(FMLEnvironment.dist.isClient()){

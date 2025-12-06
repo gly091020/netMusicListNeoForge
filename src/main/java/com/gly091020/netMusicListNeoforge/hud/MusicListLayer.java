@@ -27,16 +27,19 @@ public class MusicListLayer{
     public static boolean isRender = false;
     public static int index = -1;
     public static int count = 0;
+    public static int slot = -1;
 
     public static void render(@NotNull GuiGraphics guiGraphics) {
         if(!isRender){
             index = -1;
+            slot = -1;
             return;
         }
         if(Minecraft.getInstance().options.hideGui){return;}
+        if(slot == -1)return;
         var p = Minecraft.getInstance().player;
         if(p == null){return;}
-        var i = p.getMainHandItem();
+        var i = p.getInventory().getItem(slot);
         if(!i.is(NetMusicList.MUSIC_PLAYER_ITEM.get())){
             isRender = false;
             return;

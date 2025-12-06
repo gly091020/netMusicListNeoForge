@@ -10,6 +10,7 @@ public class NetMusicListKeyMapping {
     public static KeyMapping TOGGLE_MUSIC_SPEED_UP;
     public static KeyMapping TOGGLE_MUSIC_TRANSFORM;
     public static KeyMapping FAST_STOP;
+    public static KeyMapping SWITCH_MUSIC;
 
     public static void init(){
         TOGGLE_MUSIC_TRANSFORM = new KeyMapping(
@@ -33,11 +34,19 @@ public class NetMusicListKeyMapping {
                 InputConstants.UNKNOWN.getValue(),
                 "modmenu.nameTranslation.net_music_list"
         );
+        SWITCH_MUSIC = new KeyMapping(
+                "key.net_music_list.switch_music",
+                KeyConflictContext.UNIVERSAL,
+                InputConstants.Type.KEYSYM,
+                InputConstants.UNKNOWN.getValue(),
+                "modmenu.nameTranslation.net_music_list"
+        );
     }
 
     public static void registerKeyBindings(final RegisterKeyMappingsEvent event) {
         event.register(TOGGLE_MUSIC_SPEED_UP);
         event.register(TOGGLE_MUSIC_TRANSFORM);
         event.register(FAST_STOP);
+        event.register(SWITCH_MUSIC);
     }
 }

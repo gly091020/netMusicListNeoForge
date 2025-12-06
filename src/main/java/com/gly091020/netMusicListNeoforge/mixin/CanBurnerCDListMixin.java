@@ -35,15 +35,20 @@ public class CanBurnerCDListMixin {
     @Inject(method = "setSongInfo", at = @At("HEAD"), cancellable = true)
     public void onSetInfo(ItemMusicCD.SongInfo setSongInfo, CallbackInfo ci){
         // 列表刻录暴力适配
-        if(input.getStackInSlot(0).is(NetMusicList.MUSIC_LIST_ITEM.get())){
-            NetMusicListItem.setSongIndex(input.getStackInSlot(0), 0);
-            NetMusicListItem.setPlayMode(input.getStackInSlot(0), PlayMode.LOOP);
-        }
         if (input.getStackInSlot(0).isEmpty() && output.getStackInSlot(0).is(NetMusicList.MUSIC_LIST_ITEM.get())) {
             input.setStackInSlot(0, output.getStackInSlot(0));
             output.setStackInSlot(0, Items.AIR.getDefaultInstance());
         }
-        if(NetMusicListItem.getSongInfoList(input.getStackInSlot(0)).size() >= CONFIG.maxImportList){
+        var itemStack = input.getStackInSlot(0);
+        var size = NetMusicListItem.getSongInfoList(itemStack).size();
+        if(itemStack.is(NetMusicList.MUSIC_LIST_ITEM.get())){
+            var index = NetMusicListItem.getSongIndex(itemStack);
+            if(index < 0 || index >= size) {
+                NetMusicListItem.setSongIndex(itemStack, size);
+            }
+            NetMusicListItem.setPlayMode(itemStack, PlayMode.LOOP);
+        }
+        if(size >= CONFIG.maxImportList){
             ci.cancel();
         }
     }

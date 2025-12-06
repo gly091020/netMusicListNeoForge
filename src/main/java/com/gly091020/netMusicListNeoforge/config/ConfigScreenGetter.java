@@ -47,6 +47,12 @@ public class ConfigScreenGetter {
                 .build());
         base.addEntry(entryBuilder.startBooleanToggle(Component.translatable("config.net_music_list.old_gui"),
                                 CONFIG.oldGUI).setSaveConsumer(b -> CONFIG.oldGUI = b).setDefaultValue(false).build());
+        if(!NetMusicListUtil.hasLoginNeed()){
+            base.addEntry(entryBuilder.startBooleanToggle(Component.translatable("config.net_music_list.no_vip"), CONFIG.noVIP)
+                    .setSaveConsumer(aBoolean -> CONFIG.noVIP = aBoolean)
+                    .setDefaultValue(false)
+                    .build());
+        }
 
         var hud = builder.getOrCreateCategory(Component.translatable("config.net_music_list.config.hud.title"));
         hud.addEntry(entryBuilder.startTextDescription(Component.translatable("config.net_music_list.config.select_hud.title")).build());
@@ -54,8 +60,8 @@ public class ConfigScreenGetter {
                         CONFIG.selectHudShowArtist)
                 .setDefaultValue(true).setSaveConsumer(b -> CONFIG.selectHudShowArtist = b).build());
         hud.addEntry(entryBuilder.startIntSlider(Component.translatable("config.net_music_list.select_hud_length"),
-                        CONFIG.selectHudCount, 3, 27)
-                        .setDefaultValue(5)
+                        CONFIG.selectHudCount, 3, 50)
+                        .setDefaultValue(10)
                         .setSaveConsumer(i -> CONFIG.selectHudCount = i)
                 .build());
         hud.addEntry(entryBuilder.startIntSlider(Component.translatable("config.net_music_list.select_hud_size"), (int)(CONFIG.selectHudSize * 10), 3, 15)

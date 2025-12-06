@@ -33,7 +33,13 @@ public class EnderMusicPlayerEntity extends BlockEntity {
     private final List<UUID> players = new ArrayList<>();
     public EnderMusicPlayerEntity(BlockPos blockPos, BlockState blockState) {
         super(NetMusicList.ENDER_MUSIC_PLAYER_TYPE.get(), blockPos, blockState);
-        originalPlayer = new TileEntityMusicPlayer(blockPos, blockState);
+        // 看来这种方式已经不太好了，等我重写吧
+        originalPlayer = new TileEntityMusicPlayer(blockPos, blockState){
+            @Override
+            public boolean isValidBlockState(@NotNull BlockState state) {
+                return state.is(NetMusicList.ENDER_MUSIC_PLAYER.get());
+            }
+        };
     }
 
     public ItemStackHandler getPlayerInv() {
