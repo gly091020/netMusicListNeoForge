@@ -1,10 +1,9 @@
 package com.gly091020.netMusicListNeoforge.packet;
 
 import com.gly091020.netMusicListNeoforge.NetMusicList;
-import com.gly091020.netMusicListNeoforge.item.MusicPlayerContainer;
 import com.gly091020.netMusicListNeoforge.item.NetMusicListItem;
 import com.gly091020.netMusicListNeoforge.item.NetMusicPlayerItem;
-import com.gly091020.netMusicListNeoforge.item.component.MusicListComponent;
+import com.gly091020.netMusicListNeoforge.item.components.MusicPlayerComponent;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -14,51 +13,62 @@ import static com.gly091020.netMusicListNeoforge.NetMusicList.MUSIC_LIST_ITEM;
 import static com.gly091020.netMusicListNeoforge.NetMusicList.MUSIC_PLAYER_ITEM;
 
 public class ServerHandler {
-    public static void handleServerPlayerPlayPacket(PlayerPlayMusicCTSPacket packet, IPayloadContext handler){
-        PacketDistributor.sendToAllPlayers(new PlayerPlayMusicSTCPacket(packet.playerID(), packet.playUrl(), packet.info(), packet.slot(), packet.uuid()));
+    public static void handleServerMusicListDataPacket(MusicListDataPacket packet, IPayloadContext ctx) {
+        ctx.enqueueWork(() -> {
+            Player player = ctx.player();
+            ItemStack stack = player.getMainHandItem();
+            if (stack.is(MUSIC_LIST_ITEM.get())) {
+                NetMusicListItem.setSongIndex(stack, packet.index());
+                NetMusicListItem.setPlayMode(stack, packet.playMode());
+            }
+        });
+    }
+    public static void handleServerDeleteMusicDataPacket(DeleteMusicDataPacket packet, IPayloadContext ctx){
+        ctx.enqueueWork(() -> {
+            Player player = ctx.player();
+            ItemStack stack = player.getMainHandItem();
+            if (stack.is(MUSIC_LIST_ITEM.get())) {
+                NetMusicListItem.deleteSong(stack, packet.index());
+            }
+        });
     }
 
-    public static void handleStopMusicCTSPacket(StopMusicCTSPacket packet, IPayloadContext context){
-        PacketDistributor.sendToAllPlayers(new StopMusicSTCPacket(packet.uuid()));
+    public static void handleServerMoveMusicDataPacket(MoveMusicDataPacket packet, IPayloadContext ctx){
+        ctx.enqueueWork(() -> {
+            Player player = ctx.player();
+            ItemStack stack = player.getMainHandItem();
+            if (stack.is(MUSIC_LIST_ITEM.get())) {
+                NetMusicListItem.moveSong(stack, packet.fromIndex(), packet.toIndex());
+            }
+        });
     }
 
-    public static void handleUpdatePlayerMusicPacket(UpdatePlayerMusicPacket packet, IPayloadContext context){
-        var stack = context.player().getInventory().getItem(packet.slot());
-        if(stack.is(MUSIC_PLAYER_ITEM)){
-            var container = new MusicPlayerContainer(stack);
+    public static void handleServerPlayerPlayPacket(PlayerPlayMusicPacket packet, IPayloadContext ctx){
+        PacketDistributor.sendToAllPlayers(packet);
+    }
+
+    public static void handleServerUpdateMusicPacket(UpdatePlayerMusicPacket packet, IPayloadContext ctx){
+        var player = ctx.player();
+        var stack = player.getInventory().getItem(packet.slot());
+        if(stack.is(MUSIC_PLAYER_ITEM.get())){
+            var container = NetMusicPlayerItem.getContainer(stack);
             var stack1 = container.getItem(0);
-            var c = stack1.getOrDefault(NetMusicList.MUSIC_LIST_COMPONENT, MusicListComponent.getDefault());
-            stack1.set(NetMusicList.MUSIC_LIST_COMPONENT, new MusicListComponent(c.songList(), c.playMode(), packet.index()));
+            NetMusicListItem.setSongIndex(stack1, packet.index());
             container.setItem(0, stack1);
-            stack.set(NetMusicList.MUSIC_PLAYER_UUID, packet.uuid());
-            var uuid = packet.uuid();
-            stack.set(NetMusicList.MUSIC_PLAYER_UUID, uuid);
-            NetMusicPlayerItem.playSound(stack, context.player(), packet.slot());
+            NetMusicPlayerItem.playSound(stack, player, packet.slot());
         }
     }
 
-    public static void handleServerMusicListDataPacket(MusicListDataPacket packet, IPayloadContext handler) {
-        Player player = handler.player();
-        ItemStack stack = player.getMainHandItem();
-        if (stack.is(MUSIC_LIST_ITEM.get())) {
-            NetMusicListItem.setSongIndex(stack, packet.index());
-            NetMusicListItem.setPlayMode(stack, packet.playMode());
+    public static void handlePlayerUpdateTickPacket(UpdateMusicTickCTSPacket packet, IPayloadContext ctx){
+        var player = ctx.player();
+        var stack = player.getInventory().getItem(packet.slot());
+        if(stack.is(MUSIC_PLAYER_ITEM.get())){
+            var c = stack.getOrDefault(NetMusicList.MUSIC_PLAYER_COMPONENT, MusicPlayerComponent.getInstance());
+            stack.set(NetMusicList.MUSIC_PLAYER_COMPONENT, new MusicPlayerComponent(packet.tick(), c.shadowTick(), c.waitSong()));
         }
     }
 
-    public static void handleServerDeleteMusicDataPacket(DeleteMusicDataPacket packet, IPayloadContext handler){
-        Player player = handler.player();
-        ItemStack stack = player.getMainHandItem();
-        if (stack.is(MUSIC_LIST_ITEM.get())) {
-            NetMusicListItem.deleteSong(stack, packet.index());
-        }
-    }
-
-    public static void handleServerMoveMusicDataPacket(MoveMusicDataPacket packet, IPayloadContext handler){
-        Player player = handler.player();
-        ItemStack stack = player.getMainHandItem();
-        if (stack.is(MUSIC_LIST_ITEM.get())) {
-            NetMusicListItem.moveSong(stack, packet.fromIndex(), packet.toIndex());
-        }
+    public static void handleStopMusicPacket(StopMusicPacketServer packet, IPayloadContext ctx){
+        PacketDistributor.sendToAllPlayers(new StopMusicPacket(packet.playerID(),packet.url()));
     }
 }

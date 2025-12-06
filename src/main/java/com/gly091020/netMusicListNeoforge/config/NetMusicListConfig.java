@@ -6,9 +6,20 @@ import me.shedaniel.autoconfig.annotation.Config;
 
 @Config(name = NetMusicList.ModID)
 public class NetMusicListConfig implements ConfigData {
-    public boolean enableEtched = true;
-    public boolean oldGUI = false;
+    public boolean debug = false;
+
     public boolean musicHUD = true;
+    public boolean notPauseSoundOnGamePause = false;
     public int x = 10;
     public int y = 10;
+    public int maxImportList = 300;
+    public boolean enableCache = false;
+    public boolean globalCache = false;
+
+    public float selectHudSize = 0.7f;
+    public int selectHudCount = 5;
+    public boolean selectHudShowArtist = true;
+    public boolean glowingText = false;
+
+    public boolean oldGUI = false;
 }

@@ -1,95 +1,90 @@
 package com.gly091020.netMusicListNeoforge.packet;
 
+import net.minecraft.network.protocol.PacketFlow;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
+@EventBusSubscriber
 public class PacketRegistry {
-    public static void registryServer(final RegisterPayloadHandlersEvent event){
-        var CHANNEL = event.registrar("1.3");
-        CHANNEL.commonToServer(
-                DeleteMusicDataPacket.TYPE,
-                DeleteMusicDataPacket.STREAM_CODEC,
-                ServerHandler::handleServerDeleteMusicDataPacket
-        );
-        CHANNEL.commonToServer(
+    @SubscribeEvent
+    public static void register(final RegisterPayloadHandlersEvent event) {
+        final PayloadRegistrar registrar = event.registrar("1.6"); // 协议版本
+
+        registrar.playToServer(
                 MusicListDataPacket.TYPE,
                 MusicListDataPacket.STREAM_CODEC,
                 ServerHandler::handleServerMusicListDataPacket
         );
 
-        CHANNEL.commonToServer(MoveMusicDataPacket.TYPE,
-                MoveMusicDataPacket.STREAM_CODEC,
-                ServerHandler::handleServerMoveMusicDataPacket
-        );
-
-        CHANNEL.commonToServer(
-                PlayerPlayMusicCTSPacket.TYPE,
-                PlayerPlayMusicCTSPacket.STREAM_CODEC,
-                ServerHandler::handleServerPlayerPlayPacket
-        );
-        CHANNEL.commonToServer(
-                StopMusicCTSPacket.TYPE,
-                StopMusicCTSPacket.STREAM_CODEC,
-                ServerHandler::handleStopMusicCTSPacket
-        );
-        CHANNEL.commonToServer(
-                UpdatePlayerMusicPacket.TYPE,
-                UpdatePlayerMusicPacket.STREAM_CODEC,
-                ServerHandler::handleUpdatePlayerMusicPacket
-        );
-        CHANNEL.commonToClient(
-                StopMusicSTCPacket.TYPE,
-                StopMusicSTCPacket.STREAM_CODEC,
-                (packet, content) -> {}
-        );
-        CHANNEL.commonToClient(
-                PlayerPlayMusicSTCPacket.TYPE,
-                PlayerPlayMusicSTCPacket.STREAM_CODEC,
-                (packet, content) -> {}
-        );
-    }
-
-    public static void registryClient(final RegisterPayloadHandlersEvent event){
-        var CHANNEL = event.registrar("1.3");
-        CHANNEL.commonToServer(
+        registrar.playToServer(
                 DeleteMusicDataPacket.TYPE,
                 DeleteMusicDataPacket.STREAM_CODEC,
                 ServerHandler::handleServerDeleteMusicDataPacket
         );
-        CHANNEL.commonToServer(
-                MusicListDataPacket.TYPE,
-                MusicListDataPacket.STREAM_CODEC,
-                ServerHandler::handleServerMusicListDataPacket
-        );
 
-        CHANNEL.commonToServer(MoveMusicDataPacket.TYPE,
+        registrar.playToServer(
+                MoveMusicDataPacket.TYPE,
                 MoveMusicDataPacket.STREAM_CODEC,
                 ServerHandler::handleServerMoveMusicDataPacket
         );
 
-        CHANNEL.commonToServer(
-                PlayerPlayMusicCTSPacket.TYPE,
-                PlayerPlayMusicCTSPacket.STREAM_CODEC,
-                ServerHandler::handleServerPlayerPlayPacket
-        );
-        CHANNEL.commonToServer(
-                StopMusicCTSPacket.TYPE,
-                StopMusicCTSPacket.STREAM_CODEC,
-                ServerHandler::handleStopMusicCTSPacket
-        );
-        CHANNEL.commonToServer(
+        registrar.playToServer(
                 UpdatePlayerMusicPacket.TYPE,
                 UpdatePlayerMusicPacket.STREAM_CODEC,
-                ServerHandler::handleUpdatePlayerMusicPacket
+                ServerHandler::handleServerUpdateMusicPacket
         );
-        CHANNEL.commonToClient(
-                StopMusicSTCPacket.TYPE,
-                StopMusicSTCPacket.STREAM_CODEC,
-                ClientHandler::handleStopMusicSTCPacket
+
+        registrar.playToServer(
+                UpdateMusicTickCTSPacket.TYPE,
+                UpdateMusicTickCTSPacket.STREAM_CODEC,
+                ServerHandler::handlePlayerUpdateTickPacket
         );
-        CHANNEL.commonToClient(
-                PlayerPlayMusicSTCPacket.TYPE,
-                PlayerPlayMusicSTCPacket.STREAM_CODEC,
-                ClientHandler::handleClientPlayerPlayPacket
+
+        registrar.playToServer(
+                StopMusicPacketServer.TYPE,
+                StopMusicPacketServer.STREAM_CODEC,
+                ServerHandler::handleStopMusicPacket
         );
+
+        registrar.playBidirectional(
+                PlayerPlayMusicPacket.TYPE,
+                PlayerPlayMusicPacket.STREAM_CODEC,
+                (playerPlayMusicPacket, iPayloadContext) -> {
+                    if(iPayloadContext.flow() == PacketFlow.SERVERBOUND){
+                        ServerHandler.handleServerPlayerPlayPacket(playerPlayMusicPacket, iPayloadContext);
+                    }else{
+                        ClientHandler.handleClientPlayerPlayPacket(playerPlayMusicPacket, iPayloadContext);
+                    }
+                }
+        );
+
+        if(FMLEnvironment.dist.isClient()){
+            registrar.playToClient(
+                    PlayEnderMusicPlayerPacket.TYPE,
+                    PlayEnderMusicPlayerPacket.STREAM_CODEC,
+                    ClientHandler::handleClientEnderPlayerPlayPacket
+            );
+
+            registrar.playToClient(
+                    StopMusicPacket.TYPE,
+                    StopMusicPacket.STREAM_CODEC,
+                    ClientHandler::handleStopMusicPacket
+            );
+        }else{
+            registrar.playToClient(
+                    PlayEnderMusicPlayerPacket.TYPE,
+                    PlayEnderMusicPlayerPacket.STREAM_CODEC,
+                    (playEnderMusicPlayerPacket, iPayloadContext) -> {}
+            );
+
+            registrar.playToClient(
+                    StopMusicPacket.TYPE,
+                    StopMusicPacket.STREAM_CODEC,
+                    (playEnderMusicPlayerPacket, iPayloadContext) -> {}
+            );
+        }
     }
 }

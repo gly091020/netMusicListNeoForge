@@ -5,10 +5,14 @@ import com.github.tartaricacid.netmusic.client.audio.NetMusicAudioStream;
 import com.github.tartaricacid.netmusic.init.InitItems;
 import com.github.tartaricacid.netmusic.init.InitSounds;
 import com.github.tartaricacid.netmusic.item.ItemMusicCD;
+import com.github.tartaricacid.netmusic.network.NetworkHandler;
 import com.gly091020.netMusicListNeoforge.NetMusicList;
-import com.gly091020.netMusicListNeoforge.client.MusicInfoHud;
 import com.gly091020.netMusicListNeoforge.item.NetMusicListItem;
 import com.gly091020.netMusicListNeoforge.item.NetMusicPlayerItem;
+import com.gly091020.netMusicListNeoforge.item.components.MusicPlayerComponent;
+import com.gly091020.netMusicListNeoforge.packet.StopMusicPacketServer;
+import com.gly091020.netMusicListNeoforge.packet.UpdateMusicTickCTSPacket;
+import com.gly091020.netMusicListNeoforge.util.NetMusicListUtil;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -20,22 +24,24 @@ import net.minecraft.client.sounds.SoundBufferLibrary;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Player;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.IOException;
 import java.net.URL;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
-@OnlyIn(Dist.CLIENT)
 public class PlayerNetMusicSound extends AbstractTickableSoundInstance {
     final Player player;
     final URL url;
     final int countTick;
     int tick = 0;
     final int slot;
+
+    @Nullable
+    String clientUrl;
 
     public PlayerNetMusicSound(Player player, URL songUrl, int second, int slot) {
         super(InitSounds.NET_MUSIC.get(), SoundSource.RECORDS, SoundInstance.createUnseededRandom());
@@ -47,55 +53,110 @@ public class PlayerNetMusicSound extends AbstractTickableSoundInstance {
         this.y = player.getY();
         this.z = player.getZ();
         this.slot = slot;
+
+        // 我终于搞清楚relative怎么用了
+        // 不用relative会导致声音不稳定
+        if(isClientPlayer()){
+            attenuation = Attenuation.NONE;
+            relative = true;
+            x = 0;
+            y = 0;
+            z = 0;
+        }else{
+            relative = false;
+            attenuation = Attenuation.LINEAR;
+        }
     }
 
     @Override
     public void tick() {
         if(player.isRemoved()){
-            stop();
+            stopMusic();
         }
 
-        var itemStack = player.getInventory().getItem(slot);
-        if(!itemStack.is(NetMusicList.MUSIC_PLAYER_ITEM.get())){
-            stop();
-        }
-        itemStack = NetMusicPlayerItem.getContainer(itemStack).getItem(0);
-
-        if(itemStack.is(InitItems.MUSIC_CD.get())){
-            if(ItemMusicCD.getSongInfo(itemStack) == null) {
-                stop();
+        if(isClientPlayer()){
+            var itemStack = player.getInventory().getItem(slot);
+            var c = itemStack.getOrDefault(NetMusicList.MUSIC_PLAYER_COMPONENT, MusicPlayerComponent.getInstance()); //没错，这里可以读取tick的！，可惜不能写入，不然更好看
+            if (c.tick() <= 1 && c.tick() > -1){
+                stopMusic();
             }
-        }else if(itemStack.is(NetMusicList.MUSIC_LIST_ITEM.get())){
-            var info = NetMusicListItem.getSongInfo(itemStack);
-            if(info == null) {
-                stop();
+            if (!itemStack.is(NetMusicList.MUSIC_PLAYER_ITEM.get())) {
+                stopMusic();
             }
-        }else{
-            stop();
+            itemStack = NetMusicPlayerItem.getContainer(itemStack).getItem(0);
+            if (itemStack.is(InitItems.MUSIC_CD.get())) {
+                if (ItemMusicCD.getSongInfo(itemStack) == null) {
+                    stopMusic();
+                }
+            } else if (itemStack.is(NetMusicList.MUSIC_LIST_ITEM.get())) {
+                var info = NetMusicListItem.getSongInfo(itemStack);
+                if (info == null) {
+                    stopMusic();
+                } else {
+                    if (clientUrl == null) clientUrl = info.songUrl;
+                    if (!Objects.equals(clientUrl, info.songUrl)) {
+                        stopMusic();
+                    }
+                }
+            } else {
+                stopMusic();
+            }
         }
 
         ClientLevel level = Minecraft.getInstance().level;
         if(level == null){
-            stop();
+            stopMusic();
         }else{
             ++this.tick;
-            if (this.tick > this.countTick + 50){
-                stop();
+            if (this.tick >= this.countTick+200){ //这个给你留着做纪念意义吧，虽然可能永远都执行不了了
+                stopMusic();
             }else{
-                this.x = player.getX();
-                this.y = player.getY();
-                this.z = player.getZ();
+                if(!isClientPlayer()){
+                    // 之前声音偏左的问题是两个bug的结合，不愧是我
+                    this.x = player.getX();
+                    this.y = player.getY();
+                    this.z = player.getZ();
+                }
                 if (level.getGameTime() % 8L == 0L) {
                     for(int i = 0; i < 2; ++i) {
-                        level.addParticle(ParticleTypes.NOTE, this.x - (double)0.5F + level.random.nextDouble(), this.y + (double)1.5F + level.random.nextDouble(), this.z - (double)0.5F + level.random.nextDouble(), level.random.nextGaussian(), level.random.nextGaussian(), level.random.nextInt(3));
+                        level.addParticle(ParticleTypes.NOTE, player.getX() - (double)0.5F + level.random.nextDouble(), player.getY() + (double)2F + level.random.nextDouble(), player.getZ() - (double)0.5F + level.random.nextDouble(), level.random.nextGaussian(), level.random.nextGaussian(), level.random.nextInt(3));
                     }
                 }
             }
         }
-//        if(isStopped() && player == Minecraft.getInstance().player &&
-//                MusicInfoHud.getInfo() == NetMusicListItem.getSongInfo(itemStack)){
-//            MusicInfoHud.clearInfo();
-//        }
+
+        if(tick % 20 == 0 && isClientPlayer()){
+            NetworkHandler.sendToServer(new UpdateMusicTickCTSPacket(slot, countTick - tick));
+        }
+
+        if(isStopped() && isClientPlayer()){
+            NetworkHandler.sendToServer(new UpdateMusicTickCTSPacket(slot, -1));
+        }
+
+        if(NetMusicListUtil.globalStopMusic){
+            this.volume = 0;
+        }else{
+            this.volume = 4f;
+        }
+    }
+
+    public void stopMusic(){
+        if(!isStopped() && isClientPlayer()){
+
+            NetworkHandler.sendToServer(new StopMusicPacketServer(player.getId(), url.toString()));
+        }
+        stop();
+    }
+
+    public void onlyTickUpdate(){
+        tick++;
+        if(tick % 20 == 0 && isClientPlayer()){
+            NetworkHandler.sendToServer(new UpdateMusicTickCTSPacket(slot, countTick - tick));
+        }
+
+        if(isStopped() && isClientPlayer()){
+            NetworkHandler.sendToServer(new UpdateMusicTickCTSPacket(slot, -1));
+        }
     }
 
     @Override
@@ -110,7 +171,14 @@ public class PlayerNetMusicSound extends AbstractTickableSoundInstance {
         }, Util.backgroundExecutor());
     }
 
-    public void stopMusic(){
-        stop();
+    public boolean isClientPlayer(){
+        if (Minecraft.getInstance().player != null) {
+            return player.getUUID() == Minecraft.getInstance().player.getUUID();
+        }
+        return false;
+    }
+
+    public Player getPlayer() {
+        return player;
     }
 }

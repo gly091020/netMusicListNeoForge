@@ -3,6 +3,7 @@ package com.gly091020.netMusicListNeoforge.config;
 import me.shedaniel.clothconfig2.api.AbstractConfigListEntry;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.network.chat.Component;
@@ -56,7 +57,8 @@ public class ButtonEntry extends AbstractConfigListEntry<Object> {
     public void render(GuiGraphics graphics, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean isHovered, float delta) {
         super.render(graphics, index, y, x, entryWidth, entryHeight, mouseX, mouseY, isHovered, delta);
         button.setPosition(x, y);
-        button.setSize(entryWidth, entryHeight);
+        button.setWidth(entryWidth);
+        button.setHeight(entryHeight);
         button.render(graphics, mouseX, mouseY, delta);
     }
 
@@ -84,5 +86,9 @@ public class ButtonEntry extends AbstractConfigListEntry<Object> {
     @Override
     public @NotNull List<? extends GuiEventListener> children() {
         return List.of(button);
+    }
+
+    public void setTooltip(Tooltip tooltip){
+        button.setTooltip(tooltip);
     }
 }

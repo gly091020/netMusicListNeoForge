@@ -1,29 +1,31 @@
 package com.gly091020.netMusicListNeoforge.packet;
 
 import com.gly091020.netMusicListNeoforge.NetMusicList;
-import io.netty.buffer.ByteBuf;
-import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 
-public record UpdatePlayerMusicPacket(int index, int slot, String uuid) implements CustomPacketPayload {
-    public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(NetMusicList.ModID,
-            "update_player_music_packet");
-    public static Type<UpdatePlayerMusicPacket> TYPE = new Type<>(ID);
-    public static final StreamCodec<ByteBuf, UpdatePlayerMusicPacket> STREAM_CODEC = StreamCodec.composite(
-            ByteBufCodecs.INT,
-            UpdatePlayerMusicPacket::index,
-            ByteBufCodecs.INT,
-            UpdatePlayerMusicPacket::slot,
-            ByteBufCodecs.STRING_UTF8,
-            UpdatePlayerMusicPacket::uuid,
-            UpdatePlayerMusicPacket::new
+public record UpdatePlayerMusicPacket(int index, int slot) implements CustomPacketPayload {
+    public static final CustomPacketPayload.Type<UpdatePlayerMusicPacket> TYPE = new CustomPacketPayload.Type<>(
+            ResourceLocation.fromNamespaceAndPath(NetMusicList.ModID, "update_player_music_packet"));
+
+    public static final StreamCodec<FriendlyByteBuf, UpdatePlayerMusicPacket> STREAM_CODEC = StreamCodec.of(
+            UpdatePlayerMusicPacket::encode,
+            UpdatePlayerMusicPacket::decode
     );
 
     @Override
     public @NotNull Type<? extends CustomPacketPayload> type() {
         return TYPE;
+    }
+    public static void encode(FriendlyByteBuf buf, UpdatePlayerMusicPacket packet) {
+        buf.writeInt(packet.index);
+        buf.writeInt(packet.slot);
+    }
+
+    public static UpdatePlayerMusicPacket decode(FriendlyByteBuf buf) {
+        return new UpdatePlayerMusicPacket(buf.readInt(), buf.readInt());
     }
 }

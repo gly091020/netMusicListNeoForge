@@ -3,19 +3,20 @@ package com.gly091020.netMusicListNeoforge.item;
 
 import com.github.tartaricacid.netmusic.init.InitItems;
 import com.github.tartaricacid.netmusic.item.ItemMusicCD;
+import com.github.tartaricacid.netmusic.network.NetworkHandler;
 import com.gly091020.netMusicListNeoforge.NetMusicList;
-import com.gly091020.netMusicListNeoforge.NetMusicListUtil;
-import com.gly091020.netMusicListNeoforge.client.MusicInfoHud;
-import com.gly091020.netMusicListNeoforge.client.MusicListLayer;
-import com.gly091020.netMusicListNeoforge.item.component.MusicListComponent;
-import com.gly091020.netMusicListNeoforge.packet.PlayerPlayMusicCTSPacket;
-import com.gly091020.netMusicListNeoforge.packet.StopMusicCTSPacket;
+import com.gly091020.netMusicListNeoforge.hud.MusicListLayer;
+import com.gly091020.netMusicListNeoforge.item.components.MusicPlayerComponent;
+import com.gly091020.netMusicListNeoforge.packet.PlayerPlayMusicPacket;
 import com.gly091020.netMusicListNeoforge.packet.UpdatePlayerMusicPacket;
+import com.gly091020.netMusicListNeoforge.util.NetMusicListUtil;
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.SlotAccess;
 import net.minecraft.world.entity.player.Player;
@@ -24,12 +25,12 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.component.ItemContainerContents;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
-import java.util.UUID;
 
 public class NetMusicPlayerItem extends Item{
     public NetMusicPlayerItem() {
@@ -40,12 +41,13 @@ public class NetMusicPlayerItem extends Item{
     public boolean overrideOtherStackedOnMe(@NotNull ItemStack stack, @NotNull ItemStack stack1,
                                             @NotNull Slot slot, @NotNull ClickAction action,
                                             @NotNull Player player, @NotNull SlotAccess access) {
-        if(action == ClickAction.SECONDARY && !getContainer(stack).isEmpty()){
+        if(action == ClickAction.SECONDARY && !getContainer(stack).isEmpty() && access.get().isEmpty()){
             access.set(getContainer(stack).removeItem(0, 1));
-            stack.set(NetMusicList.MUSIC_PLAYER_TICK, -1);
+            var c = stack.getOrDefault(NetMusicList.MUSIC_PLAYER_COMPONENT, MusicPlayerComponent.getInstance());
+            stack.set(NetMusicList.MUSIC_PLAYER_COMPONENT, new MusicPlayerComponent(-1, c.shadowTick(), c.waitSong()));
             return true;
         }
-        if(action == ClickAction.PRIMARY && ItemMusicCD.getSongInfo(stack1) != null && getContainer(stack).isEmpty()){
+        if(action == ClickAction.PRIMARY && ItemMusicCD.getSongInfo(stack1) != null & getContainer(stack).isEmpty()){
             getContainer(stack).setItem(0, stack1);
             access.set(ItemStack.EMPTY);
             playSound(stack, player, slot.getSlotIndex());
@@ -60,25 +62,44 @@ public class NetMusicPlayerItem extends Item{
             return;
         }
         var info = ItemMusicCD.getSongInfo(i);
-        if(info == null){return;}
-        if(info.vip && player.level().isClientSide){
+        if(info == null)return;
+        if(!NetMusicListUtil.hasLoginNeed() && info.vip && player.level().isClientSide){
             player.sendSystemMessage(Component.translatable("message.netmusic.music_player.need_vip")
                     .withStyle(ChatFormatting.RED));
-            stack.set(NetMusicList.MUSIC_PLAYER_TICK, 0);
-            MusicInfoHud.clearInfo();
             return;
         }
-        stack.set(NetMusicList.MUSIC_PLAYER_TICK, info.songTime * 20);
+        var c = stack.getOrDefault(NetMusicList.MUSIC_PLAYER_COMPONENT, MusicPlayerComponent.getInstance());
+        var shadowTick = c.shadowTick();
+        if(shadowTick < 0){shadowTick = info.songTime * 20;} //避免出现什么奇怪的BUG
+        stack.set(NetMusicList.MUSIC_PLAYER_COMPONENT, new MusicPlayerComponent(info.songTime * 20, shadowTick, 0)); //哦！在此重置！(Dj音）
+
         if(!player.level().isClientSide){return;}
-        PacketDistributor.sendToServer(new PlayerPlayMusicCTSPacket(player.getId(), info.songUrl, info, slot, stack.getOrDefault(NetMusicList.MUSIC_PLAYER_UUID, UUID.randomUUID().toString())));
+        NetworkHandler.sendToServer(new PlayerPlayMusicPacket(player.getId(), info.songUrl, info.songTime, info.songName, slot, info));
     }
 
-    public static MusicPlayerContainer getContainer(ItemStack stack){
-        return new MusicPlayerContainer(stack);
+    public static void sendPacket(ItemStack stack, Player player, int slot){
+        var i = getContainer(stack).getItem(0);
+        if(!i.is(InitItems.MUSIC_CD.get()) && !i.is(NetMusicList.MUSIC_LIST_ITEM.get())){
+            return;
+        }
+        var info = ItemMusicCD.getSongInfo(i);
+        if(info == null)return;
+        if(!NetMusicListUtil.hasLoginNeed() && info.vip){
+            return;
+        }
+        if(!player.level().isClientSide){
+            PacketDistributor.sendToAllPlayers(new PlayerPlayMusicPacket(player.getId(), info.songUrl, info.songTime, info.songName, slot, info));
+        }else {
+            NetworkHandler.sendToServer(new PlayerPlayMusicPacket(player.getId(), info.songUrl, info.songTime, info.songName, slot, info));
+        }
+    }
+
+    public static PlayerContainer getContainer(ItemStack stack){
+        return new PlayerContainer(stack);
     }
 
     @Override
-    public void appendHoverText(@NotNull ItemStack stack, @NotNull TooltipContext context, @NotNull List<Component> tooltipComponents, @NotNull TooltipFlag tooltipFlag) {
+    public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
         Component t;
         var c = getContainer(stack);
         if(c.isEmpty()){
@@ -93,7 +114,7 @@ public class NetMusicPlayerItem extends Item{
 
     @Override
     public @NotNull Component getName(@NotNull ItemStack stack) {
-        return Component.translatable("item.net_music_player.name");
+        return Component.translatable("item.net_music_list.music_player");
     }
 
     @Override
@@ -107,9 +128,6 @@ public class NetMusicPlayerItem extends Item{
     }
 
     public static void nextMusic(ItemStack stack, Player player, int slot){
-        // todo:下一首功能只能循环播放
-        // 这个bug还是让有缘人来改吧
-        // 能跑就别动
         var i = getContainer(stack).getItem(0);
         if(i.is(NetMusicList.MUSIC_LIST_ITEM.get())){
             NetMusicListItem.nextMusic(i);
@@ -120,15 +138,23 @@ public class NetMusicPlayerItem extends Item{
     @Override
     public void inventoryTick(@NotNull ItemStack stack, @NotNull Level level, @NotNull Entity entity, int slot, boolean b) {
         super.inventoryTick(stack, level, entity, slot, b);
-        var t = stack.getOrDefault(NetMusicList.MUSIC_PLAYER_TICK, 0) - 1;
-        if(t < 0){return;}
-        if(entity instanceof Player player && 0 < t && t < 16 && t % 5 == 0){
-            stack.set(NetMusicList.MUSIC_PLAYER_TICK, -1);
+        //给你稍微重构了下，现在就是正常的结束后重新播放了
+        var c = stack.getOrDefault(NetMusicList.MUSIC_PLAYER_COMPONENT, MusicPlayerComponent.getInstance());
+        var t = c.tick();
+        var shadowTick = c.shadowTick(); //这个是记录上一个tick的值，（影子是光的上一步）
+        var waitSong = c.waitSong(); //这个是保证在声音结束后才会下一首
+        if(entity instanceof Player player && waitSong==2 && t<1){ //复杂度比你的稍微高了一点点，但是稳定性应该是高了不少
             nextMusic(stack, player, slot);
             return;
         }
-        stack.set(NetMusicList.MUSIC_PLAYER_TICK, t);
-        stack.setPopTime(0);
+        if(t==-1&&shadowTick>-1&&shadowTick<4){
+            waitSong++;
+        }
+        if(t>0){
+            shadowTick = t;
+            t--;
+        }
+        stack.set(NetMusicList.MUSIC_PLAYER_COMPONENT, new MusicPlayerComponent(t, shadowTick, waitSong));
     }
 
     @Override
@@ -140,25 +166,34 @@ public class NetMusicPlayerItem extends Item{
             NetMusicListUtil.playSound(SoundEvents.EXPERIENCE_ORB_PICKUP);
             var container = getContainer(player.getItemInHand(usedHand));
             var item = container.getItem(0);
-            var c = item.getOrDefault(NetMusicList.MUSIC_LIST_COMPONENT, MusicListComponent.getDefault());
-            if(MusicListLayer.index != c.index()){
-                item.set(NetMusicList.MUSIC_LIST_COMPONENT, new MusicListComponent(c.songList(), c.playMode(), MusicListLayer.index));
+            var index = NetMusicListItem.getSongIndex(item);
+            if(MusicListLayer.index != index){
+                NetMusicListItem.setSongIndex(item, MusicListLayer.index);
                 container.setItem(0, item);
-                var uuid = player.getItemInHand(usedHand).get(NetMusicList.MUSIC_PLAYER_UUID);
-                if(uuid != null){
-                    PacketDistributor.sendToServer(new StopMusicCTSPacket(uuid));
-                }
-                var uuid1 = UUID.randomUUID().toString();
-                player.getItemInHand(usedHand).set(NetMusicList.MUSIC_PLAYER_UUID, uuid1);
                 var slot = player.getInventory().findSlotMatchingItem(player.getItemInHand(usedHand));
                 playSound(player.getItemInHand(usedHand), player, slot);
-                PacketDistributor.sendToServer(new UpdatePlayerMusicPacket(MusicListLayer.index,
-                        slot, player.getItemInHand(usedHand).get(NetMusicList.MUSIC_PLAYER_UUID)));
+                NetworkHandler.sendToServer(new UpdatePlayerMusicPacket(MusicListLayer.index,
+                        slot));
             }
             MusicListLayer.isRender = false;
             return InteractionResultHolder.success(player.getMainHandItem());
         }
         MusicListLayer.isRender = true;
         return InteractionResultHolder.success(player.getMainHandItem());
+    }
+
+    public static class PlayerContainer extends SimpleContainer{
+        private final ItemStack stack;
+        public PlayerContainer(ItemStack stack) {
+            super(1);
+            this.stack = stack;
+            ItemContainerContents contents = stack.getOrDefault(DataComponents.CONTAINER, ItemContainerContents.EMPTY);
+            contents.copyInto(getItems());
+        }
+
+        @Override
+        public void setChanged() {
+            this.stack.set(DataComponents.CONTAINER, ItemContainerContents.fromItems(getItems()));
+        }
     }
 }

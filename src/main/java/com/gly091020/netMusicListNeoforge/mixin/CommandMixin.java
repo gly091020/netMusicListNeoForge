@@ -1,25 +1,24 @@
 package com.gly091020.netMusicListNeoforge.mixin;
 
 import com.github.tartaricacid.netmusic.NetMusic;
-import com.github.tartaricacid.netmusic.api.ExtraMusicList;
 import com.github.tartaricacid.netmusic.api.pojo.NetEaseMusicList;
 import com.github.tartaricacid.netmusic.command.NetMusicCommand;
 import com.github.tartaricacid.netmusic.item.ItemMusicCD;
 import com.gly091020.netMusicListNeoforge.NetMusicList;
-import com.gly091020.netMusicListNeoforge.NetMusicListUtil;
-import com.gly091020.netMusicListNeoforge.etched.EtchedRegistry;
 import com.gly091020.netMusicListNeoforge.item.NetMusicListItem;
+import com.gly091020.netMusicListNeoforge.util.CacheManager;
+import com.gly091020.netMusicListNeoforge.util.NetMusicListUtil;
 import com.google.gson.Gson;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.LongArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
+import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
-import net.neoforged.fml.ModList;
 import net.neoforged.fml.loading.FMLEnvironment;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -27,23 +26,53 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.ArrayList;
+import java.util.UUID;
 
 @Mixin(NetMusicCommand.class)
 public class CommandMixin {
-    @Inject(method = "get", at = @At("RETURN"))
+    @Inject(method = "get", at = @At("RETURN"), remap = false)
     private static void addCommand(CallbackInfoReturnable<LiteralArgumentBuilder<CommandSourceStack>> cir){
         if(FMLEnvironment.dist == Dist.DEDICATED_SERVER){return;}
         cir.getReturnValue().then(Commands.literal("music_list_to_item").then(Commands.argument("id",
                 LongArgumentType.longArg()).executes(CommandMixin::netMusicListNeoForge$toItem)));
-        if(ModList.get().isLoaded("etched") && !NetMusicListUtil.hasEtchedExtension()) {
-            cir.getReturnValue().then(Commands.literal("id_to_etched_item").then(Commands.argument("id",
-                    LongArgumentType.longArg()).executes(EtchedRegistry::idToItem)));
+        if(NetMusicList.CONFIG.enableCache){
+            cir.getReturnValue().then(Commands.literal("cache_all_music").then(Commands.argument("id",
+                    LongArgumentType.longArg()).executes(CommandMixin::netmusiclistforge$cacheAll)));
         }
     }
 
     @Unique
     private static final Gson netMusicListNeoForge$GSON = new Gson();
+
+    @Unique
+    private static int netmusiclistforge$cacheAll(CommandContext<CommandSourceStack> context){
+        if(context.getSource().getPlayer() == null){
+            return 0;
+        }
+        int count = 0;
+        try{
+            var id = LongArgumentType.getLong(context, "id");
+            var songs = NetMusicListUtil.getMusicList(id);
+            for(ItemMusicCD.SongInfo info: songs){
+                try {
+                    var songId = NetMusicListUtil.getIdFromInfo(info);
+                    var uuid = UUID.randomUUID().toString();
+                    if(!CacheManager.hasCache(songId)){
+                        CacheManager.startSongDownload(songId, uuid);
+                        CacheManager.startImgDownload(songId, uuid);
+                        CacheManager.startLycDownload(songId, uuid);
+                    }
+                    count++;
+                }catch (Exception ignored){}
+            }
+        } catch (Exception e) {
+            context.getSource().sendFailure(Component.literal(e.getMessage()).withStyle(ChatFormatting.RED));
+        }
+        int finalCount = count;
+        context.getSource().sendSuccess(() -> Component.literal(String.format("缓存中(共%s项)", finalCount * 3)),
+                false);
+        return count;
+    }
 
     @Unique
     private static int netMusicListNeoForge$toItem(CommandContext<CommandSourceStack> context){
@@ -57,29 +86,13 @@ public class CommandMixin {
                 withoutVip = BoolArgumentType.getBool(context, "withoutVIP");
             }catch (IllegalArgumentException ignored){}
 
-            var stack = new ItemStack(NetMusicList.MUSIC_LIST_ITEM, 1);
+            var stack = new ItemStack(NetMusicList.MUSIC_LIST_ITEM.get(), 1);
             NetMusicListItem.setSongIndex(stack, 0);
 
-            // 从网络音乐机里拿的代码
-            var SONGS = new ArrayList<ItemMusicCD.SongInfo>();
-            NetEaseMusicList pojo = netMusicListNeoForge$GSON.fromJson(NetMusic.NET_EASE_WEB_API.list(LongArgumentType.getLong(context, "id")), NetEaseMusicList.class);
-            int count = pojo.getPlayList().getTracks().size();
+            var id = LongArgumentType.getLong(context, "id");
+            NetEaseMusicList pojo = netMusicListNeoForge$GSON.fromJson(NetMusic.NET_EASE_WEB_API.list(id), NetEaseMusicList.class);
+            var SONGS = NetMusicListUtil.getMusicList(id);
             var name = pojo.getPlayList().getName();
-            int size = Math.min(pojo.getPlayList().getTrackIds().size(), 1000);
-            if (count < size) {
-                long[] ids = new long[size - count];
-
-                for(int i = count; i < size; ++i) {
-                    ids[i - count] = pojo.getPlayList().getTrackIds().get(i).getId();
-                }
-
-                String extraTrackInfo = NetMusic.NET_EASE_WEB_API.songs(ids);
-                ExtraMusicList extra = netMusicListNeoForge$GSON.fromJson(extraTrackInfo, ExtraMusicList.class);
-                pojo.getPlayList().getTracks().addAll(extra.getTracks());
-            }
-            for(NetEaseMusicList.Track track : pojo.getPlayList().getTracks()) {
-                SONGS.add(new ItemMusicCD.SongInfo(track));
-            }
 
             for(ItemMusicCD.SongInfo info: SONGS){
                 if(withoutVip && info.vip){continue;}

@@ -3,9 +3,9 @@ package com.gly091020.netMusicListNeoforge.item;
 import com.github.tartaricacid.netmusic.init.InitBlocks;
 import com.github.tartaricacid.netmusic.item.ItemMusicCD;
 import com.gly091020.netMusicListNeoforge.NetMusicList;
-import com.gly091020.netMusicListNeoforge.PlayMode;
 import com.gly091020.netMusicListNeoforge.client.MusicSelectionScreen;
-import com.gly091020.netMusicListNeoforge.item.component.MusicListComponent;
+import com.gly091020.netMusicListNeoforge.item.components.MusicListComponent;
+import com.gly091020.netMusicListNeoforge.util.PlayMode;
 import net.minecraft.ChatFormatting;
 import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
@@ -22,35 +22,25 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
 public class NetMusicListItem extends ItemMusicCD {
-    private static final String listKey = "NetMusicSongInfoList";
     public NetMusicListItem() {
         super();
     }
 
     @Override
-    public int getMaxStackSize(ItemStack stack) {
+    public int getMaxStackSize(@NotNull ItemStack stack) {
         return 1;
     }
 
     public static MusicListComponent getComponent(ItemStack stack){
-        if (stack.is(NetMusicList.MUSIC_LIST_ITEM.get())) {
-            return stack.getOrDefault(NetMusicList.MUSIC_LIST_COMPONENT.get(), MusicListComponent.getDefault());
-        }
-        return MusicListComponent.getDefault();
+        return stack.getOrDefault(NetMusicList.MUSIC_LIST_COMPONENT, MusicListComponent.getInstance());
     }
 
     public static List<SongInfo> getSongInfoList(ItemStack stack) {
-        if (stack.is(NetMusicList.MUSIC_LIST_ITEM.get())) {
-            MusicListComponent component = getComponent(stack);
-            return component.songList();
-        }
-
-        return new ArrayList<>();
+        return getComponent(stack).songInfos();
     }
 
     public static void nextMusic(ItemStack stack){
@@ -77,56 +67,52 @@ public class NetMusicListItem extends ItemMusicCD {
             return null;
         }
         var i = getSongIndex(stack);
-        if(i >= l.size()){return null;}
+        if(i >= 0 && i >= l.size()){return null;}
+        if(i < 0){return null;}
         return l.get(i);
     }
 
     public static Integer getSongIndex(ItemStack stack){
-        if (stack.is(NetMusicList.MUSIC_LIST_ITEM.get())) {
-            return getComponent(stack).index();
-        }
-        return -1;
+        return getComponent(stack).index();
     }
 
     public static void deleteSong(ItemStack stack, int index){
-        if (stack.is(NetMusicList.MUSIC_LIST_ITEM.get())) {
-             var c = getComponent(stack);
-             var c1 = new ArrayList<>(List.copyOf(c.songList()));
-             c1.remove(index);
-             stack.set(NetMusicList.MUSIC_LIST_COMPONENT.get(), new MusicListComponent(c1, c.playMode(), c.index()));
-        }
+        var c = getComponent(stack);
+        var l = new ArrayList<>(c.songInfos());
+        l.remove(index);
+        stack.set(NetMusicList.MUSIC_LIST_COMPONENT,
+                new MusicListComponent(l, c.playMode(), 0));
     }
 
     public static void moveSong(ItemStack stack, int from, int to){
-        if (stack.is(NetMusicList.MUSIC_LIST_ITEM.get())) {
-            var c = getComponent(stack);
-            var c1 = new ArrayList<>(List.copyOf(c.songList()));
-            Collections.swap(c1, from, to);
-            stack.set(NetMusicList.MUSIC_LIST_COMPONENT.get(), new MusicListComponent(c1, c.playMode(), c.index()));
-        }
+        var c = getComponent(stack);
+        var l = new ArrayList<>(c.songInfos());
+        var j = l.get(from);
+        l.set(from, l.get(to));
+        l.set(to, j);
+        stack.set(NetMusicList.MUSIC_LIST_COMPONENT,
+                new MusicListComponent(l, c.playMode(), c.index()));
     }
 
     public static void setSongIndex(ItemStack stack, Integer index){
-        if (stack.is(NetMusicList.MUSIC_LIST_ITEM.get())) {
-            var c = getComponent(stack);
-            var c1 = new MusicListComponent(c.songList(), c.playMode(), index);
-            stack.set(NetMusicList.MUSIC_LIST_COMPONENT.get(), c1);
-        }
+        var c = getComponent(stack);
+        stack.set(NetMusicList.MUSIC_LIST_COMPONENT,
+                new MusicListComponent(c.songInfos(), c.playMode(), index));
     }
 
     public static ItemStack setSongInfo(SongInfo info, ItemStack stack) {
-        if (stack.is(NetMusicList.MUSIC_LIST_ITEM.get())) {
-            var c = getComponent(stack);
-            var c1 = new ArrayList<>(List.copyOf(c.songList()));
-            if(c1.size() <= c.index()){
-                c1.add(info);
-                stack.set(NetMusicList.MUSIC_LIST_COMPONENT.get(), new MusicListComponent(c1, c.playMode(), c.index() + 1));
-            }else{
-                c1.set(c.index(), info);
-                stack.set(NetMusicList.MUSIC_LIST_COMPONENT.get(), new MusicListComponent(c1, c.playMode(), c.index()));
-            }
-        }
+        var c = getComponent(stack);
+        var l = new ArrayList<>(c.songInfos());
+        var index = c.index();
 
+        if(c.index() < 0 || c.index() >= l.size()) {
+            l.add(info);
+            index++;
+        } else
+            l.set(c.index(), info);
+
+        stack.set(NetMusicList.MUSIC_LIST_COMPONENT,
+                new MusicListComponent(l, c.playMode(), index));
         return stack;
     }
 
@@ -178,26 +164,35 @@ public class NetMusicListItem extends ItemMusicCD {
 
     public static void setPlayMode(ItemStack stack, PlayMode mode){
         var c = getComponent(stack);
-        var c1 = new MusicListComponent(c.songList(), mode, c.index());
-        stack.set(NetMusicList.MUSIC_LIST_COMPONENT.get(), c1);
+        stack.set(NetMusicList.MUSIC_LIST_COMPONENT,
+                new MusicListComponent(c.songInfos(), mode, c.index()));
     }
 
     @Override
     public @NotNull InteractionResult useOn(UseOnContext context) {
-        var stack = context.getItemInHand();
+        if(context.getPlayer() == null){return InteractionResult.PASS;}
+        var stack = context.getPlayer().getMainHandItem();
+        if(!stack.is(NetMusicList.MUSIC_LIST_ITEM.get())){
+            return InteractionResult.PASS;
+        }
         if(context.getLevel().getBlockState(context.getClickedPos()).is(InitBlocks.MUSIC_PLAYER.get())){
             if(getSongInfoList(stack).isEmpty()){return InteractionResult.PASS;}
             if(getSongIndex(stack) >= getSongInfoList(stack).size()){
                 setSongIndex(stack, getSongInfoList(stack).size() - 1);
             }
-            return InteractionResult.SUCCESS;
+            return InteractionResult.PASS;
         }
-        return InteractionResult.PASS;
+        if(context.getLevel().isClientSide){
+            var l = getSongInfoList(stack);
+            // 只要我直接移到新版本就行了（简单粗暴）
+            MusicSelectionScreen.open(l, getPlayMode(stack), getSongIndex(stack));
+        }
+        return InteractionResult.SUCCESS;
     }
 
     @Override
-    public @NotNull InteractionResultHolder<ItemStack> use(@NotNull Level level, @NotNull Player player, @NotNull InteractionHand usedHand) {
-        var stack = player.getItemInHand(usedHand);
+    public @NotNull InteractionResultHolder<ItemStack> use(@NotNull Level level, @NotNull Player player, @NotNull InteractionHand hand) {
+        var stack = player.getItemInHand(hand);
         if(!stack.is(NetMusicList.MUSIC_LIST_ITEM.get())){
             return InteractionResultHolder.pass(stack);
         }

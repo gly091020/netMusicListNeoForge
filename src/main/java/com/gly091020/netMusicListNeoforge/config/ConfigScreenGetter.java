@@ -1,14 +1,21 @@
 package com.gly091020.netMusicListNeoforge.config;
 
-import com.gly091020.netMusicListNeoforge.NetMusicListUtil;
+import com.gly091020.netMusicListNeoforge.NetMusicList;
+import com.gly091020.netMusicListNeoforge.client.CacheManagerScreen;
 import com.gly091020.netMusicListNeoforge.client.MoveHudScreen;
+import com.gly091020.netMusicListNeoforge.util.CacheManager;
+import com.gly091020.netMusicListNeoforge.util.NetMusicListUtil;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.gui.components.toasts.SystemToast;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-
-import java.util.Optional;
+import net.neoforged.fml.loading.FMLEnvironment;
 
 import static com.gly091020.netMusicListNeoforge.NetMusicList.CONFIG;
 
@@ -18,28 +25,100 @@ public class ConfigScreenGetter {
         var builder = ConfigBuilder.create();
         builder.setParentScreen(parent);
         builder.setTitle(Component.translatable("config.net_music_list.title"));
-        var category = builder.getOrCreateCategory(Component.empty());
         var entryBuilder = builder.entryBuilder();
 
-        category.addEntry(entryBuilder.startBooleanToggle(Component.translatable("config.net_music_list.enable_etched"),
-                        CONFIG.enableEtched).setErrorSupplier((b) -> {
-                    if(NetMusicListUtil.hasEtchedExtension() && b){
-                        return Optional.of(Component.translatable("config.net_music_list.enable_etched.error"));
-                    }
-                    return Optional.empty();
-                }).setDefaultValue(!NetMusicListUtil.hasEtchedExtension())
-                .setSaveConsumer(b -> CONFIG.enableEtched = b).requireRestart().build());
-        category.addEntry(entryBuilder.startBooleanToggle(Component.translatable("config.net_music_list.old_gui"),
-                        CONFIG.oldGUI).setSaveConsumer(b -> CONFIG.oldGUI = b).setDefaultValue(false)
+        var base = builder.getOrCreateCategory(Component.translatable("config.net_music_list.config.base.title"));
+
+        if(NetMusicListUtil.isGLY() || !FMLEnvironment.production){
+            base.addEntry(new ImageEntry(ResourceLocation.fromNamespaceAndPath(NetMusicList.ModID, "textures/gui/server.png")));
+        }
+        if(NetMusicListUtil.isWangRenZe9788() || NetMusicListUtil.isN44()){
+            // gly特有的自黑
+            base.addEntry(new ImageEntry(ResourceLocation.fromNamespaceAndPath(NetMusicList.ModID, "textures/gui/gly_is_suck.png")));
+        }
+
+        base.addEntry(entryBuilder.startBooleanToggle(Component.translatable("config.net_music_list.not_pause_sound"),
+                        CONFIG.notPauseSoundOnGamePause)
+                        .setTooltip(Component.translatable("config.net_music_list.not_pause_sound.tip"))
+                .setDefaultValue(false).setSaveConsumer(b -> CONFIG.notPauseSoundOnGamePause = b).build());
+        base.addEntry(entryBuilder.startIntSlider(Component.translatable("config.net_music_list.max_import_list"), CONFIG.maxImportList, 100, 1000)
+                .setDefaultValue(300)
+                .setSaveConsumer(i -> CONFIG.maxImportList = i)
                 .build());
-        category.addEntry(entryBuilder.startBooleanToggle(Component.translatable("config.net_music_list.music_hud"),
-                        CONFIG.musicHUD).setSaveConsumer(b -> CONFIG.musicHUD = b).setDefaultValue(true)
+        base.addEntry(entryBuilder.startBooleanToggle(Component.translatable("config.net_music_list.old_gui"),
+                                CONFIG.oldGUI).setSaveConsumer(b -> CONFIG.oldGUI = b).setDefaultValue(false).build());
+
+        var hud = builder.getOrCreateCategory(Component.translatable("config.net_music_list.config.hud.title"));
+        hud.addEntry(entryBuilder.startTextDescription(Component.translatable("config.net_music_list.config.select_hud.title")).build());
+        hud.addEntry(entryBuilder.startBooleanToggle(Component.translatable("config.net_music_list.select_hud_artist"),
+                        CONFIG.selectHudShowArtist)
+                .setDefaultValue(true).setSaveConsumer(b -> CONFIG.selectHudShowArtist = b).build());
+        hud.addEntry(entryBuilder.startIntSlider(Component.translatable("config.net_music_list.select_hud_length"),
+                        CONFIG.selectHudCount, 3, 27)
+                        .setDefaultValue(5)
+                        .setSaveConsumer(i -> CONFIG.selectHudCount = i)
+                .build());
+        hud.addEntry(entryBuilder.startIntSlider(Component.translatable("config.net_music_list.select_hud_size"), (int)(CONFIG.selectHudSize * 10), 3, 15)
+                        .setDefaultValue(7)
+                        .setSaveConsumer(integer -> CONFIG.selectHudSize = integer / 10f)
+                .build());
+        hud.addEntry(entryBuilder.startBooleanToggle(Component.translatable("config.net_music_list.glowing_text"), CONFIG.glowingText)
+                .setSaveConsumer(b -> CONFIG.glowingText = b)
+                .setDefaultValue(false)
                 .build());
 
+        hud.addEntry(entryBuilder.startTextDescription(Component.translatable("config.net_music_list.config.music_info_hud.title")).build());
+        hud.addEntry(entryBuilder.startBooleanToggle(Component.translatable("config.net_music_list.music_hud"),
+                        CONFIG.musicHUD).setSaveConsumer(b -> CONFIG.musicHUD = b).setDefaultValue(true)
+                .build());
         var buttonWidget = new ButtonEntry(Component.translatable("config.net_music_list.set_hud_pos"),
                 (button) -> MoveHudScreen.open());
         buttonWidget.isEnable(CONFIG.musicHUD);
-        category.addEntry(buttonWidget);
+        hud.addEntry(buttonWidget);
+
+        var cache = builder.getOrCreateCategory(Component.translatable("config.net_music_list.config.cache.title"));
+        cache.addEntry(entryBuilder.startBooleanToggle(Component.translatable("config.net_music_list.enable_cache"),
+                        CONFIG.enableCache)
+                .requireRestart()
+                .setTooltip(Component.translatable("config.net_music_list.cache_warning"))
+                .setDefaultValue(false)
+                .setSaveConsumer(b -> CONFIG.enableCache = b)
+                .build());
+        cache.addEntry(entryBuilder.startBooleanToggle(Component.translatable("config.net_music_list.global_cache"),
+                        CONFIG.globalCache)
+                .requireRestart()
+                .setDefaultValue(false)
+                .setSaveConsumer(b -> CONFIG.globalCache = b)
+                .build()
+        );
+
+        if(!FMLEnvironment.production || CONFIG.debug){
+            var debug = builder.getOrCreateCategory(Component.literal("调试功能"));
+            var button = new ButtonEntry(Component.literal("打开FuckBlitNineSlicedScreen"), button1 -> {});
+            button.setTooltip(Tooltip.create(Component.literal("这下不用Fuck了").withStyle(ChatFormatting.AQUA), null));
+            button.isEnable(false);
+            debug.addEntry(button);
+            debug.addEntry(new ButtonEntry(Component.literal("打开缓存管理界面"), b ->
+                    Minecraft.getInstance().setScreen(new CacheManagerScreen())));
+            debug.addEntry(new ButtonEntry(Component.literal("检查缓存"), b -> {
+                var count = CacheManager.checkCache(true);
+                if(count > 0){
+                    Minecraft.getInstance().getToasts().addToast(new SystemToast(SystemToast.SystemToastId.NARRATOR_TOGGLE,
+                            Component.literal("清理了无效缓存"), Component.literal(String.format("清理了%d个缓存", count))));
+                }else{
+                    Minecraft.getInstance().getToasts().addToast(new SystemToast(SystemToast.SystemToastId.NARRATOR_TOGGLE,
+                            Component.literal("所有缓存都有效"), null));
+                }
+            }));
+            debug.addEntry(new ButtonEntry(Component.literal("导入歌曲无上限"), button1 -> {
+                CONFIG.maxImportList = Integer.MAX_VALUE;
+                NetMusicListUtil.reloadConfig();
+                Minecraft.getInstance().getToasts().addToast(new SystemToast(SystemToast.SystemToastId.NARRATOR_TOGGLE,
+                        Component.literal("不是哥们？"), Component.literal("已提高上限至Integer.MAX_VALUE")));
+            }));
+        }
+
+        builder.setSavingRunnable(NetMusicListUtil::reloadConfig);
 
         return builder.build();
     }

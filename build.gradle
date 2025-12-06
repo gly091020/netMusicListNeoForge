@@ -1,8 +1,10 @@
+import com.modrinth.minotaur.dependencies.ModDependency;
 plugins {
     id 'java-library'
     id 'maven-publish'
     id 'idea'
     id 'net.neoforged.moddev' version '2.0.106'
+    id "com.modrinth.minotaur" version "2.+"
 }
 
 version = mod_version
@@ -121,10 +123,11 @@ dependencies {
     // For more info:
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
-    implementation "curse.maven:net-music-978569:6838604"
-    implementation "curse.maven:touhou-little-maid-355044:6657437"
-    implementation "curse.maven:etched-491890:5998004"
+    implementation "curse.maven:net-music-978569:7263238"
+    implementation "curse.maven:touhou-little-maid-355044:7198494"
     implementation "curse.maven:cloth-config-348521:5623420"
+    implementation "curse.maven:patchouli-306770:6842247"
+    compileOnly files("libs/net_music_login_need-1.21.1-0.3.jar")
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.
@@ -140,7 +143,8 @@ var generateModMetadata = tasks.register("generateModMetadata", ProcessResources
                              mod_license            : mod_license,
                              mod_version            : mod_version,
                              mod_authors            : mod_authors,
-                             mod_description        : mod_description]
+                             mod_description        : mod_description,
+                             version_description    : version_description]
     inputs.properties replaceProperties
     expand replaceProperties
     from "src/main/templates"
@@ -173,4 +177,30 @@ idea {
         downloadSources = true
         downloadJavadoc = true
     }
+}
+
+modrinth {
+    def envToken = System.getenv("MODRINTH_TOKEN")
+    if (envToken != null && !envToken.isEmpty()) {
+        token = envToken
+    } else {
+        // 如果没有 token，跳过 Modrinth 配置
+        throw new GradleException("错误: MODRINTH_TOKEN 环境变量未设置")
+    }
+    // 从环境变量获取 token，如果没有设置就报错
+    token = System.getenv("MODRINTH_TOKEN");
+
+    projectId = 'Jc6WJafg'           // 你的 Modrinth 项目 ID
+    versionNumber = mod_version          // 模组版本号
+    versionName = mod_name + " " + mod_version // 版本标题
+    uploadFile = jar             // 上传重映射的 jar 文件
+    gameVersions = [minecraft_version] // 支持的游戏版本
+    loaders = ['neoforge']              // 加载器类型
+    dependencies = [
+            new ModDependency("9s6osm5g", "required"),
+            new ModDependency("gKNuqaQq", "required")
+    ]
+    changelog = version_description
+
+    versionType = "alpha"  // 版本类型
 }

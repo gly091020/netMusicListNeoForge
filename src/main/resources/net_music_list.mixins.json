@@ -2,7 +2,7 @@
   "required": true,
   "minVersion": "0.8",
   "package": "com.gly091020.netMusicListNeoforge.mixin",
-  "compatibilityLevel": "JAVA_21",
+  "compatibilityLevel": "JAVA_17",
   "refmap": "net_music_list.refmap.json",
   "mixins": [
     "AbstractContainerMenuMixin",
@@ -10,6 +10,7 @@
     "CanBurnerCDListMixin",
     "CanPlayListMixin",
     "CommandMixin",
+    "FuckTelemetryMixin",
     "MusicPlayerBackpackMixin",
     "PlayListIsOKMixin",
     "PlayModeMixin",
@@ -20,5 +21,14 @@
   },
   "overwrites": {
     "requireAnnotations": true
-  }
+  },
+  "client": [
+    "BurnerSongListMixin",
+    "GamePauseMixin",
+    "PlayMusicCacheMixin",
+    "SoundPausedMixin",
+    "TickableSoundGetterMixins$SoundEngineMixin",
+    "TickableSoundGetterMixins$SoundManagerMixin",
+    "LyricCacheMixin"
+  ]
 }

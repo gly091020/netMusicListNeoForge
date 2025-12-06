@@ -1,13 +1,16 @@
 package com.gly091020.netMusicListNeoforge.client;
 
 import com.gly091020.netMusicListNeoforge.NetMusicList;
-import com.gly091020.netMusicListNeoforge.NetMusicListUtil;
+import com.gly091020.netMusicListNeoforge.hud.MusicInfoHud;
+import com.gly091020.netMusicListNeoforge.util.NetMusicListUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
+
+import static com.gly091020.netMusicListNeoforge.NetMusicList.CONFIG;
 
 public class MoveHudScreen extends Screen {
     public int x;
@@ -30,7 +33,7 @@ public class MoveHudScreen extends Screen {
         this.addRenderableWidget(Button.builder(Component.translatable("config.net_music_list.hud.close"), button -> onClose()).pos(width - 60, height - 30)
                 .size(50, 20)
                 .build());
-        this.addRenderableWidget(Button.builder(Component.translatable("config.net_music_list.hud.net_save"), button -> Minecraft.getInstance().setScreen(parent)).pos(width - 115, height - 30)
+        this.addRenderableWidget(Button.builder(Component.translatable("config.net_music_list.hud.not_save"), button -> Minecraft.getInstance().setScreen(parent)).pos(width - 115, height - 30)
                 .size(50, 20)
                 .build());
         x = NetMusicList.CONFIG.x;
@@ -39,6 +42,7 @@ public class MoveHudScreen extends Screen {
 
     @Override
     public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+        renderBackground(guiGraphics, mouseX, mouseY, partialTick);
         super.render(guiGraphics, mouseX, mouseY, partialTick);
         guiGraphics.fill(x, y, x + 100, y + 40, 0xFFAAAAAA);
         guiGraphics.drawCenteredString(Minecraft.getInstance().font,
@@ -51,6 +55,7 @@ public class MoveHudScreen extends Screen {
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if(super.mouseDragged(mouseX, mouseY, button, dragX, dragY))return false;
         x = (int) mouseX - 50;
         y = (int) mouseY - 20;
         return true;
@@ -62,6 +67,7 @@ public class MoveHudScreen extends Screen {
         NetMusicList.CONFIG.y = y;
         NetMusicListUtil.reloadConfig();
         Minecraft.getInstance().setScreen(parent);
+        MusicInfoHud.setPos(CONFIG.x, CONFIG.y);
     }
 
     public static void open(){
