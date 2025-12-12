@@ -491,9 +491,6 @@ public class MusicSelectionScreen extends Screen {
         @Override
         protected void renderListItems(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
             super.renderListItems(guiGraphics, mouseX, mouseY, partialTick);
-            int i = this.getRowLeft();
-            int j = this.getRowWidth();
-            int k = this.itemHeight - 4;
             int l = this.getItemCount();
             for(int i1 = 0; i1 < l; ++i1) {
                 int j1 = this.getRowTop(i1);

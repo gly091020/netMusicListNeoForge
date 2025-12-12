@@ -23,6 +23,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.regex.Pattern;
 
+import static com.gly091020.netMusicListNeoforge.NetMusicList.CONFIG;
+
 @Mixin(value = CDBurnerMenuScreen.class, remap = false)
 public class BurnerSongListMixin {
     @Shadow
@@ -45,6 +47,8 @@ public class BurnerSongListMixin {
                 if(!songs.isEmpty()){
                     for (ItemMusicCD.SongInfo info: songs){
                         info.readOnly = readOnlyButton.selected();
+                        if(CONFIG.debug && CONFIG.only5Second)
+                            info.songTime = 5;
                         NetworkHandler.sendToServer(new SetMusicIDMessage(info));
                     }
                 }

@@ -23,4 +23,6 @@ public class NetMusicListConfig implements ConfigData {
 
     public boolean oldGUI = false;
     public boolean noVIP = false;
+
+    public boolean only5Second = false;
 }

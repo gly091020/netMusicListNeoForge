@@ -128,10 +128,13 @@ public class NetMusicPlayerItem extends Item{
     }
 
     public static void nextMusic(ItemStack stack, Player player, int slot){
-        var i = getContainer(stack).getItem(0);
+        var c = getContainer(stack);
+        var i = c.getItem(0);
         if(i.is(NetMusicList.MUSIC_LIST_ITEM.get())){
             NetMusicListItem.nextMusic(i);
         }
+        c.setChanged();
+        player.getInventory().setChanged();
         playSound(stack, player, slot);
     }
 

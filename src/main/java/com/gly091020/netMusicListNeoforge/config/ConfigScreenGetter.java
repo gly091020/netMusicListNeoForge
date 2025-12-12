@@ -122,6 +122,10 @@ public class ConfigScreenGetter {
                 Minecraft.getInstance().getToasts().addToast(new SystemToast(SystemToast.SystemToastId.NARRATOR_TOGGLE,
                         Component.literal("不是哥们？"), Component.literal("已提高上限至Integer.MAX_VALUE")));
             }));
+            debug.addEntry(entryBuilder.startBooleanToggle(Component.literal("导入歌曲只有5秒"), CONFIG.only5Second)
+                            .setDefaultValue(false)
+                            .setSaveConsumer(b -> CONFIG.only5Second = b)
+                    .build());
         }
 
         builder.setSavingRunnable(NetMusicListUtil::reloadConfig);
