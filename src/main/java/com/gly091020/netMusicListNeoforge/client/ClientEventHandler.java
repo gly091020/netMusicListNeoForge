@@ -124,6 +124,7 @@ public class ClientEventHandler {
     }
 
     private static void tickKey(){
+        // todo:修复歌曲切换时直接停止的问题
         if (Minecraft.getInstance().screen != null) {
             wasSwitchMusicPressed = false;
             return;
@@ -154,7 +155,7 @@ public class ClientEventHandler {
                 var container = NetMusicPlayerItem.getContainer(musicPlayer);
                 var item = container.getItem(0);
                 var index = NetMusicListItem.getSongIndex(item);
-                if(MusicListLayer.index != index){
+//                if(MusicListLayer.index != index){
                     NetMusicListItem.setSongIndex(item, MusicListLayer.index);
                     container.setItem(0, item);
                     player.getInventory().setChanged();
@@ -162,7 +163,7 @@ public class ClientEventHandler {
                     NetworkHandler.sendToServer(new UpdatePlayerMusicPacket(MusicListLayer.index,
                             slot));
                     NetworkHandler.sendToServer(new UpdateMusicIndexCTSPacket(slot, MusicListLayer.index));
-                }
+//                }
                 MusicListLayer.isRender = false;
             }
         }

@@ -7,3 +7,5 @@
 给网络音乐机添加了一个播放列表物品，可以方便的播放多首歌曲
 
 万恶之源：https://www.mcmod.cn/post/4332.html
+
+等[IAM](https://github.com/Mod-Sauce/IamMusicPlayer_FIX)有1.21.1了我立马停更
