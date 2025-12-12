@@ -7,11 +7,11 @@ import com.github.tartaricacid.netmusic.init.InitSounds;
 import com.github.tartaricacid.netmusic.item.ItemMusicCD;
 import com.github.tartaricacid.netmusic.network.NetworkHandler;
 import com.gly091020.netMusicListNeoforge.NetMusicList;
+import com.gly091020.netMusicListNeoforge.hud.MusicInfoHud;
 import com.gly091020.netMusicListNeoforge.item.NetMusicListItem;
 import com.gly091020.netMusicListNeoforge.item.NetMusicPlayerItem;
-import com.gly091020.netMusicListNeoforge.item.components.MusicPlayerComponent;
 import com.gly091020.netMusicListNeoforge.packet.StopMusicPacketServer;
-import com.gly091020.netMusicListNeoforge.packet.UpdateMusicTickCTSPacket;
+import com.gly091020.netMusicListNeoforge.packet.UpdateMusicIndexCTSPacket;
 import com.gly091020.netMusicListNeoforge.util.NetMusicListUtil;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
@@ -74,12 +74,23 @@ public class PlayerNetMusicSound extends AbstractTickableSoundInstance {
             stopMusic();
         }
 
+        if(tick > countTick){
+            var musicPlayer = player.getInventory().getItem(slot);
+            if(!isStopped() && isClientPlayer() && musicPlayer.is(NetMusicList.MUSIC_PLAYER_ITEM) &&
+                    NetMusicPlayerItem.getContainer(musicPlayer).getItem(0).is(NetMusicList.MUSIC_LIST_ITEM)) {
+                var c = NetMusicPlayerItem.getContainer(musicPlayer);
+                var i = NetMusicListItem.nextMusic(c.getItem(0));
+                c.setChanged();
+                NetworkHandler.sendToServer(new UpdateMusicIndexCTSPacket(slot, i));
+                NetMusicPlayerItem.playSound(musicPlayer, player, slot);
+                MusicInfoHud.setInfo(NetMusicListItem.getSongInfo(c.getItem(0)), c.getItem(0), slot);
+            }
+            stopMusic();
+            return;
+        }
+
         if(isClientPlayer()){
             var itemStack = player.getInventory().getItem(slot);
-            var c = itemStack.getOrDefault(NetMusicList.MUSIC_PLAYER_COMPONENT, MusicPlayerComponent.getInstance()); //没错，这里可以读取tick的！，可惜不能写入，不然更好看
-            if (c.tick() <= 1 && c.tick() > -1){
-                stopMusic();
-            }
             if (!itemStack.is(NetMusicList.MUSIC_PLAYER_ITEM.get())) {
                 stopMusic();
             }
@@ -125,14 +136,6 @@ public class PlayerNetMusicSound extends AbstractTickableSoundInstance {
             }
         }
 
-        if(tick % 20 == 0 && isClientPlayer()){
-            NetworkHandler.sendToServer(new UpdateMusicTickCTSPacket(slot, countTick - tick));
-        }
-
-        if(isStopped() && isClientPlayer()){
-            NetworkHandler.sendToServer(new UpdateMusicTickCTSPacket(slot, -1));
-        }
-
         if(NetMusicListUtil.globalStopMusic){
             this.volume = 0;
         }else{
@@ -142,7 +145,6 @@ public class PlayerNetMusicSound extends AbstractTickableSoundInstance {
 
     public void stopMusic(){
         if(!isStopped() && isClientPlayer()){
-
             NetworkHandler.sendToServer(new StopMusicPacketServer(player.getId(), url.toString()));
         }
         stop();
@@ -150,13 +152,10 @@ public class PlayerNetMusicSound extends AbstractTickableSoundInstance {
 
     public void onlyTickUpdate(){
         tick++;
-        if(tick % 20 == 0 && isClientPlayer()){
-            NetworkHandler.sendToServer(new UpdateMusicTickCTSPacket(slot, countTick - tick));
-        }
+    }
 
-        if(isStopped() && isClientPlayer()){
-            NetworkHandler.sendToServer(new UpdateMusicTickCTSPacket(slot, -1));
-        }
+    public int getTick(){
+        return Math.clamp(countTick - tick, 0, countTick);
     }
 
     @Override

@@ -10,7 +10,6 @@ import com.gly091020.netMusicListNeoforge.item.NetMusicListItem;
 import com.gly091020.netMusicListNeoforge.item.NetMusicListManual;
 import com.gly091020.netMusicListNeoforge.item.NetMusicPlayerItem;
 import com.gly091020.netMusicListNeoforge.item.components.MusicListComponent;
-import com.gly091020.netMusicListNeoforge.item.components.MusicPlayerComponent;
 import com.gly091020.netMusicListNeoforge.util.CacheManager;
 import com.gly091020.netMusicListNeoforge.util.MP3Pack;
 import com.gly091020.netMusicListNeoforge.util.NetMusicListKeyMapping;
@@ -72,11 +71,6 @@ public class NetMusicList {
             DataComponentType.<MusicListComponent>builder()
                     .persistent(MusicListComponent.CODEC)
                     .networkSynchronized(MusicListComponent.STREAM_CODEC)
-                    .build());
-    public static final Supplier<DataComponentType<MusicPlayerComponent>> MUSIC_PLAYER_COMPONENT = DATA_COMPONENTS.register("music_player", () ->
-            DataComponentType.<MusicPlayerComponent>builder()
-                    .persistent(MusicPlayerComponent.CODEC)
-                    .networkSynchronized(MusicPlayerComponent.STREAM_CODEC)
                     .build());
 
     public static NetMusicListConfig CONFIG;

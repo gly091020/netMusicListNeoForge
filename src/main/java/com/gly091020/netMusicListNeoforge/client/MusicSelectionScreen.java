@@ -82,7 +82,13 @@ public class MusicSelectionScreen extends Screen {
         }
         listWidget.addEntry(new AddMusicEntry());
 
-        listWidget.setSelected(listWidget.children().get(index));
+        var count = listWidget.children().size();
+        if(index < 0 || index >= count){
+            listWidget.setSelected(listWidget.children().get(count - 1));
+            index = count - 1;
+        }else{
+            listWidget.setSelected(listWidget.children().get(index));
+        }
         this.addRenderableWidget(listWidget);
 
         playModeButton = new PlayModeButton(left + 4 + 3, top + 133, button -> {

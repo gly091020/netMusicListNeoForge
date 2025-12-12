@@ -6,8 +6,8 @@ import com.github.tartaricacid.netmusic.item.ItemMusicCD;
 import com.github.tartaricacid.netmusic.network.NetworkHandler;
 import com.gly091020.netMusicListNeoforge.NetMusicList;
 import com.gly091020.netMusicListNeoforge.hud.MusicListLayer;
-import com.gly091020.netMusicListNeoforge.item.components.MusicPlayerComponent;
 import com.gly091020.netMusicListNeoforge.packet.PlayerPlayMusicPacket;
+import com.gly091020.netMusicListNeoforge.packet.UpdateMusicIndexCTSPacket;
 import com.gly091020.netMusicListNeoforge.packet.UpdatePlayerMusicPacket;
 import com.gly091020.netMusicListNeoforge.util.NetMusicListUtil;
 import net.minecraft.ChatFormatting;
@@ -17,7 +17,6 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.SimpleContainer;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.SlotAccess;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ClickAction;
@@ -43,15 +42,19 @@ public class NetMusicPlayerItem extends Item{
                                             @NotNull Player player, @NotNull SlotAccess access) {
         if(action == ClickAction.SECONDARY && !getContainer(stack).isEmpty() && access.get().isEmpty()){
             access.set(getContainer(stack).removeItem(0, 1));
-            var c = stack.getOrDefault(NetMusicList.MUSIC_PLAYER_COMPONENT, MusicPlayerComponent.getInstance());
-            stack.set(NetMusicList.MUSIC_PLAYER_COMPONENT, new MusicPlayerComponent(-1, c.shadowTick(), c.waitSong()));
             return true;
         }
-        if(action == ClickAction.PRIMARY && ItemMusicCD.getSongInfo(stack1) != null & getContainer(stack).isEmpty()){
-            getContainer(stack).setItem(0, stack1);
-            access.set(ItemStack.EMPTY);
-            playSound(stack, player, slot.getSlotIndex());
-            return true;
+        if(action == ClickAction.PRIMARY && getContainer(stack).isEmpty()){
+            if(stack1.is(NetMusicList.MUSIC_LIST_ITEM) && ItemMusicCD.getSongInfo(stack1) == null) {
+                NetMusicListItem.setSongIndex(stack1, 0);
+                NetMusicListItem.nextMusic(stack1);
+            }
+            if(ItemMusicCD.getSongInfo(stack1) != null){
+                getContainer(stack).setItem(0, stack1);
+                access.set(ItemStack.EMPTY);
+                playSound(stack, player, slot.getSlotIndex());
+                return true;
+            }
         }
         return super.overrideOtherStackedOnMe(stack, stack1, slot, action, player, access);
     }
@@ -68,10 +71,6 @@ public class NetMusicPlayerItem extends Item{
                     .withStyle(ChatFormatting.RED));
             return;
         }
-        var c = stack.getOrDefault(NetMusicList.MUSIC_PLAYER_COMPONENT, MusicPlayerComponent.getInstance());
-        var shadowTick = c.shadowTick();
-        if(shadowTick < 0){shadowTick = info.songTime * 20;} //避免出现什么奇怪的BUG
-        stack.set(NetMusicList.MUSIC_PLAYER_COMPONENT, new MusicPlayerComponent(info.songTime * 20, shadowTick, 0)); //哦！在此重置！(Dj音）
 
         if(!player.level().isClientSide){return;}
         NetworkHandler.sendToServer(new PlayerPlayMusicPacket(player.getId(), info.songUrl, info.songTime, info.songName, slot, info));
@@ -138,36 +137,6 @@ public class NetMusicPlayerItem extends Item{
         playSound(stack, player, slot);
     }
 
-    public static void switchMusic(ItemStack stack, Player player, int slot, int index){
-        var i = getContainer(stack).getItem(0);
-        if(i.is(NetMusicList.MUSIC_LIST_ITEM.get())){
-            NetMusicListItem.setSongIndex(i, index);
-        }
-        playSound(stack, player, slot);
-    }
-
-    @Override
-    public void inventoryTick(@NotNull ItemStack stack, @NotNull Level level, @NotNull Entity entity, int slot, boolean b) {
-        super.inventoryTick(stack, level, entity, slot, b);
-        //给你稍微重构了下，现在就是正常的结束后重新播放了
-        var c = stack.getOrDefault(NetMusicList.MUSIC_PLAYER_COMPONENT, MusicPlayerComponent.getInstance());
-        var t = c.tick();
-        var shadowTick = c.shadowTick(); //这个是记录上一个tick的值，（影子是光的上一步）
-        var waitSong = c.waitSong(); //这个是保证在声音结束后才会下一首
-        if(entity instanceof Player player && waitSong==2 && t<1){ //复杂度比你的稍微高了一点点，但是稳定性应该是高了不少
-            nextMusic(stack, player, slot);
-            return;
-        }
-        if(t==-1&&shadowTick>-1&&shadowTick<4){
-            waitSong++;
-        }
-        if(t>0){
-            shadowTick = t;
-            t--;
-        }
-        stack.set(NetMusicList.MUSIC_PLAYER_COMPONENT, new MusicPlayerComponent(t, shadowTick, waitSong));
-    }
-
     @Override
     public @NotNull InteractionResultHolder<ItemStack> use(Level level, @NotNull Player player, @NotNull InteractionHand usedHand) {
         if(!level.isClientSide){
@@ -185,6 +154,7 @@ public class NetMusicPlayerItem extends Item{
                 playSound(player.getItemInHand(usedHand), player, slot);
                 NetworkHandler.sendToServer(new UpdatePlayerMusicPacket(MusicListLayer.index,
                         slot));
+                NetworkHandler.sendToServer(new UpdateMusicIndexCTSPacket(slot, MusicListLayer.index));
             }
             MusicListLayer.isRender = false;
             return InteractionResultHolder.success(player.getMainHandItem());

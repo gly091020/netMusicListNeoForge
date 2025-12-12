@@ -6,9 +6,11 @@ import com.gly091020.netMusicListNeoforge.hud.MusicInfoHud;
 import com.gly091020.netMusicListNeoforge.hud.MusicListLayer;
 import com.gly091020.netMusicListNeoforge.item.NetMusicListItem;
 import com.gly091020.netMusicListNeoforge.item.NetMusicPlayerItem;
+import com.gly091020.netMusicListNeoforge.packet.UpdateMusicIndexCTSPacket;
 import com.gly091020.netMusicListNeoforge.packet.UpdatePlayerMusicPacket;
 import com.gly091020.netMusicListNeoforge.sounds.PlayerNetMusicSound;
 import com.gly091020.netMusicListNeoforge.util.CacheManager;
+import com.gly091020.netMusicListNeoforge.util.MusicManager;
 import com.gly091020.netMusicListNeoforge.util.NetMusicListKeyMapping;
 import com.gly091020.netMusicListNeoforge.util.NetMusicListUtil;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -73,15 +75,17 @@ public class ClientEventHandler {
         fastStop();
         CacheManager.tick();
         tickKey();
+        MusicManager.tick();
     }
 
     @SubscribeEvent
-    public static void onQuitWorld(LevelEvent.Save event){
+    public static void onQuitWorld(LevelEvent.Unload event){
         try{
             CacheManager.checkCache(true);
         }catch (Exception e){
             NetMusicList.LOGGER.error("缓存清理时出现问题：", e);
         }
+        MusicManager.clearSound();
     }
 
     private static void fastStop(){
@@ -153,9 +157,11 @@ public class ClientEventHandler {
                 if(MusicListLayer.index != index){
                     NetMusicListItem.setSongIndex(item, MusicListLayer.index);
                     container.setItem(0, item);
+                    player.getInventory().setChanged();
                     NetMusicPlayerItem.playSound(musicPlayer, player, slot);
                     NetworkHandler.sendToServer(new UpdatePlayerMusicPacket(MusicListLayer.index,
                             slot));
+                    NetworkHandler.sendToServer(new UpdateMusicIndexCTSPacket(slot, MusicListLayer.index));
                 }
                 MusicListLayer.isRender = false;
             }

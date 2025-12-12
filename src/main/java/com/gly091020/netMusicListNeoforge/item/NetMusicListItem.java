@@ -43,12 +43,13 @@ public class NetMusicListItem extends ItemMusicCD {
         return getComponent(stack).songInfos();
     }
 
-    public static void nextMusic(ItemStack stack){
+    public static int nextMusic(ItemStack stack){
         if(stack.is(NetMusicList.MUSIC_LIST_ITEM.get())){
             switch (getPlayMode(stack)){
                 case RANDOM -> {
                     var i = RandomSource.create().nextInt(0, getSongInfoList(stack).size() - 1);
                     setSongIndex(stack, i);
+                    return i;
                 }
                 case SEQUENTIAL -> {
                     var i = getSongIndex(stack) + 1;
@@ -56,9 +57,12 @@ public class NetMusicListItem extends ItemMusicCD {
                         i = 0;
                     }
                     setSongIndex(stack, i);
+                    return i;
                 }
             }
+            return getSongIndex(stack);
         }
+        return 0;
     }
 
     public static SongInfo getSongInfo(ItemStack stack) {

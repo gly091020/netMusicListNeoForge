@@ -3,9 +3,8 @@ package com.gly091020.netMusicListNeoforge.hud;
 import com.github.tartaricacid.netmusic.NetMusic;
 import com.github.tartaricacid.netmusic.item.ItemMusicCD;
 import com.gly091020.netMusicListNeoforge.NetMusicList;
-import com.gly091020.netMusicListNeoforge.item.NetMusicPlayerItem;
-import com.gly091020.netMusicListNeoforge.item.components.MusicPlayerComponent;
 import com.gly091020.netMusicListNeoforge.util.CacheManager;
+import com.gly091020.netMusicListNeoforge.util.MusicManager;
 import com.gly091020.netMusicListNeoforge.util.NetMusicListUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -58,34 +57,26 @@ public class MusicInfoHud{
         guiGraphics.drawString(font, text, left + 50, top, 0xFFFFFFFF);
 
         var count = info.songTime;
-        if(stack != null){
-            int tick;
-            if (Minecraft.getInstance().player != null) {
-                var stack1 = Minecraft.getInstance().player.getInventory().getItem(slot);
-                if(!stack1.is(NetMusicList.MUSIC_PLAYER_ITEM.get()) || NetMusicPlayerItem.getContainer(stack1).isEmpty()){
-                    clearInfo();
-                    return;
-                }
-                tick = stack1.getOrDefault(NetMusicList.MUSIC_PLAYER_COMPONENT, MusicPlayerComponent.getInstance()).tick();
-            }else{
-                clearInfo();
-                return;
-            }
+        var tickWidth = 100;
 
-            var tickWidth = 100;
-            guiGraphics.fill(left + 50, top + font.lineHeight + 4, left + 50 + tickWidth, top + font.lineHeight + 6, 0xFFAAAAAA);
-            guiGraphics.fill(left + 50, top + font.lineHeight + 4, (int) (left + 50 + tickWidth * clamp((count - tick / 20f) / count, 0, 1)), top + font.lineHeight + 6, 0xFFFFFFFF);
-            if(id != null && CacheManager.getDownloadProgress(id) > 0){
-                guiGraphics.fill(left + 50, top + font.lineHeight + 4, (int) (left + 50 + tickWidth * clamp(CacheManager.getDownloadProgress(id), 0, 1)), top + font.lineHeight + 6, 0xFF00FF00);
-            }
-            guiGraphics.drawString(font, String.format("%s/%s", NetMusicListUtil.secondsToMinutesSeconds((int) (count - (tick / 20f))), NetMusicListUtil.secondsToMinutesSeconds(count)), left + 50 + tickWidth + 5, top + font.lineHeight + 1, 0xFFFFFFFF);
+        var sounds = MusicManager.getSelfSounds();
+        if(sounds.isEmpty()){
+            clearInfo();
+            return;
+        }
+        var tick = sounds.getFirst().getTick();
+        guiGraphics.fill(left + 50, top + font.lineHeight + 4, left + 50 + tickWidth, top + font.lineHeight + 6, 0xFFAAAAAA);
+        guiGraphics.fill(left + 50, top + font.lineHeight + 4, (int) (left + 50 + tickWidth * clamp((count - tick / 20f) / count, 0, 1)), top + font.lineHeight + 6, 0xFFFFFFFF);
+        if(id != null && CacheManager.getDownloadProgress(id) > 0){
+            guiGraphics.fill(left + 50, top + font.lineHeight + 4, (int) (left + 50 + tickWidth * clamp(CacheManager.getDownloadProgress(id), 0, 1)), top + font.lineHeight + 6, 0xFF00FF00);
+        }
+        guiGraphics.drawString(font, String.format("%s/%s", NetMusicListUtil.secondsToMinutesSeconds((int) (count - (tick / 20f))), NetMusicListUtil.secondsToMinutesSeconds(count)), left + 50 + tickWidth + 5, top + font.lineHeight + 1, 0xFFFFFFFF);
 
-            if(lyric != null){
-                var lyricPart = lyric.getLyric(clamp(count - tick / 20f, 0, Float.MAX_VALUE));
-                guiGraphics.drawString(font, lyricPart.getA(), left + 50, top + (font.lineHeight * 2 + 1), 0xFFFFFFFF);
-                if (lyricPart.getB() != null && !lyricPart.getB().isEmpty()) {
-                    guiGraphics.drawString(font, lyricPart.getB(), left + 50, top + (font.lineHeight + 1) * 3, 0xFFFFFFFF);
-                }
+        if(lyric != null) {
+            var lyricPart = lyric.getLyric(clamp(count - tick / 20f, 0, Float.MAX_VALUE));
+            guiGraphics.drawString(font, lyricPart.getA(), left + 50, top + (font.lineHeight * 2 + 1), 0xFFFFFFFF);
+            if (lyricPart.getB() != null && !lyricPart.getB().isEmpty()) {
+                guiGraphics.drawString(font, lyricPart.getB(), left + 50, top + (font.lineHeight + 1) * 3, 0xFFFFFFFF);
             }
         }
     }
@@ -146,7 +137,7 @@ public class MusicInfoHud{
                         icon = DEFAULT_TEXTURE;
                     }else{
                         var resourceLocation = ResourceLocation.fromNamespaceAndPath(NetMusicList.ModID,
-                                String.format("icon_%s", id));
+                                String.format("icon_%s", UUID.randomUUID()));
                         Minecraft.getInstance().getTextureManager().register(resourceLocation,
                                 NetMusicListUtil.getTextureFromPath(imagePath));
                         icon = resourceLocation;
@@ -171,9 +162,10 @@ public class MusicInfoHud{
         try {
             var icon_url = NetMusicListUtil.getIconUrl(NetMusic.NET_EASE_WEB_API.song(id));
             var resourceLocation = ResourceLocation.fromNamespaceAndPath(NetMusicList.ModID,
-                    String.format("icon_%s", id));
+                    String.format("icon_%s", UUID.randomUUID()));
+            var texture = NetMusicListUtil.getTextureFromURL(icon_url);
             Minecraft.getInstance().getTextureManager().register(resourceLocation,
-                    NetMusicListUtil.getTextureFromURL(icon_url));
+                    texture);
             var l = NetMusicListUtil.getLyric(NetMusic.NET_EASE_WEB_API.lyric(id));
             if(Thread.currentThread().isInterrupted()){return;}
             icon = resourceLocation;

@@ -6,6 +6,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.entity.player.ItemEntityPickupEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 
 @EventBusSubscriber(modid = NetMusicList.ModID)
@@ -23,6 +24,13 @@ public class EventHandler {
     @SubscribeEvent
     public static void onLogin(PlayerEvent.PlayerLoggedInEvent event){
         handlePlayerEvent(event);
+    }
+
+    @SubscribeEvent
+    public static void onGetItem(ItemEntityPickupEvent.Post event){
+        if(event.getOriginalStack().is(NetMusicList.MUSIC_PLAYER_ITEM)){
+            playerPlayMusic(event.getPlayer());
+        }
     }
 
     private static void handlePlayerEvent(PlayerEvent event){

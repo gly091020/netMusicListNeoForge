@@ -3,7 +3,6 @@ package com.gly091020.netMusicListNeoforge.packet;
 import com.gly091020.netMusicListNeoforge.NetMusicList;
 import com.gly091020.netMusicListNeoforge.item.NetMusicListItem;
 import com.gly091020.netMusicListNeoforge.item.NetMusicPlayerItem;
-import com.gly091020.netMusicListNeoforge.item.components.MusicPlayerComponent;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -59,16 +58,17 @@ public class ServerHandler {
         }
     }
 
-    public static void handlePlayerUpdateTickPacket(UpdateMusicTickCTSPacket packet, IPayloadContext ctx){
-        var player = ctx.player();
-        var stack = player.getInventory().getItem(packet.slot());
-        if(stack.is(MUSIC_PLAYER_ITEM.get())){
-            var c = stack.getOrDefault(NetMusicList.MUSIC_PLAYER_COMPONENT, MusicPlayerComponent.getInstance());
-            stack.set(NetMusicList.MUSIC_PLAYER_COMPONENT, new MusicPlayerComponent(packet.tick(), c.shadowTick(), c.waitSong()));
-        }
-    }
-
     public static void handleStopMusicPacket(StopMusicPacketServer packet, IPayloadContext ctx){
         PacketDistributor.sendToAllPlayers(new StopMusicPacket(packet.playerID(),packet.url()));
+    }
+
+    public static void handleUpdateMusicIndexCTSPacket(UpdateMusicIndexCTSPacket packet, IPayloadContext context) {
+        var player = context.player();
+        var stack = player.getInventory().getItem(packet.slot());
+        if(stack.is(MUSIC_PLAYER_ITEM.get())){
+            var c = NetMusicPlayerItem.getContainer(stack);
+            NetMusicListItem.setSongIndex(c.getItem(0), packet.index());
+            c.setChanged();
+        }
     }
 }

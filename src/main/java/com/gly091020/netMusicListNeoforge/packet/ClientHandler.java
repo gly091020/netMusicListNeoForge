@@ -8,6 +8,7 @@ import com.gly091020.netMusicListNeoforge.item.NetMusicPlayerItem;
 import com.gly091020.netMusicListNeoforge.sounds.EnderPlayerNetMusicSound;
 import com.gly091020.netMusicListNeoforge.sounds.PlayerNetMusicSound;
 import com.gly091020.netMusicListNeoforge.util.LoginNeedUtil;
+import com.gly091020.netMusicListNeoforge.util.MusicManager;
 import com.gly091020.netMusicListNeoforge.util.NetMusicListUtil;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
@@ -28,8 +29,11 @@ public class ClientHandler {
                         var url1 = LoginNeedUtil.getUrl(finalUrl);
                         if(url1 != null)finalUrl = url1;
                     }
-                    MusicPlayManager.play(finalUrl, packet.songName(), url ->
-                            new PlayerNetMusicSound(player, url, packet.timeSecond(), packet.slot()));
+                    MusicPlayManager.play(finalUrl, packet.songName(), url -> {
+                        var sound = new PlayerNetMusicSound(player, url, packet.timeSecond(), packet.slot());
+                        MusicManager.addSound(sound);
+                        return sound;
+                    });
 
                     if (player == Minecraft.getInstance().player) {
                         var stack = player.getInventory().getItem(packet.slot());

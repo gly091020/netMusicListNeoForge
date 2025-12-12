@@ -11,7 +11,7 @@ import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 public class PacketRegistry {
     @SubscribeEvent
     public static void register(final RegisterPayloadHandlersEvent event) {
-        final PayloadRegistrar registrar = event.registrar("1.6"); // 协议版本
+        final PayloadRegistrar registrar = event.registrar("1.7"); // 协议版本
 
         registrar.playToServer(
                 MusicListDataPacket.TYPE,
@@ -38,15 +38,15 @@ public class PacketRegistry {
         );
 
         registrar.playToServer(
-                UpdateMusicTickCTSPacket.TYPE,
-                UpdateMusicTickCTSPacket.STREAM_CODEC,
-                ServerHandler::handlePlayerUpdateTickPacket
-        );
-
-        registrar.playToServer(
                 StopMusicPacketServer.TYPE,
                 StopMusicPacketServer.STREAM_CODEC,
                 ServerHandler::handleStopMusicPacket
+        );
+
+        registrar.playToServer(
+                UpdateMusicIndexCTSPacket.TYPE,
+                UpdateMusicIndexCTSPacket.STREAM_CODEC,
+                ServerHandler::handleUpdateMusicIndexCTSPacket
         );
 
         registrar.playBidirectional(
