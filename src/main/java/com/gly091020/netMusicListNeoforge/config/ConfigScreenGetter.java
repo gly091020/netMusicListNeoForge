@@ -5,6 +5,7 @@ import com.gly091020.netMusicListNeoforge.client.CacheManagerScreen;
 import com.gly091020.netMusicListNeoforge.client.MoveHudScreen;
 import com.gly091020.netMusicListNeoforge.client.manual.DirectoryFragment;
 import com.gly091020.netMusicListNeoforge.util.CacheManager;
+import com.gly091020.netMusicListNeoforge.util.MUIUtil;
 import com.gly091020.netMusicListNeoforge.util.NetMusicListUtil;
 import icyllis.modernui.mc.neoforge.MuiForgeApi;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
@@ -17,6 +18,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.fml.ModList;
 import net.neoforged.fml.loading.FMLEnvironment;
 
 import static com.gly091020.netMusicListNeoforge.NetMusicList.CONFIG;
@@ -124,8 +126,10 @@ public class ConfigScreenGetter {
                 Minecraft.getInstance().getToasts().addToast(new SystemToast(SystemToast.SystemToastId.NARRATOR_TOGGLE,
                         Component.literal("不是哥们？"), Component.literal("已提高上限至Integer.MAX_VALUE")));
             }));
-            debug.addEntry(new ButtonEntry(Component.literal("打开测试界面"), b ->
-                    Minecraft.getInstance().setScreen(MuiForgeApi.get().createScreen(new DirectoryFragment(), null, Minecraft.getInstance().screen))));
+            var button1 = new ButtonEntry(Component.literal("打开摩登手册界面"), b ->
+                    MUIUtil.openDirectoryScreen());
+            button1.isEnable(ModList.get().isLoaded("modernui"));
+            debug.addEntry(button1);
             debug.addEntry(entryBuilder.startBooleanToggle(Component.literal("导入歌曲只有5秒"), CONFIG.only5Second)
                             .setDefaultValue(false)
                             .setSaveConsumer(b -> CONFIG.only5Second = b)
