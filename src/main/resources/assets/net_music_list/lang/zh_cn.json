@@ -88,5 +88,8 @@
   "patchouli.net_music_list.ender_player_use.text1": "末影播放器和网络音乐机的唱片机使用方法基本一样。$(br)右键可以将自己从白名单中添加和删除。$(br)如果白名单为空，则会向周围的所有人播放无视距离的音乐。（需在视野内）$(br)否则只向对应玩家播放音乐。",
 
   "advancements.net_music_list.spyglass_at_cat.title": "这不是小猫吗？",
-  "advancements.net_music_list.spyglass_at_cat.description": "小猫可爱捏"
+  "advancements.net_music_list.spyglass_at_cat.description": "小猫可爱捏",
+
+  "manual.net_music_list.desc": "只是一个音乐播放模组而已。\n感谢现代化UI提供的API(🥰)",
+  "manual.net_music_list.images": "画廊"
 }

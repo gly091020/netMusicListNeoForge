@@ -392,14 +392,25 @@ public class NetMusicListUtil {
     }
 
     public static void loadAllMD(){
+        EntriesRegistry.clear();
         List<Object> data;
+        var language = Minecraft.getInstance().getLanguageManager().getSelected();
         try{
-            data = GSON.fromJson(loadStringFromFile("manual/all_entries.json"),
-                    new TypeToken<List<Object>>(){}.getType());
-            registryMD(null, data);
+            try{
+                data = GSON.fromJson(loadStringFromFile("manual/" + language + "/all_entries.json"),
+                        new TypeToken<List<Object>>(){}.getType());
+                registryMD(null, data);
+            }catch (RuntimeException e){
+                data = GSON.fromJson(loadStringFromFile("manual/en_us/all_entries.json"),
+                        new TypeToken<List<Object>>(){}.getType());
+                registryMD(null, data);
+            }
+            if(!FMLEnvironment.production)
+                EntriesRegistry.registryNewEntries(Entries.createFromMD("dev.md"));
         }catch (Exception e){
             NetMusicList.LOGGER.error("加载手册出现错误：", e);
         }
+        NetMusicList.LOGGER.info("已加载{}手册", language);
     }
 
     @SuppressWarnings("all")
@@ -413,7 +424,6 @@ public class NetMusicListUtil {
                     d = directory.registryNewParent();
                 }
                 registryMD(d, (List<Object>) list);
-                // todo:有地方不对
             }else if(item instanceof String path){
                 if(directory == null){
                     EntriesRegistry.registryNewEntries(Entries.createFromMD(path));
@@ -422,5 +432,11 @@ public class NetMusicListUtil {
                 }
             }
         }
+    }
+
+    public static void initMDButtons(){
+        EntriesRegistry.registryButtonGroup("example", List.of(
+                new Entries.Button("示例按钮", () -> {})
+        ));
     }
 }

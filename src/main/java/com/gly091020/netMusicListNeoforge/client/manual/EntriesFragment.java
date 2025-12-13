@@ -20,6 +20,7 @@ import icyllis.modernui.view.LayoutInflater;
 import icyllis.modernui.view.View;
 import icyllis.modernui.view.ViewGroup;
 import icyllis.modernui.widget.*;
+import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
@@ -27,6 +28,8 @@ import java.util.Objects;
 public class EntriesFragment extends Fragment {
     private Markflow mMarkflow;
     private final Entries entries;
+    private ViewGroup leftPart;
+    private ViewGroup rightPart;
 
     public EntriesFragment(Entries entries){
         super();
@@ -49,7 +52,7 @@ public class EntriesFragment extends Fragment {
         leftParams.setMargins(10, 10, 10, 10);
         rightParams.setMargins(10, 10, 10, 10);
 
-        var rightPart = getRightPart();
+        var rightPart = initRightPart();
 
         var title = new TextView(getContext());
         title.setText(entries.title());
@@ -103,7 +106,7 @@ public class EntriesFragment extends Fragment {
         var imagesPopup = initPopupWindow();
         if(!entries.images().isEmpty()){
             var button = new Button(getContext(), null, R.attr.buttonOutlinedStyle);
-            button.setText("画廊");
+            button.setText(Component.translatable("manual.net_music_list.images").getString());
             var buttonParams = new LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.WRAP_CONTENT
@@ -116,15 +119,25 @@ public class EntriesFragment extends Fragment {
         base.addView(leftPart, leftParams);
         base.addView(line1, lintParams1);
         base.addView(rightPart, rightParams);
+        this.leftPart = leftPart;
+        this.rightPart = rightPart;
         return base;
     }
 
-    protected @NotNull ScrollView getRightPart() {
+    protected @NotNull ScrollView initRightPart() {
         var rightPart = new ScrollView(requireContext());
         var rightText = new TextView(requireContext());
         mMarkflow.setMarkdown(rightText, entries.markdown());
         rightText.setTextIsSelectable(true);
         rightPart.addView(rightText);
+        return rightPart;
+    }
+
+    public ViewGroup getLeftPart() {
+        return leftPart;
+    }
+
+    public ViewGroup getRightPart() {
         return rightPart;
     }
 

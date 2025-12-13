@@ -88,5 +88,8 @@
   "patchouli.net_music_list.ender_player_use.text1": "The usage of the Ender Player is basically the same as the Net Music Player's jukebox.$(br)Right-click to add or remove yourself from the whitelist.$(br)If the whitelist is empty, it will play music to everyone around regardless of distance (but they must be in visible range).$(br)Otherwise, it only plays music to the corresponding players.",
 
   "advancements.net_music_list.spyglass_at_cat.title": "Is This Not a Kitten?",
-  "advancements.net_music_list.spyglass_at_cat.description": "The kitten is so cute"
+  "advancements.net_music_list.spyglass_at_cat.description": "The kitten is so cute",
+
+  "manual.net_music_list.desc": "Just a music player mod.\nThanks to ModernUI for the API (🥰)",
+  "manual.net_music_list.images": "Gallery"
 }
