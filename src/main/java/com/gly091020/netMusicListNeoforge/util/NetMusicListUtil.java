@@ -5,7 +5,10 @@ import com.github.tartaricacid.netmusic.api.ExtraMusicList;
 import com.github.tartaricacid.netmusic.api.lyric.LyricRecord;
 import com.github.tartaricacid.netmusic.api.pojo.NetEaseMusicList;
 import com.github.tartaricacid.netmusic.item.ItemMusicCD;
+import com.gly091020.netMusicListNeoforge.NetMusicList;
 import com.gly091020.netMusicListNeoforge.client.PauseSoundManager;
+import com.gly091020.netMusicListNeoforge.client.manual.Entries;
+import com.gly091020.netMusicListNeoforge.client.manual.EntriesRegistry;
 import com.gly091020.netMusicListNeoforge.config.NetMusicListConfig;
 import com.gly091020.netMusicListNeoforge.hud.MusicInfoHud;
 import com.gly091020.netMusicListNeoforge.mixin.TickableSoundGetterMixins;
@@ -36,6 +39,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -372,5 +376,51 @@ public class NetMusicListUtil {
         }
 
         throw new IOException("Too many redirects (max: " + maxRedirects + ")");
+    }
+
+    public static String loadStringFromFile(String path) {
+        String resourcePath = "/assets/" + NetMusicList.ModID + "/" + path;
+        try (InputStream inputStream = NetMusicListUtil.class.getResourceAsStream(resourcePath)) {
+            if (inputStream != null) {
+                return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+            } else {
+                throw new RuntimeException("Could not find resource: " + resourcePath);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to load resource: " + resourcePath, e);
+        }
+    }
+
+    public static void loadAllMD(){
+        List<Object> data;
+        try{
+            data = GSON.fromJson(loadStringFromFile("manual/all_entries.json"),
+                    new TypeToken<List<Object>>(){}.getType());
+            registryMD(null, data);
+        }catch (Exception e){
+            NetMusicList.LOGGER.error("加载手册出现错误：", e);
+        }
+    }
+
+    @SuppressWarnings("all")
+    private static void registryMD(@Nullable EntriesRegistry.Directory directory, List<Object> data){
+        for(Object item: data){
+            if(item instanceof List list){
+                EntriesRegistry.Directory d;
+                if(directory == null){
+                    d = EntriesRegistry.registryNewParent();
+                }else{
+                    d = directory.registryNewParent();
+                }
+                registryMD(d, (List<Object>) list);
+                // todo:有地方不对
+            }else if(item instanceof String path){
+                if(directory == null){
+                    EntriesRegistry.registryNewEntries(Entries.createFromMD(path));
+                }else{
+                    directory.registryNewEntries(Entries.createFromMD(path));
+                }
+            }
+        }
     }
 }

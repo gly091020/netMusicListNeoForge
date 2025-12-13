@@ -3,8 +3,10 @@ package com.gly091020.netMusicListNeoforge.config;
 import com.gly091020.netMusicListNeoforge.NetMusicList;
 import com.gly091020.netMusicListNeoforge.client.CacheManagerScreen;
 import com.gly091020.netMusicListNeoforge.client.MoveHudScreen;
+import com.gly091020.netMusicListNeoforge.client.manual.DirectoryFragment;
 import com.gly091020.netMusicListNeoforge.util.CacheManager;
 import com.gly091020.netMusicListNeoforge.util.NetMusicListUtil;
+import icyllis.modernui.mc.neoforge.MuiForgeApi;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -122,6 +124,8 @@ public class ConfigScreenGetter {
                 Minecraft.getInstance().getToasts().addToast(new SystemToast(SystemToast.SystemToastId.NARRATOR_TOGGLE,
                         Component.literal("不是哥们？"), Component.literal("已提高上限至Integer.MAX_VALUE")));
             }));
+            debug.addEntry(new ButtonEntry(Component.literal("打开测试界面"), b ->
+                    Minecraft.getInstance().setScreen(MuiForgeApi.get().createScreen(new DirectoryFragment(), null, Minecraft.getInstance().screen))));
             debug.addEntry(entryBuilder.startBooleanToggle(Component.literal("导入歌曲只有5秒"), CONFIG.only5Second)
                             .setDefaultValue(false)
                             .setSaveConsumer(b -> CONFIG.only5Second = b)

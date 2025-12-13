@@ -1,0 +1,4 @@
+[
+  "test.md",
+  ["t1/test.md", ["t1/t2/test.md", ["t1/t2/t3/test.md", "t1/t2/t4/test.md"]]]
+]

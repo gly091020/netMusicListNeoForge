@@ -127,6 +127,9 @@ dependencies {
     implementation "curse.maven:touhou-little-maid-355044:7198494"
     implementation "curse.maven:cloth-config-348521:5623420"
     implementation "curse.maven:patchouli-306770:6842247"
+
+    implementation "curse.maven:modern-ui-352491:6956436"
+    implementation("org.commonmark:commonmark:0.21.0")
     compileOnly files("libs/net_music_login_need-1.21.1-0.3.jar")
 }
 

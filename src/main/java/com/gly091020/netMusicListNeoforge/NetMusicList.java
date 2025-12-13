@@ -99,6 +99,7 @@ public class NetMusicList {
         }
         modEventBus.addListener(NetMusicList::gatherData);
         CacheManager.load();
+        NetMusicListUtil.loadAllMD();
     }
 
     public static void gatherData(GatherDataEvent event){
