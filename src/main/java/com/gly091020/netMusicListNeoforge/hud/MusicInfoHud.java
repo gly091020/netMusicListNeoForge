@@ -44,7 +44,15 @@ public class MusicInfoHud{
         if(!NetMusicList.CONFIG.musicHUD)return;
         if(NetMusicListUtil.globalStopMusic)return;
         if(Minecraft.getInstance().options.hideGui){return;}
-        if(info == null){return;}
+        if(info == null){
+            var sounds = MusicManager.getSelfSounds();
+            if(!sounds.isEmpty()){
+                var sound = sounds.getFirst();
+                setInfo(sound.getInfo(), sound.getPlayer().getInventory().getItem(sound.getSlot()), sound.getSlot());
+                return;
+            }
+            return;
+        }
 
         var font = Minecraft.getInstance().font;
         guiGraphics.blit(Objects.requireNonNullElse(icon, DEFAULT_TEXTURE), left, top, 0, 0, 40, 40, 40, 40);

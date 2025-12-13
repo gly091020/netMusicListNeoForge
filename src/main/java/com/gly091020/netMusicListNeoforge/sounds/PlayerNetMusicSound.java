@@ -40,6 +40,8 @@ public class PlayerNetMusicSound extends AbstractTickableSoundInstance {
     int tick = 0;
     final int slot;
 
+    final ItemMusicCD.SongInfo info;
+
     @Nullable
     String clientUrl;
 
@@ -66,6 +68,12 @@ public class PlayerNetMusicSound extends AbstractTickableSoundInstance {
             relative = false;
             attenuation = Attenuation.LINEAR;
         }
+
+        var musicPlayer = player.getInventory().getItem(slot);
+        if(musicPlayer.is(NetMusicList.MUSIC_PLAYER_ITEM))
+            info = ItemMusicCD.getSongInfo(NetMusicPlayerItem.getContainer(player.getInventory().getItem(slot)).getItem(0));
+        else
+            info = null;
     }
 
     @Override
@@ -179,5 +187,14 @@ public class PlayerNetMusicSound extends AbstractTickableSoundInstance {
 
     public Player getPlayer() {
         return player;
+    }
+
+    @Nullable
+    public ItemMusicCD.SongInfo getInfo(){
+        return info;
+    }
+
+    public int getSlot() {
+        return slot;
     }
 }
