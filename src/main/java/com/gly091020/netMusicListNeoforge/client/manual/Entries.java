@@ -52,7 +52,7 @@ public record Entries(String title,
                     break;
                 }
                 case "img":{
-                    var p = data.split(",");
+                    var p = data.split(",", 2);
                     if(p.length != 2)continue;
                     images.add(new Image(p[0], p[1]));
                     break;

@@ -23,7 +23,7 @@ import java.util.List;
 public class DirectoryFragment extends EntriesFragment{
     public DirectoryFragment() {
         super(new Entries(getSelf().getDisplayName(),
-                "", null, List.of(), List.of(), true));
+                "", "manual/long_net_music_list.png", List.of(), List.of(), true));
     }
 
     public static IModInfo getSelf(){

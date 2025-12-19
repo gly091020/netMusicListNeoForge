@@ -186,8 +186,7 @@ public class ClientEventHandler {
             @Override
             public @NotNull CompletableFuture<Void> reload(@NotNull PreparationBarrier preparationBarrier, @NotNull ResourceManager resourceManager, @NotNull ProfilerFiller profilerFiller, @NotNull ProfilerFiller profilerFiller1, @NotNull Executor executor, @NotNull Executor executor1) {
                 return CompletableFuture.runAsync(() -> {
-                    NetMusicList.LOGGER.info("重载手册中");
-                    NetMusicListUtil.loadAllMD();
+                    NetMusicListUtil.needReload = true;
                 }, executor).thenCompose(preparationBarrier::wait); // 俺寻思能加载
             }
         });

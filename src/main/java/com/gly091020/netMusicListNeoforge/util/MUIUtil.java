@@ -6,7 +6,8 @@ import net.minecraft.client.Minecraft;
 
 public class MUIUtil {
     public static void openDirectoryScreen(){
-        NetMusicListUtil.initMDButtons();
+        if(NetMusicListUtil.isNeedReload())
+            NetMusicListUtil.loadAllMD();
         Minecraft.getInstance().setScreen(MuiForgeApi.get().createScreen(new DirectoryFragment(), null, Minecraft.getInstance().screen));
     }
 }

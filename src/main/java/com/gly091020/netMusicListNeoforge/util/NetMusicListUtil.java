@@ -58,6 +58,8 @@ public class NetMusicListUtil {
     // 自己的石山还得让别人来修……
     public static final UUID WANG_REN_ZE_9788 = UUID.fromString("21b900df-8ea3-47e4-81cb-ed1146714b14");
     public static boolean globalStopMusic = false;
+    public static boolean needReload = false;
+
     @OnlyIn(Dist.CLIENT)
     public static void playSound(SoundEvent event){
         Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(event, 1));
@@ -134,6 +136,12 @@ public class NetMusicListUtil {
             }
             return new DynamicTexture(nativeImage);
         }
+    }
+
+    public static boolean isNeedReload(){
+        var b = needReload;
+        needReload = false;
+        return b;
     }
 
     public static class Lyric {
