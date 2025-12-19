@@ -50,5 +50,6 @@ public class EntriesRegistry {
 
     public static void clear(){
         allEntries.clear();
+        buttons.clear();
     }
 }

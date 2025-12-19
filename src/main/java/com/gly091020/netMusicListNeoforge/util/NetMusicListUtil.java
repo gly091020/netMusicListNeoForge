@@ -4,11 +4,13 @@ import com.github.tartaricacid.netmusic.NetMusic;
 import com.github.tartaricacid.netmusic.api.ExtraMusicList;
 import com.github.tartaricacid.netmusic.api.lyric.LyricRecord;
 import com.github.tartaricacid.netmusic.api.pojo.NetEaseMusicList;
+import com.github.tartaricacid.netmusic.compat.cloth.MenuIntegration;
 import com.github.tartaricacid.netmusic.item.ItemMusicCD;
 import com.gly091020.netMusicListNeoforge.NetMusicList;
 import com.gly091020.netMusicListNeoforge.client.PauseSoundManager;
 import com.gly091020.netMusicListNeoforge.client.manual.Entries;
 import com.gly091020.netMusicListNeoforge.client.manual.EntriesRegistry;
+import com.gly091020.netMusicListNeoforge.config.ConfigScreenGetter;
 import com.gly091020.netMusicListNeoforge.config.NetMusicListConfig;
 import com.gly091020.netMusicListNeoforge.hud.MusicInfoHud;
 import com.gly091020.netMusicListNeoforge.mixin.TickableSoundGetterMixins;
@@ -25,6 +27,7 @@ import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.resources.sounds.TickableSoundInstance;
+import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvent;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
@@ -396,6 +399,7 @@ public class NetMusicListUtil {
         List<Object> data;
         var language = Minecraft.getInstance().getLanguageManager().getSelected();
         try{
+            initMDButtons();
             try{
                 data = GSON.fromJson(loadStringFromFile("manual/" + language + "/all_entries.json"),
                         new TypeToken<List<Object>>(){}.getType());
@@ -438,5 +442,29 @@ public class NetMusicListUtil {
         EntriesRegistry.registryButtonGroup("example", List.of(
                 new Entries.Button("示例按钮", () -> {})
         ));
+
+        var buttons = new ArrayList<Entries.Button>();
+        buttons.add(new Entries.Button(
+                Component.translatable("itemGroup.netmusic").getString() +
+                        Component.translatable("text.cloth-config.config").getString(),
+                () -> Minecraft.getInstance().setScreen(MenuIntegration.getConfigBuilder()
+                        .setParentScreen(Minecraft.getInstance().screen).build())
+        ));
+        buttons.add(new Entries.Button(
+                Component.translatable("modmenu.nameTranslation.net_music_list").getString() +
+                        Component.translatable("text.cloth-config.config").getString(),
+                () -> Minecraft.getInstance().setScreen(
+                        ConfigScreenGetter.getConfigScreen(Minecraft.getInstance().screen))
+        ));
+        if(ModList.get().isLoaded("net_music_login_need")){
+            buttons.add(new Entries.Button(
+                    ModList.get().getModContainerById("net_music_login_need").orElseThrow()
+                            .getModInfo().getDisplayName() +
+                            Component.translatable("text.cloth-config.config").getString(),
+                    () -> Minecraft.getInstance().setScreen(
+                            LoginNeedUtil.getConfigScreen())
+            ));
+        }
+        EntriesRegistry.registryButtonGroup("all_config", buttons);
     }
 }

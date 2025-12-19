@@ -180,7 +180,7 @@ public class ClientEventHandler {
 
     private static boolean wasSwitchMusicPressed = false; // 用一个全局变量的方法感觉一点也不优雅
 
-    @SubscribeEvent
+    @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onRegisterReloadListeners(RegisterClientReloadListenersEvent event) {
         event.registerReloadListener(new PreparableReloadListener() {
             @Override

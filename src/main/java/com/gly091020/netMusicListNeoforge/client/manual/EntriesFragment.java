@@ -20,6 +20,7 @@ import icyllis.modernui.view.LayoutInflater;
 import icyllis.modernui.view.View;
 import icyllis.modernui.view.ViewGroup;
 import icyllis.modernui.widget.*;
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
@@ -99,7 +100,7 @@ public class EntriesFragment extends Fragment {
                     ViewGroup.LayoutParams.WRAP_CONTENT
             );
             buttonParams.topMargin = 10;
-            button.setOnClickListener(view -> buttonData.runnable().run());
+            button.setOnClickListener(view -> Minecraft.getInstance().execute(buttonData.runnable()));
             leftPart.addView(button, buttonParams);
         }
 
