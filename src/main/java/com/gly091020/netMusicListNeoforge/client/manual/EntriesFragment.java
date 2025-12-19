@@ -172,7 +172,7 @@ public class EntriesFragment extends Fragment {
                 frameLayout.dp(12), frameLayout.dp(12),
                 0, 0
         );
-        background.setColor(0x55999999);
+        background.setColor(0x99999999);
         horizontalContainer.setBackground(background);
         horizontalContainer.setPadding(frameLayout.dp(16), frameLayout.dp(16),
                 frameLayout.dp(16), frameLayout.dp(16));
@@ -207,6 +207,7 @@ public class EntriesFragment extends Fragment {
             var text = new TextView(requireContext());
             text.setText(imageData.tip());
             text.setTextSize(12);
+            text.setTextStyle(Typeface.BOLD);
             text.setGravity(Gravity.CENTER);
             text.setLayoutParams(new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,

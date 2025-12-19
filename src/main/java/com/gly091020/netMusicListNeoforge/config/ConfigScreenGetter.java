@@ -130,6 +130,12 @@ public class ConfigScreenGetter {
                     MUIUtil.openDirectoryScreen());
             button1.isEnable(ModList.get().isLoaded("modernui"));
             debug.addEntry(button1);
+            debug.addEntry(new ButtonEntry(Component.literal("重载手册"), b ->
+            {
+                NetMusicListUtil.loadAllMD();
+                Minecraft.getInstance().getToasts().addToast(new SystemToast(SystemToast.SystemToastId.NARRATOR_TOGGLE,
+                        Component.literal("手册重载成功"), null));
+            }));
             debug.addEntry(entryBuilder.startBooleanToggle(Component.literal("导入歌曲只有5秒"), CONFIG.only5Second)
                             .setDefaultValue(false)
                             .setSaveConsumer(b -> CONFIG.only5Second = b)
