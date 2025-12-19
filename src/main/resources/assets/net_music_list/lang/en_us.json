@@ -54,8 +54,9 @@
   "config.net_music_list.old_gui": "Enable legacy interface",
   "config.net_music_list.no_vip": "Play VIP songs without restriction",
 
+  "text.net_music_list.no_manual_mod": "Damn Minecraft doesn't have the required mod installed.",
+  "patchouli.net_music_list.description": "$(#FF0000)This manual is deprecated. Please install $(l:https://modrinth.com/mod/modern-ui)ModernUI$()$(#FF0000) to view the new manual.$()",
   "patchouli.net_music_list.title": "Net Music: Playlist Manual",
-  "patchouli.net_music_list.description": "Net Music: Basic usage guide for playlists",
   "patchouli.net_music_list.play_list.title": "Playlist",
   "patchouli.net_music_list.play_list.description": "The core of the entire mod",
   "patchouli.net_music_list.play_list.add_music.title": "Burn",
@@ -90,6 +91,6 @@
   "advancements.net_music_list.spyglass_at_cat.title": "Is This Not a Kitten?",
   "advancements.net_music_list.spyglass_at_cat.description": "The kitten is so cute",
 
-  "manual.net_music_list.desc": "Just a music player mod.\nThanks to ModernUI for the API (🥰)",
+  "manual.net_music_list.desc": "Just a music player mod.\nThanks to ModernUI for the API ヾ(≧▽≦*)o",
   "manual.net_music_list.images": "Gallery"
 }

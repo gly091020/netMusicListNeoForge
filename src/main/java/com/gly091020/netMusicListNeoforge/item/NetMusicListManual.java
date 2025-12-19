@@ -1,6 +1,9 @@
 package com.gly091020.netMusicListNeoforge.item;
 
+import com.gly091020.netMusicListNeoforge.util.MUIUtil;
 import com.gly091020.netMusicListNeoforge.util.PatchouliOpener;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
@@ -18,10 +21,17 @@ public class NetMusicListManual extends Item {
 
     @Override
     public @NotNull InteractionResultHolder<ItemStack> use(@NotNull Level level, @NotNull Player player, @NotNull InteractionHand hand) {
-        if(!player.level().isClientSide && ModList.get().isLoaded("patchouli")){
-            PatchouliOpener.open((ServerPlayer) player);
-            return InteractionResultHolder.success(player.getItemInHand(hand));
+        if(ModList.get().isLoaded("modernui")) {
+            if (player.level().isClientSide) {
+                MUIUtil.openDirectoryScreen();
+            }
+        } else if(ModList.get().isLoaded("patchouli")) {
+            if (!player.level().isClientSide) {
+                PatchouliOpener.open((ServerPlayer) player);
+            }
+        } else {
+            player.sendSystemMessage(Component.translatable("text.net_music_list.no_manual_mod").withStyle(ChatFormatting.RED));
         }
-        return super.use(level, player, hand);
+        return InteractionResultHolder.success(player.getItemInHand(hand));
     }
 }

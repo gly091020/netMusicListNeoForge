@@ -54,8 +54,9 @@
   "config.net_music_list.old_gui": "启用旧界面",
   "config.net_music_list.no_vip": "忽略VIP直接播放",
 
+  "text.net_music_list.no_manual_mod": "这该死的Minecraft没有安装联动的模组",
   "patchouli.net_music_list.title": "网络音乐机：播放列表手册",
-  "patchouli.net_music_list.description": "网络音乐机：播放列表的基本使用方法介绍",
+  "patchouli.net_music_list.description": "$(#FF0000)此手册已弃用，请安装$(l:https://www.mcmod.cn/class/2454.html)ModernUI$()$(#FF0000)来查看新的手册$()",
   "patchouli.net_music_list.play_list.title": "播放列表",
   "patchouli.net_music_list.play_list.description": "整个模组的核心",
   "patchouli.net_music_list.play_list.add_music.title": "刻录",
@@ -90,6 +91,6 @@
   "advancements.net_music_list.spyglass_at_cat.title": "这不是小猫吗？",
   "advancements.net_music_list.spyglass_at_cat.description": "小猫可爱捏",
 
-  "manual.net_music_list.desc": "只是一个音乐播放模组而已。\n感谢现代化UI提供的API(🥰)",
+  "manual.net_music_list.desc": "只是一个音乐播放模组而已。\n感谢现代化UI提供的API ヾ(≧▽≦*)o",
   "manual.net_music_list.images": "画廊"
 }
