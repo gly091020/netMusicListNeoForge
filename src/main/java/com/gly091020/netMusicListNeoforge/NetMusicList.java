@@ -5,6 +5,7 @@ import com.gly091020.netMusicListNeoforge.block.EnderMusicPlayer;
 import com.gly091020.netMusicListNeoforge.block.EnderMusicPlayerEntity;
 import com.gly091020.netMusicListNeoforge.config.ConfigScreenGetter;
 import com.gly091020.netMusicListNeoforge.config.NetMusicListConfig;
+import com.gly091020.netMusicListNeoforge.create.CreateRegistry;
 import com.gly091020.netMusicListNeoforge.datagen.*;
 import com.gly091020.netMusicListNeoforge.item.NetMusicListItem;
 import com.gly091020.netMusicListNeoforge.item.NetMusicListManual;
@@ -28,6 +29,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModList;
 import net.neoforged.fml.ModLoadingContext;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.loading.FMLEnvironment;
@@ -93,6 +95,10 @@ public class NetMusicList {
                         ConfigScreenGetter.getConfigScreen(screen)
         );
 
+        if(ModList.get().isLoaded("create")) {
+            CreateRegistry.registry(modEventBus);
+        }
+
         if(FMLEnvironment.dist.isClient()){
             NetMusicListKeyMapping.init();
             modEventBus.addListener(NetMusicListKeyMapping::registerKeyBindings);
@@ -100,6 +106,7 @@ public class NetMusicList {
         modEventBus.addListener(NetMusicList::gatherData);
         CacheManager.load();
     }
+
 
     public static void gatherData(GatherDataEvent event){
         DataGenerator generator = event.getGenerator();

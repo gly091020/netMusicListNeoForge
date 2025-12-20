@@ -92,5 +92,22 @@
   "advancements.net_music_list.spyglass_at_cat.description": "The kitten is so cute",
 
   "manual.net_music_list.desc": "Just a music player mod.\nThanks to ModernUI for the API ヾ(≧▽≦*)o",
-  "manual.net_music_list.images": "Gallery"
+  "manual.net_music_list.images": "Gallery",
+
+  "tooltips.net_music_list.cd.song_name": "Song Name",
+  "tooltips.net_music_list.cd.trans_name": "Translated Name",
+  "tooltips.net_music_list.cd.null": "None",
+  "tooltips.net_music_list.cd.song_info": "Song Information",
+  "tooltips.net_music_list.index": "Song Index",
+  "create.tooltips.net_music_list.relative": "Relative Index",
+  "create.tooltips.net_music_list.absolute": "Absolute Index",
+  "create.tooltips.net_music_list.is_number": "Show Number",
+  "create.tooltips.net_music_list.number": "Show",
+  "create.tooltips.net_music_list.no_number": "Don't Show",
+  "tooltips.net_music_list.count": "Display Total",
+  "net_music_list.display_source.music_info": "Music Information",
+  "net_music_list.display_source.player_progress": "Song Progress",
+  "net_music_list.display_source.music_index": "Multiple Songs Information",
+  "net_music_list.display_source.lyric": "Lyric",
+  "config.net_music_list.allow_lyric_to_server": "Enable Server-side Lyrics [alpha]"
 }

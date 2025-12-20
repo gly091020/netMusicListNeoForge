@@ -3,11 +3,9 @@ package com.gly091020.netMusicListNeoforge.config;
 import com.gly091020.netMusicListNeoforge.NetMusicList;
 import com.gly091020.netMusicListNeoforge.client.CacheManagerScreen;
 import com.gly091020.netMusicListNeoforge.client.MoveHudScreen;
-import com.gly091020.netMusicListNeoforge.client.manual.DirectoryFragment;
 import com.gly091020.netMusicListNeoforge.util.CacheManager;
 import com.gly091020.netMusicListNeoforge.util.MUIUtil;
 import com.gly091020.netMusicListNeoforge.util.NetMusicListUtil;
-import icyllis.modernui.mc.neoforge.MuiForgeApi;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -51,6 +49,9 @@ public class ConfigScreenGetter {
                 .build());
         base.addEntry(entryBuilder.startBooleanToggle(Component.translatable("config.net_music_list.old_gui"),
                                 CONFIG.oldGUI).setSaveConsumer(b -> CONFIG.oldGUI = b).setDefaultValue(false).build());
+        base.addEntry(entryBuilder.startBooleanToggle(Component.translatable("config.net_music_list.allow_lyric_to_server"),
+                CONFIG.allowLyricToServer).setSaveConsumer(b -> CONFIG.allowLyricToServer = b)
+                .requireRestart().setDefaultValue(false).build());
         if(!NetMusicListUtil.hasLoginNeed()){
             base.addEntry(entryBuilder.startBooleanToggle(Component.translatable("config.net_music_list.no_vip"), CONFIG.noVIP)
                     .setSaveConsumer(aBoolean -> CONFIG.noVIP = aBoolean)

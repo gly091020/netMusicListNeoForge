@@ -25,4 +25,6 @@ public class NetMusicListConfig implements ConfigData {
     public boolean noVIP = false;
 
     public boolean only5Second = false;
+
+    public boolean allowLyricToServer = false;
 }

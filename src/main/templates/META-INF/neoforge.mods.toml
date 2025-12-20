@@ -83,5 +83,5 @@ side = "BOTH"
 modId = "netmusic"
 mandatory = true
 versionRange = "[1.0.0,)"
-ordering = "NONE"
+ordering = "AFTER"
 side = "BOTH"

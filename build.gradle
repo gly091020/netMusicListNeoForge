@@ -12,11 +12,11 @@ group = mod_group_id
 
 repositories {
     mavenLocal()
-    repositories {
-        maven {
-            url "https://cursemaven.com"
-        }
+    maven {
+        url "https://cursemaven.com"
     }
+    maven { url = "https://maven.createmod.net" } // Create, Ponder, Flywheel
+    maven { url = "https://maven.ithundxr.dev/snapshots" }
 }
 
 base {
@@ -131,6 +131,13 @@ dependencies {
     implementation "curse.maven:modern-ui-352491:6956436"
     implementation("org.commonmark:commonmark:0.21.0")
     compileOnly files("libs/net_music_login_need-1.21.1-0.3.jar")
+
+    // create
+    implementation("com.simibubi.create:create-${minecraft_version}:${create_version}:slim") { transitive = false }
+    implementation("net.createmod.ponder:Ponder-NeoForge-${minecraft_version}:${ponder_version}")
+    compileOnly("dev.engine-room.flywheel:flywheel-neoforge-api-${minecraft_version}:${flywheel_version}")
+    runtimeOnly("dev.engine-room.flywheel:flywheel-neoforge-${minecraft_version}:${flywheel_version}")
+    implementation("com.tterrag.registrate:Registrate:${registrate_version}")
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.
@@ -147,7 +154,11 @@ var generateModMetadata = tasks.register("generateModMetadata", ProcessResources
                              mod_version            : mod_version,
                              mod_authors            : mod_authors,
                              mod_description        : mod_description,
-                             version_description    : version_description]
+                             version_description    : version_description,
+                             create_version         : create_version,
+                             ponder_version         : ponder_version,
+                             flywheel_version       : flywheel_version,
+                             registrate_version     : registrate_version]
     inputs.properties replaceProperties
     expand replaceProperties
     from "src/main/templates"

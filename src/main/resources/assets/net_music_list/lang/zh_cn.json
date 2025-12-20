@@ -92,5 +92,22 @@
   "advancements.net_music_list.spyglass_at_cat.description": "小猫可爱捏",
 
   "manual.net_music_list.desc": "只是一个音乐播放模组而已。\n感谢现代化UI提供的API ヾ(≧▽≦*)o",
-  "manual.net_music_list.images": "画廊"
+  "manual.net_music_list.images": "画廊",
+
+  "tooltips.net_music_list.cd.song_name": "歌名",
+  "tooltips.net_music_list.cd.trans_name": "翻译名",
+  "tooltips.net_music_list.cd.null": "无",
+  "tooltips.net_music_list.cd.song_info": "歌曲信息",
+  "tooltips.net_music_list.index": "歌曲索引",
+  "create.tooltips.net_music_list.relative": "相对索引",
+  "create.tooltips.net_music_list.absolute": "绝对索引",
+  "create.tooltips.net_music_list.is_number": "是否显示序号",
+  "create.tooltips.net_music_list.number": "显示",
+  "create.tooltips.net_music_list.no_number": "不显示",
+  "tooltips.net_music_list.count": "显示总数",
+  "net_music_list.display_source.music_info": "歌曲信息",
+  "net_music_list.display_source.player_progress": "歌曲进度",
+  "net_music_list.display_source.music_index": "多首歌曲信息",
+  "net_music_list.display_source.lyric": "歌词",
+  "config.net_music_list.allow_lyric_to_server": "启用服务端歌词[alpha]"
 }

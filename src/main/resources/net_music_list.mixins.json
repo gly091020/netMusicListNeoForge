@@ -14,7 +14,8 @@
     "MusicPlayerBackpackMixin",
     "PlayListIsOKMixin",
     "PlayModeMixin",
-    "PlayNextSongMixin"
+    "PlayNextSongMixin",
+    "create.ArmDancingMixin"
   ],
   "injectors": {
     "defaultRequire": 1
@@ -25,10 +26,11 @@
   "client": [
     "BurnerSongListMixin",
     "GamePauseMixin",
+    "LyricCacheMixin",
+    "NetMusicSoundLyricMixin",
     "PlayMusicCacheMixin",
     "SoundPausedMixin",
     "TickableSoundGetterMixins$SoundEngineMixin",
-    "TickableSoundGetterMixins$SoundManagerMixin",
-    "LyricCacheMixin"
+    "TickableSoundGetterMixins$SoundManagerMixin"
   ]
 }

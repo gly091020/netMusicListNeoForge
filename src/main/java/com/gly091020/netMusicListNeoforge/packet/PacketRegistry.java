@@ -1,5 +1,6 @@
 package com.gly091020.netMusicListNeoforge.packet;
 
+import com.gly091020.netMusicListNeoforge.NetMusicList;
 import net.minecraft.network.protocol.PacketFlow;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -11,7 +12,7 @@ import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 public class PacketRegistry {
     @SubscribeEvent
     public static void register(final RegisterPayloadHandlersEvent event) {
-        final PayloadRegistrar registrar = event.registrar("1.7"); // 协议版本
+        final PayloadRegistrar registrar = event.registrar("1.8"); // 协议版本
 
         registrar.playToServer(
                 MusicListDataPacket.TYPE,
@@ -48,6 +49,13 @@ public class PacketRegistry {
                 UpdateMusicIndexCTSPacket.STREAM_CODEC,
                 ServerHandler::handleUpdateMusicIndexCTSPacket
         );
+
+        if(NetMusicList.CONFIG.allowLyricToServer)
+            registrar.playToServer(
+                    UpdateBlockLyricPacket.TYPE,
+                    UpdateBlockLyricPacket.STREAM_CODEC,
+                    ServerHandler::handleUpdateBlockLyricPacket
+            );
 
         registrar.playBidirectional(
                 PlayerPlayMusicPacket.TYPE,

@@ -1,6 +1,6 @@
 package com.gly091020.netMusicListNeoforge.packet;
 
-import com.gly091020.netMusicListNeoforge.NetMusicList;
+import com.github.tartaricacid.netmusic.tileentity.TileEntityMusicPlayer;
 import com.gly091020.netMusicListNeoforge.item.NetMusicListItem;
 import com.gly091020.netMusicListNeoforge.item.NetMusicPlayerItem;
 import net.minecraft.world.entity.player.Player;
@@ -69,6 +69,13 @@ public class ServerHandler {
             var c = NetMusicPlayerItem.getContainer(stack);
             NetMusicListItem.setSongIndex(c.getItem(0), packet.index());
             c.setChanged();
+        }
+    }
+
+    public static void handleUpdateBlockLyricPacket(UpdateBlockLyricPacket updateBlockLyricPacket, IPayloadContext context) {
+        var level = context.player().level();
+        if(level.getBlockEntity(updateBlockLyricPacket.pos()) instanceof TileEntityMusicPlayer musicPlayer){
+            musicPlayer.lyricRecord = updateBlockLyricPacket.lyric().toLyricRecord();
         }
     }
 }

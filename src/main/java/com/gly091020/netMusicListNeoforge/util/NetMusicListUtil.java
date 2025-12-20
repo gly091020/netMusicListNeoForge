@@ -25,9 +25,13 @@ import me.shedaniel.autoconfig.AutoConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.resources.sounds.TickableSoundInstance;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.sounds.SoundEvent;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
@@ -146,19 +150,21 @@ public class NetMusicListUtil {
 
     public static class Lyric {
         @SerializedName("lyric")
-        private final Map<Float, String> lyric;
+        private final LinkedHashMap<Float, String> lyric;
 
         @SerializedName("transform_lyric")
         @Nullable
-        private final Map<Float, String> transformLyric;
+        private final LinkedHashMap<Float, String> transformLyric;
 
-        public Lyric(Map<Float, String> lyric, @Nullable Map<Float, String> transformLyric) {
+        public Lyric(LinkedHashMap<Float, String> lyric, @Nullable LinkedHashMap<Float, String> transformLyric) {
             this.lyric = lyric;
+            if (transformLyric != null && transformLyric.isEmpty())
+                transformLyric = null;
             this.transformLyric = transformLyric;
         }
 
         public Lyric() {
-            this.lyric = new TreeMap<>();
+            this.lyric = new LinkedHashMap<>();
             this.transformLyric = null;
         }
 
@@ -186,12 +192,12 @@ public class NetMusicListUtil {
             return new Pair<>(text, transformText);
         }
 
-        public Map<Float, String> getLyric() {
+        public LinkedHashMap<Float, String> getLyric() {
             return lyric;
         }
 
-        @Nullable
-        public Map<Float, String> getTransformLyric() {
+        public LinkedHashMap<Float, String> getTransformLyric() {
+            if(transformLyric == null)return new LinkedHashMap<>();
             return transformLyric;
         }
 
@@ -219,6 +225,34 @@ public class NetMusicListUtil {
             }
             return new LyricRecord(lyric1, lyric2);
         }
+
+        public static Lyric fromLyricRecord(LyricRecord record){
+            LinkedHashMap<Float, String> f1 = new LinkedHashMap<>();
+            LinkedHashMap<Float, String> f2 = new LinkedHashMap<>();
+
+            record.getLyrics().forEach((integer, s) -> f1.put(integer * 0.05f, s));
+            if (record.getTransLyrics() != null) {
+                record.getTransLyrics().forEach((integer, s) -> f2.put(integer * 0.05f, s));
+            }
+
+            return new Lyric(f1, f2);
+        }
+
+        public static final StreamCodec<FriendlyByteBuf, Lyric> STREAM_CODEC = StreamCodec.composite(
+                ByteBufCodecs.map(
+                        LinkedHashMap::new,
+                        ByteBufCodecs.FLOAT,
+                        ByteBufCodecs.stringUtf8(32767)
+                ),
+                Lyric::getLyric,
+                ByteBufCodecs.map(
+                        LinkedHashMap::new,
+                        ByteBufCodecs.FLOAT,
+                        ByteBufCodecs.stringUtf8(32767)
+                ),
+                Lyric::getTransformLyric,
+                Lyric::new
+        );
     }
 
     public static String secondsToMinutesSeconds(int totalSeconds) {
@@ -243,8 +277,8 @@ public class NetMusicListUtil {
         if(lrc.isEmpty()){
             return null;
         }
-        Map<Float, String> lyricMap;
-        Map<Float, String> transformLyricMap = null;
+        LinkedHashMap<Float, String> lyricMap;
+        LinkedHashMap<Float, String> transformLyricMap = null;
         if(!transformlLrc.isEmpty()){
             transformLyricMap = new LinkedHashMap<>();
             for(String part: transformlLrc.split("\n")){
@@ -474,5 +508,13 @@ public class NetMusicListUtil {
             ));
         }
         EntriesRegistry.registryButtonGroup("all_config", buttons);
+    }
+
+    public static String getSongTime(int songTime) {
+        int min = songTime / 60;
+        int sec = songTime % 60;
+        String minStr = min <= 9 ? "0" + min : "" + min;
+        String secStr = sec <= 9 ? "0" + sec : "" + sec;
+        return I18n.get("tooltips.netmusic.cd.time.format", minStr, secStr);
     }
 }
