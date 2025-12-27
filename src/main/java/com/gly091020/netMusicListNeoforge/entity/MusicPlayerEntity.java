@@ -202,13 +202,13 @@ public class MusicPlayerEntity extends LivingEntity {
             setMusicCD(useItem);
             setPlaying(true);
             player.setItemInHand(hand, ItemStack.EMPTY);
-            NetworkHandler.sendToServer(new MusicPlayerEntityPlayMusicPacket(getId(), info.songUrl, info.songTime, info.songName));
+            tryPlayMusic();
             return InteractionResult.SUCCESS;
         }else if(isRightItem(useItem) && !musicCD.isEmpty() && info != null){
             player.setItemInHand(hand, musicCD);
             setMusicCD(useItem);
             setPlaying(true);
-            NetworkHandler.sendToServer(new MusicPlayerEntityPlayMusicPacket(getId(), info.songUrl, info.songTime, info.songName));
+            tryPlayMusic();
             return InteractionResult.SUCCESS;
         } else if (useItem.isEmpty()) {
             die(level().damageSources().playerAttack(player));
@@ -238,8 +238,14 @@ public class MusicPlayerEntity extends LivingEntity {
             var info = ItemMusicCD.getSongInfo(this.getMusicCD());
             if(info == null)return;
             this.setPlaying(true);
-            NetworkHandler.sendToServer(new MusicPlayerEntityPlayMusicPacket(this.getId(),
-                    info.songUrl, info.songTime, info.songName));
+            if(level().isClientSide)
+                NetworkHandler.sendToServer(new MusicPlayerEntityPlayMusicPacket(this.getId(),
+                        info.songUrl, info.songTime, info.songName));
+            else
+                ((ServerLevel)level()).getPlayers(player -> player.distanceTo(this) < 100)
+                        .forEach(player ->
+                        NetworkHandler.sendToClientPlayer(new MusicPlayerEntityPlayMusicPacket(this.getId(),
+                        info.songUrl, info.songTime, info.songName), player));
         }
     }
 
