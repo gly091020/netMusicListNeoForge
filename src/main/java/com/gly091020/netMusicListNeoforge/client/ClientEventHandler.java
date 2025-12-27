@@ -2,6 +2,8 @@ package com.gly091020.netMusicListNeoforge.client;
 
 import com.github.tartaricacid.netmusic.network.NetworkHandler;
 import com.gly091020.netMusicListNeoforge.NetMusicList;
+import com.gly091020.netMusicListNeoforge.entity.MusicPlayerModel;
+import com.gly091020.netMusicListNeoforge.entity.MusicPlayerRenderer;
 import com.gly091020.netMusicListNeoforge.hud.MusicInfoHud;
 import com.gly091020.netMusicListNeoforge.hud.MusicListLayer;
 import com.gly091020.netMusicListNeoforge.item.NetMusicListItem;
@@ -27,10 +29,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.ClientTickEvent;
-import net.neoforged.neoforge.client.event.InputEvent;
-import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
-import net.neoforged.neoforge.client.event.RenderGuiEvent;
+import net.neoforged.neoforge.client.event.*;
 import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
 import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent;
 import net.neoforged.neoforge.event.level.LevelEvent;
@@ -190,5 +189,17 @@ public class ClientEventHandler {
                 }, executor).thenCompose(preparationBarrier::wait); // 俺寻思能加载
             }
         });
+    }
+
+    @SubscribeEvent
+    public static void registerLayerDefinitions(EntityRenderersEvent.RegisterLayerDefinitions event) {
+        event.registerLayerDefinition(MusicPlayerModel.LAYER_LOCATION,
+                MusicPlayerModel::createBodyLayer);
+    }
+
+    @SubscribeEvent
+    public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
+        event.registerEntityRenderer(NetMusicList.MUSIC_PLAYER_ENTITY.get(),
+                MusicPlayerRenderer::new);
     }
 }

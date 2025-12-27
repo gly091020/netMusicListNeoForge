@@ -109,5 +109,8 @@
   "net_music_list.display_source.player_progress": "Song Progress",
   "net_music_list.display_source.music_index": "Multiple Songs Information",
   "net_music_list.display_source.lyric": "Lyric",
-  "config.net_music_list.allow_lyric_to_server": "Enable Server-side Lyrics [alpha]"
+  "config.net_music_list.allow_lyric_to_server": "Enable Server-side Lyrics [alpha]",
+
+  "config.jade.plugin_net_music_list.player_block": "Music Player Block",
+  "config.jade.plugin_net_music_list.player_entity": "Music Player Entity"
 }

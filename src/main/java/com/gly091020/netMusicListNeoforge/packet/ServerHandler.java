@@ -78,4 +78,9 @@ public class ServerHandler {
             musicPlayer.lyricRecord = updateBlockLyricPacket.lyric().toLyricRecord();
         }
     }
+
+    public static void handleServerMusicPlayerEntityPlayMusicPacket(MusicPlayerEntityPlayMusicPacket packet, IPayloadContext iPayloadContext) {
+        // 这名字这么越来越长了？
+        PacketDistributor.sendToAllPlayers(packet);
+    }
 }

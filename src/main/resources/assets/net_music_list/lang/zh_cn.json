@@ -109,5 +109,8 @@
   "net_music_list.display_source.player_progress": "歌曲进度",
   "net_music_list.display_source.music_index": "多首歌曲信息",
   "net_music_list.display_source.lyric": "歌词",
-  "config.net_music_list.allow_lyric_to_server": "启用服务端歌词[alpha]"
+  "config.net_music_list.allow_lyric_to_server": "启用服务端歌词[alpha]",
+
+  "config.jade.plugin_net_music_list.player_block": "音乐播放器方块",
+  "config.jade.plugin_net_music_list.player_entity": "音乐播放器实体"
 }

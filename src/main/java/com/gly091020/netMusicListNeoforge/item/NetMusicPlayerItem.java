@@ -5,18 +5,22 @@ import com.github.tartaricacid.netmusic.init.InitItems;
 import com.github.tartaricacid.netmusic.item.ItemMusicCD;
 import com.github.tartaricacid.netmusic.network.NetworkHandler;
 import com.gly091020.netMusicListNeoforge.NetMusicList;
+import com.gly091020.netMusicListNeoforge.entity.MusicPlayerEntity;
 import com.gly091020.netMusicListNeoforge.hud.MusicListLayer;
 import com.gly091020.netMusicListNeoforge.packet.PlayerPlayMusicPacket;
 import com.gly091020.netMusicListNeoforge.packet.UpdateMusicIndexCTSPacket;
 import com.gly091020.netMusicListNeoforge.packet.UpdatePlayerMusicPacket;
 import com.gly091020.netMusicListNeoforge.util.NetMusicListUtil;
 import net.minecraft.ChatFormatting;
+import net.minecraft.commands.arguments.EntityAnchorArgument;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.SlotAccess;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ClickAction;
@@ -25,9 +29,11 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.ItemContainerContents;
+import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
@@ -138,7 +144,9 @@ public class NetMusicPlayerItem extends Item{
     }
 
     @Override
-    public @NotNull InteractionResultHolder<ItemStack> use(Level level, @NotNull Player player, @NotNull InteractionHand usedHand) {
+    public @NotNull InteractionResultHolder<ItemStack> use(@NotNull Level level, @NotNull Player player, @NotNull InteractionHand usedHand) {
+        if(player.isShiftKeyDown())
+            return InteractionResultHolder.success(player.getItemInHand(usedHand));
         if(!level.isClientSide){
             return super.use(level, player, usedHand);
         }
@@ -162,6 +170,46 @@ public class NetMusicPlayerItem extends Item{
         MusicListLayer.isRender = true;
         MusicListLayer.slot = player.getInventory().findSlotMatchingItem(player.getMainHandItem());
         return InteractionResultHolder.success(player.getMainHandItem());
+    }
+
+    @Override
+    public @NotNull InteractionResult useOn(UseOnContext context) {
+        var player = context.getPlayer();
+        if(player == null)return super.useOn(context);
+        if(player.isShiftKeyDown()){
+            var usedHand = context.getHand();
+            var level = context.getLevel();
+            var item = player.getItemInHand(usedHand);
+            var entity = MusicPlayerEntity.fromItem(item, level);
+            if(entity == null)
+                return InteractionResult.SUCCESS;
+            entity.setPos(context.getClickLocation());
+            entity.lookAt(EntityAnchorArgument.Anchor.EYES, player.position());
+            entity.tryPlayMusic();
+            level.addFreshEntity(entity);
+            if(!player.isCreative())
+                player.getItemInHand(context.getHand()).shrink(1);
+            return InteractionResult.SUCCESS;
+        }
+        return super.useOn(context);
+    }
+
+    @Override
+    public boolean hasCustomEntity(@NotNull ItemStack stack) {
+        return true;
+    }
+
+    @Override
+    public @Nullable Entity createEntity(@NotNull Level level, @NotNull Entity location, @NotNull ItemStack stack) {
+        var entity = MusicPlayerEntity.fromItem(stack, level);
+        if(entity == null)
+            return null;
+        entity.setPos(location.position());
+        entity.setXRot(location.getXRot() + 90);
+        entity.setYRot(location.getYRot());
+        entity.setDeltaMovement(location.getDeltaMovement());
+        entity.tryPlayMusic();
+        return entity;
     }
 
     public static class PlayerContainer extends SimpleContainer{

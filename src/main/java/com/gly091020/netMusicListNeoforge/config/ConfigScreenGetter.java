@@ -58,6 +58,12 @@ public class ConfigScreenGetter {
                     .setDefaultValue(false)
                     .build());
         }
+        if(CONFIG.glyMusicEntity || NetMusicListUtil.isCreator()){
+            base.addEntry(entryBuilder.startBooleanToggle(Component.literal("GLY091020™的神必播放器实体特效"), CONFIG.glyMusicEntity)
+                    .setSaveConsumer(aBoolean -> CONFIG.glyMusicEntity = aBoolean)
+                    .setDefaultValue(false)
+                    .build());
+        }
 
         var hud = builder.getOrCreateCategory(Component.translatable("config.net_music_list.config.hud.title"));
         hud.addEntry(entryBuilder.startTextDescription(Component.translatable("config.net_music_list.config.select_hud.title")).build());

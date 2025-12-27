@@ -29,7 +29,7 @@ public class MusicInfoHud{
             "textures/gui/default.png");
 
     private static ItemMusicCD.SongInfo info;
-    private static ResourceLocation icon;
+    private volatile static ResourceLocation icon;
     @Nullable
     private static Long id = null;
     private static NetMusicListUtil.Lyric lyric;
@@ -144,17 +144,19 @@ public class MusicInfoHud{
                     if(imagePath == null){
                         icon = DEFAULT_TEXTURE;
                     }else{
-                        var resourceLocation = ResourceLocation.fromNamespaceAndPath(NetMusicList.ModID,
-                                String.format("icon_%s", UUID.randomUUID()));
-                        Minecraft.getInstance().getTextureManager().register(resourceLocation,
-                                NetMusicListUtil.getTextureFromPath(imagePath));
-                        icon = resourceLocation;
+                        Minecraft.getInstance().execute(() -> {
+                            var resourceLocation = ResourceLocation.fromNamespaceAndPath(NetMusicList.ModID,
+                                    String.format("icon_%s", UUID.randomUUID()));
+                            try {
+                                Minecraft.getInstance().getTextureManager().register(resourceLocation,
+                                        NetMusicListUtil.getTextureFromPath(imagePath));
+                            } catch (IOException ignored) {}
+                            icon = resourceLocation;
+                        });
                         return;
                     }
                 }
-            } catch (IllegalAccessException | IOException ignored) {
-
-            }
+            } catch (IllegalAccessException ignored) {}
             try {
                 getTextureFromLocal(info);
                 id = NetMusicListUtil.getIdFromInfo(info);

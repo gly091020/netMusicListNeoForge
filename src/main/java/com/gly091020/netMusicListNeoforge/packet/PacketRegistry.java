@@ -12,7 +12,7 @@ import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 public class PacketRegistry {
     @SubscribeEvent
     public static void register(final RegisterPayloadHandlersEvent event) {
-        final PayloadRegistrar registrar = event.registrar("1.8"); // 协议版本
+        final PayloadRegistrar registrar = event.registrar("1.9"); // 协议版本
 
         registrar.playToServer(
                 MusicListDataPacket.TYPE,
@@ -65,6 +65,18 @@ public class PacketRegistry {
                         ServerHandler.handleServerPlayerPlayPacket(playerPlayMusicPacket, iPayloadContext);
                     }else{
                         ClientHandler.handleClientPlayerPlayPacket(playerPlayMusicPacket, iPayloadContext);
+                    }
+                }
+        );
+
+        registrar.playBidirectional(
+                MusicPlayerEntityPlayMusicPacket.TYPE,
+                MusicPlayerEntityPlayMusicPacket.STREAM_CODEC,
+                (musicPlayerEntityPlayMusicPacket, iPayloadContext) -> {
+                    if(iPayloadContext.flow() == PacketFlow.SERVERBOUND){
+                        ServerHandler.handleServerMusicPlayerEntityPlayMusicPacket(musicPlayerEntityPlayMusicPacket, iPayloadContext);
+                    }else{
+                        ClientHandler.handleClientMusicPlayerEntityPlayMusicPacket(musicPlayerEntityPlayMusicPacket, iPayloadContext);
                     }
                 }
         );

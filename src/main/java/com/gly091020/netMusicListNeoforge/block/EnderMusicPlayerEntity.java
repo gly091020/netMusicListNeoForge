@@ -148,4 +148,8 @@ public class EnderMusicPlayerEntity extends BlockEntity {
     public Packet<ClientGamePacketListener> getUpdatePacket() {
         return ClientboundBlockEntityDataPacket.create(this);
     }
+
+    public TileEntityMusicPlayer getOriginalPlayer() {
+        return originalPlayer;
+    }
 }

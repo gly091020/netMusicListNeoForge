@@ -6,6 +6,7 @@ import com.gly091020.netMusicListNeoforge.NetMusicList;
 import com.gly091020.netMusicListNeoforge.hud.MusicInfoHud;
 import com.gly091020.netMusicListNeoforge.item.NetMusicPlayerItem;
 import com.gly091020.netMusicListNeoforge.sounds.EnderPlayerNetMusicSound;
+import com.gly091020.netMusicListNeoforge.sounds.PlayerEntityNetMusicSound;
 import com.gly091020.netMusicListNeoforge.sounds.PlayerNetMusicSound;
 import com.gly091020.netMusicListNeoforge.util.LoginNeedUtil;
 import com.gly091020.netMusicListNeoforge.util.MusicManager;
@@ -40,7 +41,8 @@ public class ClientHandler {
                         if (stack.is(NetMusicList.MUSIC_PLAYER_ITEM.get())) {
                             var stack1 = NetMusicPlayerItem.getContainer(stack).getItem(0);
                             if (stack1.getItem() instanceof ItemMusicCD) {
-                                MusicInfoHud.setInfo(packet.info(), stack, packet.slot());
+                                Minecraft.getInstance().execute(() ->
+                                        MusicInfoHud.setInfo(packet.info(), stack, packet.slot()));
                             }
                         }
                     }
@@ -68,6 +70,18 @@ public class ClientHandler {
                     sound.stopMusic();
                 }
             }
+        }));
+    }
+
+    public static void handleClientMusicPlayerEntityPlayMusicPacket(MusicPlayerEntityPlayMusicPacket packet, IPayloadContext iPayloadContext) {
+        iPayloadContext.enqueueWork(() -> CompletableFuture.runAsync(() -> {
+            var finalUrl = packet.url();
+            if(NetMusicListUtil.hasLoginNeed()){
+                var url1 = LoginNeedUtil.getUrl(finalUrl);
+                if(url1 != null)finalUrl = url1;
+            }
+            MusicPlayManager.play(finalUrl, packet.songName(), url ->
+                    new PlayerEntityNetMusicSound(packet.entityID(), packet.url(), url, packet.timeSecond()));
         }));
     }
 }

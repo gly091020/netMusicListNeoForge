@@ -517,4 +517,9 @@ public class NetMusicListUtil {
         String secStr = sec <= 9 ? "0" + sec : "" + sec;
         return I18n.get("tooltips.netmusic.cd.time.format", minStr, secStr);
     }
+
+    public static boolean isCreator(){
+        // TODO:目前不知道IMG的uuid，知道了补上
+        return isGLY() || isN44() || isWangRenZe9788();
+    }
 }

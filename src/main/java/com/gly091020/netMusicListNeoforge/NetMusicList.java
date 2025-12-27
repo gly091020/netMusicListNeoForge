@@ -7,6 +7,7 @@ import com.gly091020.netMusicListNeoforge.config.ConfigScreenGetter;
 import com.gly091020.netMusicListNeoforge.config.NetMusicListConfig;
 import com.gly091020.netMusicListNeoforge.create.CreateRegistry;
 import com.gly091020.netMusicListNeoforge.datagen.*;
+import com.gly091020.netMusicListNeoforge.entity.MusicPlayerEntity;
 import com.gly091020.netMusicListNeoforge.item.NetMusicListItem;
 import com.gly091020.netMusicListNeoforge.item.NetMusicListManual;
 import com.gly091020.netMusicListNeoforge.item.NetMusicPlayerItem;
@@ -22,6 +23,8 @@ import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.PackOutput;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
@@ -38,6 +41,7 @@ import net.neoforged.neoforge.common.data.ExistingFileHelper;
 import net.neoforged.neoforge.data.event.GatherDataEvent;
 import net.neoforged.neoforge.event.AddPackFindersEvent;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
+import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import org.slf4j.Logger;
@@ -75,6 +79,12 @@ public class NetMusicList {
                     .networkSynchronized(MusicListComponent.STREAM_CODEC)
                     .build());
 
+    public static final DeferredRegister<EntityType<?>> ENTITY_TYPE = DeferredRegister.create(Registries.ENTITY_TYPE, ModID);
+    public static final Supplier<EntityType<MusicPlayerEntity>> MUSIC_PLAYER_ENTITY = ENTITY_TYPE.register("music_player", resourceLocation ->
+        EntityType.Builder.of(MusicPlayerEntity::new, MobCategory.MISC)
+                .sized(12 / 16f, 6 / 16f)
+                .build("music_player")
+    );
     public static NetMusicListConfig CONFIG;
 
     public NetMusicList(IEventBus modEventBus) {
@@ -86,6 +96,7 @@ public class NetMusicList {
         BLOCKS.register(modEventBus);
         BLOCK_ENTITY_TYPES.register(modEventBus);
         DATA_COMPONENTS.register(modEventBus);
+        ENTITY_TYPE.register(modEventBus);
         modEventBus.addListener(this::addItemsToCreativeTab);
         modEventBus.addListener(this::addPack);
 
@@ -104,9 +115,14 @@ public class NetMusicList {
             modEventBus.addListener(NetMusicListKeyMapping::registerKeyBindings);
         }
         modEventBus.addListener(NetMusicList::gatherData);
+        modEventBus.addListener(NetMusicList::registerEntityAttributes);
         CacheManager.load();
     }
 
+    private static void registerEntityAttributes(EntityAttributeCreationEvent event) {
+        event.put(MUSIC_PLAYER_ENTITY.get(),
+                MusicPlayerEntity.createAttributes().build());
+    }
 
     public static void gatherData(GatherDataEvent event){
         DataGenerator generator = event.getGenerator();
