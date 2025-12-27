@@ -27,4 +27,6 @@ Click again or release the key to confirm your selection.
 
 When a **Portable Player** is playing a song **owned by you**, a song information HUD will appear in the top-left corner.
 
-It can currently display the cover, song name (translated name), progress bar, and lyrics.
+## Entity
+
+Sneak right-click on the ground or throw the item to transform it into a Portable Player entity. Please refer to the relevant section for details.

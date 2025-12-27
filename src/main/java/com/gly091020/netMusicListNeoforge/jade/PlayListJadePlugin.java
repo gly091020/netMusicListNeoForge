@@ -1,7 +1,6 @@
 package com.gly091020.netMusicListNeoforge.jade;
 
 import com.github.tartaricacid.netmusic.block.BlockMusicPlayer;
-import com.gly091020.netMusicListNeoforge.block.EnderMusicPlayer;
 import com.gly091020.netMusicListNeoforge.entity.MusicPlayerEntity;
 import snownee.jade.api.IWailaClientRegistration;
 import snownee.jade.api.IWailaCommonRegistration;

@@ -5,6 +5,7 @@
   [
     "item/playlist.md",
     "item/music_player.md",
+    "item/player_entity.md",
     "item/manual.md",
     "item/ender_player.md"
   ],
@@ -15,5 +16,6 @@
     "addition/key_binds.md",
     "addition/sound_fix.md"
   ],
-  "other/create_supports.md"
+  "other/create_supports.md",
+  "other/jade_supports.md"
 ]
