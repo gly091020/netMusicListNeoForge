@@ -96,14 +96,12 @@ public class ConfigScreenGetter {
         var cache = builder.getOrCreateCategory(Component.translatable("config.net_music_list.config.cache.title"));
         cache.addEntry(entryBuilder.startBooleanToggle(Component.translatable("config.net_music_list.enable_cache"),
                         CONFIG.enableCache)
-                .requireRestart()
                 .setTooltip(Component.translatable("config.net_music_list.cache_warning"))
                 .setDefaultValue(false)
                 .setSaveConsumer(b -> CONFIG.enableCache = b)
                 .build());
         cache.addEntry(entryBuilder.startBooleanToggle(Component.translatable("config.net_music_list.global_cache"),
                         CONFIG.globalCache)
-                .requireRestart()
                 .setDefaultValue(false)
                 .setSaveConsumer(b -> CONFIG.globalCache = b)
                 .build()

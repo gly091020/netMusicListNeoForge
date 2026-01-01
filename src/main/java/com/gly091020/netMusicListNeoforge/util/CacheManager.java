@@ -60,6 +60,12 @@ public class CacheManager {
         }
     }
 
+    public static void reload(){
+        if(!NetMusicList.CONFIG.enableCache)return;
+        musicCache.clear();
+        load();
+    }
+
     public static void save(){
         if(!NetMusicList.CONFIG.enableCache)return;
         try{
@@ -102,9 +108,20 @@ public class CacheManager {
     public static void startImgDownload(long resourceId, String uuid){
         if(!NetMusicList.CONFIG.enableCache)return;
         EXECUTOR_SERVICE.submit(() -> {
+            var json = "";
             try {
-                startDownload(NetMusicListUtil.getIconUrl(NetMusic.NET_EASE_WEB_API.song(resourceId))
-                        .toString(), resourceId, ".png", uuid);
+                while (true){
+                    json = NetMusic.NET_EASE_WEB_API.song(resourceId);
+                    try{
+                        startDownload(NetMusicListUtil.getIconUrl(json)
+                                .toString(), resourceId, ".png", uuid);
+                    } catch (Exception e) {
+                        NetMusicList.LOGGER.error("出现错误(405?):{}", json);
+                        Thread.sleep(1000);
+                        continue;
+                    }
+                    break;
+                }
             } catch (Exception e) {
                 NetMusicList.LOGGER.error("出现错误：", e);
             }
@@ -158,6 +175,10 @@ public class CacheManager {
     public static boolean hasCache(long resourceId){
         if(!NetMusicList.CONFIG.enableCache)return false;
         return musicCache.containsKey(String.valueOf(resourceId));
+    }
+
+    public static String getCacheUUID(long resourceID){
+        return musicCache.get(String.valueOf(resourceID));
     }
 
     public static Path getImageCache(long resourceId){

@@ -1,4 +1,6 @@
 // 回来吧我的IAM MUSIC PLAYER
+// Iam Music Player Renewed的前置已经有1.21.1了
+// 加油啊Iam Music Player Renewed，干翻网络音乐机：播放列表
 package com.gly091020.netMusicListNeoforge.item;
 
 import com.github.tartaricacid.netmusic.init.InitItems;
@@ -58,7 +60,8 @@ public class NetMusicPlayerItem extends Item{
             if(ItemMusicCD.getSongInfo(stack1) != null){
                 getContainer(stack).setItem(0, stack1);
                 access.set(ItemStack.EMPTY);
-                playSound(stack, player, slot.getSlotIndex());
+                if(slot.container == player.getInventory())
+                    playSound(stack, player, slot.getSlotIndex());
                 return true;
             }
         }

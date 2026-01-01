@@ -334,6 +334,7 @@ public class NetMusicListUtil {
         if(FMLEnvironment.dist.isClient()){
             MusicInfoHud.setPos(CONFIG.x, CONFIG.y);
         }
+        CacheManager.reload();
     }
 
     @OnlyIn(Dist.CLIENT)

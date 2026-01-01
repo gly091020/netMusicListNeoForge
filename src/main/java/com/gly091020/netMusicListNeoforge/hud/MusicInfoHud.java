@@ -102,7 +102,11 @@ public class MusicInfoHud{
         top = y;
     }
 
-    public static void setInfo(ItemMusicCD.SongInfo info, @NotNull ItemStack playerStack, int slot){
+    public static void setInfo(@Nullable ItemMusicCD.SongInfo info, @NotNull ItemStack playerStack, int slot){
+        if(info == null){
+            MusicInfoHud.info = null;
+            return;
+        }
         id = null;
         MusicInfoHud.info = info;
         MusicInfoHud.slot = slot;

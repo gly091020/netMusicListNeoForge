@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Objects;
 
 public class FileDownloadThread extends Thread {
     private final String downloadUrl;
@@ -81,8 +82,10 @@ public class FileDownloadThread extends Thread {
             String finalFileName = threadId + fileType;
             Path finalPath = downloadDir.resolve(finalFileName);
             Files.move(filePath, finalPath);
-
             completed = true;
+
+            // 防止出现操作频繁
+            Thread.sleep(3000);
 
         } catch (Exception e) {
             failed = true;

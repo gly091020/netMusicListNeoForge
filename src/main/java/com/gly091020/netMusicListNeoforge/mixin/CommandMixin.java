@@ -61,6 +61,15 @@ public class CommandMixin {
                         CacheManager.startSongDownload(songId, uuid);
                         CacheManager.startImgDownload(songId, uuid);
                         CacheManager.startLycDownload(songId, uuid);
+                    }else {
+                        var u = CacheManager.getCacheUUID(songId);
+                        if(u != null)uuid = u;
+                        if(CacheManager.getSongCache(songId) == null)
+                            CacheManager.startSongDownload(songId, uuid);
+                        if(CacheManager.getImageCache(songId) == null)
+                            CacheManager.startImgDownload(songId, uuid);
+                        if(CacheManager.getLycCache(songId) == null)
+                            CacheManager.startLycDownload(songId, uuid);
                     }
                     count++;
                 }catch (Exception ignored){}
