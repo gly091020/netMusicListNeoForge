@@ -3,7 +3,9 @@
 <!-- entry.img:manual/music_player/put_in.png,Put in Disc -->
 <!-- entry.img:manual/music_player/tooltip.png,Item Tooltip -->
 <!-- entry.img:manual/music_player/hud.png,HUD -->
-# Portable Player
+# Ender Player (This item has been deprecated)
+
+Please use the Network Music Player from the Advanced Jukebox mod instead.
 
 A player that allows you to carry and play songs anywhere, and it is the most complex item (in terms of mechanics) in the entire mod.
 

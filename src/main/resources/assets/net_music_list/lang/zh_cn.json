@@ -81,6 +81,8 @@
   "text.net_music_list.debug_mode": "警告：你当前处于调试模式",
 
   "block.net_music_list.ender_music_player": "末影播放器",
+  "item.net_music_list.ender_music_player.tip1": "§c此方块已弃用，请使用网络音乐机：高级唱片机模组代替",
+  "item.net_music_list.ender_music_player.tip2": "潜行使用将其拆解",
   "block.net_music_list.ender_music_player.add_player": "已添加%s玩家",
   "block.net_music_list.ender_music_player.remove_player": "已移除%s玩家",
   "patchouli.net_music_list.ender_player.title": "末影播放器",

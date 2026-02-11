@@ -49,12 +49,6 @@ public class RecipeGenerator extends RecipeProvider{
                 .unlockedBy("has_list", has(NetMusicList.MUSIC_LIST_ITEM.get()))
                 .save(recipeOutput);
 
-        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, NetMusicList.ENDER_PLAYER_ITEM.get())
-                .requires(InitItems.MUSIC_PLAYER.get())
-                .requires(Items.ENDER_PEARL)
-                .unlockedBy("has_player", has(InitItems.MUSIC_PLAYER.get()))
-                .save(recipeOutput);
-
         ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, NetMusicList.MANUAL.get())
                 .requires(Items.BOOK)
                 .requires(InitItems.MUSIC_CD.get())

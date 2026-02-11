@@ -2,7 +2,9 @@
 <!-- entry.ico:manual/ender_player/ender_player.png -->
 <!-- entry.img:manual/ender_player/add_player.png,添加玩家 -->
 
-# 末影播放器
+# 末影播放器（此物品已被弃用）
+
+请使用网络音乐机：高级唱片机模组代替。
 
 一个可以无视距离播放音乐的唱片机。（有区块加载限制）
 

@@ -81,6 +81,8 @@
   "text.net_music_list.debug_mode": "Warning: You are currently in debug mode.",
 
   "block.net_music_list.ender_music_player": "Ender Music Player",
+  "item.net_music_list.ender_music_player.tip1": "§cThis block has been deprecated. Please use the Net Music: Advanced Player mod instead.",
+  "item.net_music_list.ender_music_player.tip2": "Sneak-use to dismantle it",
   "block.net_music_list.ender_music_player.add_player": "Added player %s",
   "block.net_music_list.ender_music_player.remove_player": "Removed player %s",
   "patchouli.net_music_list.ender_player.title": "Ender Player",

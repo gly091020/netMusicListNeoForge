@@ -8,6 +8,7 @@ import com.gly091020.netMusicListNeoforge.config.NetMusicListConfig;
 import com.gly091020.netMusicListNeoforge.create.CreateRegistry;
 import com.gly091020.netMusicListNeoforge.datagen.*;
 import com.gly091020.netMusicListNeoforge.entity.MusicPlayerEntity;
+import com.gly091020.netMusicListNeoforge.item.EnderMusicPlayerItem;
 import com.gly091020.netMusicListNeoforge.item.NetMusicListItem;
 import com.gly091020.netMusicListNeoforge.item.NetMusicListManual;
 import com.gly091020.netMusicListNeoforge.item.NetMusicPlayerItem;
@@ -70,7 +71,7 @@ public class NetMusicList {
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITY_TYPES = DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, ModID);
     public static final DeferredHolder<Block, EnderMusicPlayer> ENDER_MUSIC_PLAYER = BLOCKS.register("ender_music_player", EnderMusicPlayer::new);
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<EnderMusicPlayerEntity>> ENDER_MUSIC_PLAYER_TYPE = BLOCK_ENTITY_TYPES.register("ender_music_player_entity", () -> BlockEntityType.Builder.of(EnderMusicPlayerEntity::new, ENDER_MUSIC_PLAYER.get()).build(null));
-    public static final DeferredHolder<Item, BlockItem> ENDER_PLAYER_ITEM = ITEMS.register("ender_music_player", () -> new BlockItem(ENDER_MUSIC_PLAYER.get(), new Item.Properties()));
+    public static final DeferredHolder<Item, BlockItem> ENDER_PLAYER_ITEM = ITEMS.register("ender_music_player", EnderMusicPlayerItem::new);
 
     public static final DeferredRegister<DataComponentType<?>> DATA_COMPONENTS = DeferredRegister.create(Registries.DATA_COMPONENT_TYPE, ModID);
     public static final Supplier<DataComponentType<MusicListComponent>> MUSIC_LIST_COMPONENT = DATA_COMPONENTS.register("music_list", () ->
@@ -154,11 +155,12 @@ public class NetMusicList {
                     new ItemStack(ENDER_PLAYER_ITEM.get()),
                     CreativeModeTab.TabVisibility.PARENT_AND_SEARCH_TABS
             );
-            event.insertBefore(
-                    new ItemStack(ENDER_PLAYER_ITEM.get()),
-                    new ItemStack(MANUAL.get()),
-                    CreativeModeTab.TabVisibility.PARENT_AND_SEARCH_TABS
-            );
+            if(!NetMusicListUtil.hasAdvancedPlayer())
+                event.insertBefore(
+                        new ItemStack(ENDER_PLAYER_ITEM.get()),
+                        new ItemStack(MANUAL.get()),
+                        CreativeModeTab.TabVisibility.PARENT_AND_SEARCH_TABS
+                );
         }
     }
 

@@ -522,4 +522,8 @@ public class NetMusicListUtil {
         // TODO:目前不知道IMG的uuid，知道了补上
         return isGLY() || isN44() || isWangRenZe9788();
     }
+
+    public static boolean hasAdvancedPlayer(){
+        return ModList.get().isLoaded("netmusicadvancedplayer");
+    }
 }
