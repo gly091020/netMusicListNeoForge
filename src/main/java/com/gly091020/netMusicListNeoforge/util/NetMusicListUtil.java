@@ -25,7 +25,6 @@ import me.shedaniel.autoconfig.AutoConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.DynamicTexture;
-import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.resources.sounds.TickableSoundInstance;
 import net.minecraft.network.FriendlyByteBuf;
@@ -516,7 +515,7 @@ public class NetMusicListUtil {
         int sec = songTime % 60;
         String minStr = min <= 9 ? "0" + min : "" + min;
         String secStr = sec <= 9 ? "0" + sec : "" + sec;
-        return I18n.get("tooltips.netmusic.cd.time.format", minStr, secStr);
+        return Component.translatable("tooltips.netmusic.cd.time.format", minStr, secStr).getString();
     }
 
     public static boolean isCreator(){

@@ -72,7 +72,7 @@ public class MusicInfoHud{
             clearInfo();
             return;
         }
-        var tick = sounds.getFirst().getTick();
+        var tick = sounds.getLast().getTick();
         guiGraphics.fill(left + 50, top + font.lineHeight + 4, left + 50 + tickWidth, top + font.lineHeight + 6, 0xFFAAAAAA);
         guiGraphics.fill(left + 50, top + font.lineHeight + 4, (int) (left + 50 + tickWidth * clamp((count - tick / 20f) / count, 0, 1)), top + font.lineHeight + 6, 0xFFFFFFFF);
         if(id != null && CacheManager.getDownloadProgress(id) > 0){
