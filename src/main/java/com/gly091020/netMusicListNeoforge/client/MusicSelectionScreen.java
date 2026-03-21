@@ -6,6 +6,7 @@ import com.gly091020.netMusicListNeoforge.config.ConfigScreenGetter;
 import com.gly091020.netMusicListNeoforge.packet.DeleteMusicDataPacket;
 import com.gly091020.netMusicListNeoforge.packet.MoveMusicDataPacket;
 import com.gly091020.netMusicListNeoforge.packet.MusicListDataPacket;
+import com.gly091020.netMusicListNeoforge.util.MUIUtil;
 import com.gly091020.netMusicListNeoforge.util.NetMusicListUtil;
 import com.gly091020.netMusicListNeoforge.util.PlayMode;
 import com.mojang.math.Axis;
@@ -23,6 +24,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
+import net.neoforged.fml.ModList;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -128,6 +130,54 @@ public class MusicSelectionScreen extends Screen {
         if(musicList.size() == listWidget.getSelectedIndex()){
             pointerRotation = 45;
         }
+        initIAM();
+    }
+
+    private boolean showIAM = ModList.get().isLoaded("modernui") &&
+            !ModList.get().isLoaded("iammusicplayer") && !NetMusicList.CONFIG.showedIAM;
+    private static final ResourceLocation IAM_ICON = ResourceLocation.fromNamespaceAndPath(NetMusicList.ModID,
+            "textures/manual/iam/icon.png");
+    private static final Component IAM_TEXT1 = Component.translatable("gui.net_music_list.iam.text1");
+    private static final Component IAM_TEXT2 = Component.translatable("gui.net_music_list.iam.text2");
+
+    private void initIAM(){
+        if(!showIAM)return;
+        var b1 = Button.builder(Component.translatable("gui.net_music_list.iam.yes"),
+                        button -> {
+                            showIAM = false;
+                            NetMusicList.CONFIG.showedIAM = true;
+                            NetMusicListUtil.reloadConfig();
+                            button.visible = false;
+                            if(ModList.get().isLoaded("modernui"))
+                                MUIUtil.openIAMScreen();
+                            NetMusicList.LOGGER.info("q(≧▽≦q)");
+                        })
+                .pos(left + backgroundWidth - 50 - 2 - 50 - 50, top - 5 - 2 - 20)
+                .size(50, 20).build();
+        addRenderableWidget(b1);
+        var b2 = Button.builder(Component.translatable("gui.net_music_list.iam.no"),
+                        button -> {
+                            showIAM = false;
+                            NetMusicList.CONFIG.showedIAM = true;
+                            NetMusicListUtil.reloadConfig();
+                            button.visible = false;
+                            b1.visible = false;
+                            NetMusicList.LOGGER.info("╥﹏╥...");
+                        })
+                .pos(left + backgroundWidth - 50 - 2 - 50, top - 5 - 2 - 20)
+                .size(50, 20).build();
+        addRenderableWidget(b2);
+    }
+
+    private void renderIAM(@NotNull GuiGraphics guiGraphics){
+        if(!showIAM)return;
+        guiGraphics.fill(left + 50, top - 60, left + backgroundWidth - 50, top - 5, 0xFFA1A1A1);
+        guiGraphics.fill(left + 50 + 2, top - 60 + 2, left + backgroundWidth - 50 - 2, top - 5 - 2, 0xFFD2D2D2);
+        guiGraphics.blit(IAM_ICON, left + 50 + 2, top - 60 + 2, 0, 0, 51, 51, 51, 51);
+        guiGraphics.fill(left + 50 + 2 + 51, top - 60 + 2, left + 50 + 2 + 51 + 2, top - 5 - 2, 0xFFA1A1A1);
+
+        guiGraphics.drawString(font, IAM_TEXT1, left + 50 + 2 + 51 + 5, top - 60 + 2 + 2, 0xFFFFFFFF);
+        guiGraphics.drawString(font, IAM_TEXT2, left + 50 + 2 + 51 + 5, top - 60 + 2 + 2 + font.lineHeight + 2, 0xFFFFFFFF);
     }
 
     @Override
@@ -139,6 +189,7 @@ public class MusicSelectionScreen extends Screen {
     public void renderBackground(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         super.renderBackground(guiGraphics, mouseX, mouseY, partialTick);
         guiGraphics.blit(BACKGROUND_TEXTURE, left, top, 0, 0, backgroundWidth, backgroundHeight, 512, 256);
+        renderIAM(guiGraphics);
     }
 
     public void renderCD(@NotNull GuiGraphics guiGraphics, float delta){

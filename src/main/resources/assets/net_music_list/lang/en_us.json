@@ -114,5 +114,10 @@
   "config.net_music_list.allow_lyric_to_server": "Enable Server-side Lyrics [alpha]",
 
   "config.jade.plugin_net_music_list.player_block": "Music Player Block",
-  "config.jade.plugin_net_music_list.player_entity": "Music Player Entity"
+  "config.jade.plugin_net_music_list.player_entity": "Music Player Entity",
+
+  "gui.net_music_list.iam.text1": "Try Iam Music Player Renewed?",
+  "gui.net_music_list.iam.text2": "Support the Author!",
+  "gui.net_music_list.iam.yes": "Details",
+  "gui.net_music_list.iam.no": "Hide"
 }

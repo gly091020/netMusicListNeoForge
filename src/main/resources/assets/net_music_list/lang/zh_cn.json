@@ -114,5 +114,10 @@
   "config.net_music_list.allow_lyric_to_server": "启用服务端歌词[alpha]",
 
   "config.jade.plugin_net_music_list.player_block": "音乐播放器方块",
-  "config.jade.plugin_net_music_list.player_entity": "音乐播放器实体"
+  "config.jade.plugin_net_music_list.player_entity": "音乐播放器实体",
+
+  "gui.net_music_list.iam.text1": "也试试 Iam Music Player Renewed？",
+  "gui.net_music_list.iam.text2": "支持作者！",
+  "gui.net_music_list.iam.yes": "详细信息",
+  "gui.net_music_list.iam.no": "不再显示"
 }

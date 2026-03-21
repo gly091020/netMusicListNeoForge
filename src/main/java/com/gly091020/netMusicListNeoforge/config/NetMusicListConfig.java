@@ -30,4 +30,6 @@ public class NetMusicListConfig implements ConfigData {
 
     // gly特有的突然扭曲
     public boolean glyMusicEntity = false;
+
+    public boolean showedIAM = false;
 }
