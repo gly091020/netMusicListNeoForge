@@ -1,24 +1,25 @@
 package com.gly091020.netMusicListNeoforge.client;
 
+import com.github.tartaricacid.netmusic.client.renderer.MusicPlayerItemRenderer;
 import com.gly091020.netMusicListNeoforge.NetMusicList;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
+import com.mojang.serialization.MapCodec;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.Sheets;
-import net.minecraft.client.renderer.entity.ItemRenderer;
-import net.minecraft.client.resources.model.BakedModel;
-import net.minecraft.client.resources.model.ModelResourceLocation;
+import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.item.ItemModel;
+import net.minecraft.client.renderer.special.NoDataSpecialModelRenderer;
+import net.minecraft.client.renderer.special.SpecialModelRenderer;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.ItemDisplayContext;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.resources.Identifier;
+import net.minecraft.util.FormattedCharSequence;
 import net.neoforged.fml.ModList;
-import org.jetbrains.annotations.NotNull;
+import org.joml.Vector3fc;
 
-public class NetMusicListManualRenderer extends BlockEntityWithoutLevelRenderer {
+import java.util.function.Consumer;
+
+public class NetMusicListManualRenderer implements NoDataSpecialModelRenderer {
     // 用了很多来自IAM Music Player的渲染代码
     private static final Component DEV_TEXT = Component.literal("5112151111121");
     private static final Component MANUAL_TEXT = Component.translatable("manual.net_music_list.manual");
@@ -27,11 +28,9 @@ public class NetMusicListManualRenderer extends BlockEntityWithoutLevelRenderer 
     private static final Component MOD_NAME_TEXT = Component.translatable("modmenu.nameTranslation.net_music_list");
     private final Component MOD_VERSION_TEXT;
 
-    public static BakedModel model;
-    private static final ModelResourceLocation MODEL_LOCATION = new ModelResourceLocation(ResourceLocation.fromNamespaceAndPath(NetMusicList.ModID, "manual_model"),
-            "inventory");
+    public static ItemModel model;
+    private static final Identifier MODEL_LOCATION = Identifier.fromNamespaceAndPath(NetMusicList.ModID, "manual_model");
     public NetMusicListManualRenderer() {
-        super(Minecraft.getInstance().getBlockEntityRenderDispatcher(), Minecraft.getInstance().getEntityModels());
         var info = ModList.get().getModFileById(NetMusicList.ModID).getMods().getFirst();
         MOD_VERSION_TEXT = Component.literal("v").append(Component.literal(info.getVersion().toString()));
     }
@@ -42,41 +41,72 @@ public class NetMusicListManualRenderer extends BlockEntityWithoutLevelRenderer 
         return INSTANCE;
     }
 
-    @Override
-    @SuppressWarnings("all")
-    public void renderByItem(@NotNull ItemStack itemStack, @NotNull ItemDisplayContext displayContext, @NotNull PoseStack poseStack, @NotNull MultiBufferSource multiBufferSource, int packedLight, int packedOverlay) {
-        var renderer = Minecraft.getInstance().getBlockRenderer().getModelRenderer();
-        var vertexConsumer = ItemRenderer.getFoilBufferDirect(multiBufferSource, Sheets.solidBlockSheet(), true, itemStack.hasFoil());
-        model = Minecraft.getInstance().getModelManager().getModel(MODEL_LOCATION);
-        renderer.renderModel(poseStack.last(), vertexConsumer, null, model, 1, 1, 1, packedLight, packedOverlay);
-        renderText(poseStack, multiBufferSource, DEV_TEXT, packedLight, 9f, 15.75f, 0.4f, false, 0);
-        renderText(poseStack, multiBufferSource, MANUAL_TEXT, packedLight, 4.225f / 2f, 15.75f, 0.54f, true, 0xFFFFFFFF);
-        renderText(poseStack, multiBufferSource, MOD_NAME_TEXT, packedLight, 9.85f, 14.5f, 0.6f, false, 0);
-        renderText(poseStack, multiBufferSource, MOD_VERSION_TEXT, packedLight, 9.85f, 13.5f, 0.4f, false, 0);
-        renderText(poseStack, multiBufferSource, COVER_INFO1_TEXT, packedLight, 10f / 2f, 12, 0.4f, true, 0xFFFFFFFF);
-        renderText(poseStack, multiBufferSource, COVER_INFO2_TEXT, packedLight, 10f / 2f, 11.4514f, 0.4f, true, 0XFFFFFFFF);
-        //                                                                                    意义明确的数值
-    }
+    public void renderText(PoseStack poseStack,
+                           Component text,
+                           int light,
+                           float x,
+                           float y,
+                           float scale,
+                           boolean center,
+                           int color,
+                           SubmitNodeCollector collector) {
 
-    public void renderText(@NotNull PoseStack poseStack, @NotNull MultiBufferSource multiBufferSource, Component text, int light, float x, float y, float scale, boolean center, int color){
-        var mc = Minecraft.getInstance();
         poseStack.pushPose();
-        poseStack.translate(0, 1.0E-3F, 0);
-        poseStack.translate(1 / 16f * x, 0.5f / 16, 1 / 16f * y);
+        poseStack.translate(1 / 16f * x, 0.5f / 16f, 1 / 16f * y);
         poseStack.mulPose(Axis.XP.rotationDegrees(-90f));
         poseStack.mulPose(Axis.ZP.rotationDegrees(180f));
-        int lineHeight = -mc.font.lineHeight + mc.font.lineHeight;
-        if(center){
-            poseStack.pushPose();
-            poseStack.scale(0.010416667F * scale, -0.010416667F * scale, 0.010416667F * scale);
-            mc.font.drawInBatch(text, ((float) -mc.font.width(text) / 2f), lineHeight, color, false, poseStack.last().pose(), multiBufferSource, Font.DisplayMode.NORMAL, 0, light);
-            poseStack.popPose();
-        }else{
-            poseStack.pushPose();
-            poseStack.scale(0.010416667F * scale, -0.010416667F * scale, 0.010416667F * scale);
-            mc.font.drawInBatch(text, 0, lineHeight, color, false, poseStack.last().pose(), multiBufferSource, Font.DisplayMode.NORMAL, 0, light);
-            poseStack.popPose();
+        poseStack.scale(
+                0.010416667F * scale,
+                -0.010416667F * scale,
+                0.010416667F * scale
+        );
+        float offsetX = 0f;
+        if (center) {
+            offsetX = -Minecraft.getInstance().font.width(text) / 2f;
         }
+        FormattedCharSequence seq = text.getVisualOrderText();
+        collector.submitText(
+                poseStack,
+                offsetX,
+                0,
+                seq,
+                false,
+                Font.DisplayMode.NORMAL,
+                color,
+                light,
+                0,
+                0
+        );
+
         poseStack.popPose();
+    }
+
+    @Override
+    public void submit(PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int i, int i1, boolean b, int i2) {
+        model = Minecraft.getInstance().getModelManager().getItemModel(MODEL_LOCATION);
+        renderText(poseStack, DEV_TEXT, i, 9f, 15.75f, 0.4f, false, 0, submitNodeCollector);
+        renderText(poseStack, MANUAL_TEXT, i, 4.225f / 2f, 15.75f, 0.54f, true, 0xFFFFFFFF, submitNodeCollector);
+        renderText(poseStack, MOD_NAME_TEXT, i, 9.85f, 14.5f, 0.6f, false, 0, submitNodeCollector);
+        renderText(poseStack, MOD_VERSION_TEXT, i, 9.85f, 13.5f, 0.4f, false, 0, submitNodeCollector);
+        renderText(poseStack, COVER_INFO1_TEXT, i, 10f / 2f, 12, 0.4f, true, 0xFFFFFFFF, submitNodeCollector);
+        renderText(poseStack, COVER_INFO2_TEXT, i, 10f / 2f, 11.4514f, 0.4f, true, 0XFFFFFFFF, submitNodeCollector);
+        //                                                       意义明确的数值
+    }
+
+    @Override
+    public void getExtents(Consumer<Vector3fc> consumer) {
+
+    }
+
+    public record Unbaked() implements NoDataSpecialModelRenderer.Unbaked {
+        public static final MapCodec<MusicPlayerItemRenderer.Unbaked> MAP_CODEC = MapCodec.unit(new MusicPlayerItemRenderer.Unbaked());
+
+        public MapCodec<MusicPlayerItemRenderer.Unbaked> type() {
+            return MAP_CODEC;
+        }
+
+        public NetMusicListManualRenderer bake(SpecialModelRenderer.BakingContext context) {
+            return new NetMusicListManualRenderer();
+        }
     }
 }

@@ -11,32 +11,20 @@ import com.gly091020.netMusicListNeoforge.item.NetMusicPlayerItem;
 import com.gly091020.netMusicListNeoforge.packet.UpdateMusicIndexCTSPacket;
 import com.gly091020.netMusicListNeoforge.packet.UpdatePlayerMusicPacket;
 import com.gly091020.netMusicListNeoforge.sounds.PlayerNetMusicSound;
-import com.gly091020.netMusicListNeoforge.util.CacheManager;
-import com.gly091020.netMusicListNeoforge.util.MusicManager;
-import com.gly091020.netMusicListNeoforge.util.NetMusicListKeyMapping;
-import com.gly091020.netMusicListNeoforge.util.NetMusicListUtil;
+import com.gly091020.netMusicListNeoforge.util.*;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.resources.sounds.TickableSoundInstance;
 import net.minecraft.network.chat.Component;
-import net.minecraft.server.packs.resources.PreparableReloadListener;
-import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.util.profiling.ProfilerFiller;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.*;
-import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
-import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent;
 import net.neoforged.neoforge.event.level.LevelEvent;
-import org.jetbrains.annotations.NotNull;
-
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
 
 @EventBusSubscriber(value = Dist.CLIENT, modid = NetMusicList.ModID)
 public class ClientEventHandler {
@@ -48,7 +36,7 @@ public class ClientEventHandler {
         if(NetMusicListUtil.globalStopMusic){
             var w = Minecraft.getInstance().getWindow().getGuiScaledWidth();
             var h = Minecraft.getInstance().getWindow().getGuiScaledHeight();
-            event.getGuiGraphics().drawCenteredString(Minecraft.getInstance().font,
+            event.getGuiGraphics().centeredText(Minecraft.getInstance().font,
                     Component.translatable("text.net_music_list.fast_stoping"),
                     w / 2, (int) (h * 0.1f), 0xFFFFFFFF
             );
@@ -103,11 +91,11 @@ public class ClientEventHandler {
     private static void soundFix(){
         var server = Minecraft.getInstance().getSingleplayerServer();
         if(!Minecraft.getInstance().isLocalServer() || (server != null && server.isPublished())){return;}
-        var sounds = NetMusicListUtil.getTickableSounds();
+        var sounds = NetMusicListClientUtil.getTickableSounds();
         var screen = Minecraft.getInstance().screen;
         // 猜猜我用了几个Mixin？
         // SB MOJANG
-        if(screen != null && !NetMusicListUtil.isPaused() && screen.isPauseScreen()){
+        if(screen != null && !NetMusicListClientUtil.isPaused() && screen.isPauseScreen()){
             for(TickableSoundInstance instance: sounds){
                 if(instance instanceof PlayerNetMusicSound playerNetMusicSound){
                     playerNetMusicSound.onlyTickUpdate();
@@ -117,15 +105,10 @@ public class ClientEventHandler {
     }
 
     @SubscribeEvent
-    public static void registerClientExtensions(RegisterClientExtensionsEvent event) {
-        event.registerItem(
-                new IClientItemExtensions() {
-                    @Override
-                    public @NotNull BlockEntityWithoutLevelRenderer getCustomRenderer() {
-                        return new NetMusicListManualRenderer();
-                    }
-                },
-                NetMusicList.MANUAL
+    public static void registerSpecialRenderers(RegisterSpecialModelRendererEvent event) {
+        event.register(
+                Identifier.fromNamespaceAndPath(NetMusicList.ModID, "manual"),
+                NetMusicListManualRenderer.Unbaked.MAP_CODEC
         );
     }
 
@@ -154,7 +137,7 @@ public class ClientEventHandler {
         if (!isPressed && wasSwitchMusicPressed) {
             if(MusicListLayer.isRender){
                 MusicListLayer.isRender = false;
-                NetMusicListUtil.playSound(SoundEvents.EXPERIENCE_ORB_PICKUP);
+                NetMusicListClientUtil.playSound(SoundEvents.EXPERIENCE_ORB_PICKUP);
                 var slot = MusicListLayer.slot;
                 var musicPlayer = player.getInventory().getItem(slot);
                 if(!musicPlayer.is(NetMusicList.MUSIC_PLAYER_ITEM.get()))return;
@@ -178,18 +161,6 @@ public class ClientEventHandler {
     }
 
     private static boolean wasSwitchMusicPressed = false; // 用一个全局变量的方法感觉一点也不优雅
-
-    @SubscribeEvent(priority = EventPriority.LOWEST)
-    public static void onRegisterReloadListeners(RegisterClientReloadListenersEvent event) {
-        event.registerReloadListener(new PreparableReloadListener() {
-            @Override
-            public @NotNull CompletableFuture<Void> reload(@NotNull PreparationBarrier preparationBarrier, @NotNull ResourceManager resourceManager, @NotNull ProfilerFiller profilerFiller, @NotNull ProfilerFiller profilerFiller1, @NotNull Executor executor, @NotNull Executor executor1) {
-                return CompletableFuture.runAsync(() -> {
-                    NetMusicListUtil.needReload = true;
-                }, executor).thenCompose(preparationBarrier::wait); // 俺寻思能加载
-            }
-        });
-    }
 
     @SubscribeEvent
     public static void registerLayerDefinitions(EntityRenderersEvent.RegisterLayerDefinitions event) {

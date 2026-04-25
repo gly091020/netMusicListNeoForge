@@ -2,10 +2,9 @@ package com.gly091020.netMusicListNeoforge.sounds;
 
 import com.github.tartaricacid.netmusic.client.audio.NetMusicAudioStream;
 import com.github.tartaricacid.netmusic.init.InitSounds;
-import com.github.tartaricacid.netmusic.item.ItemMusicCD;
 import com.gly091020.netMusicListNeoforge.NetMusicList;
 import com.gly091020.netMusicListNeoforge.entity.MusicPlayerEntity;
-import net.minecraft.Util;
+import net.minecraft.util.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.sounds.AbstractTickableSoundInstance;
 import net.minecraft.client.resources.sounds.Sound;
@@ -63,7 +62,7 @@ public class PlayerEntityNetMusicSound extends AbstractTickableSoundInstance {
             this.stop();
         } else if (!isStopped() && world.getGameTime() % 8L == 0L) {
             for(int i = 0; i < 2; ++i) {
-                world.addParticle(ParticleTypes.NOTE, this.x - (double)0.5F + world.random.nextDouble(), this.y + world.random.nextDouble() + (double)1.0F, this.z - (double)0.5F + world.random.nextDouble(), world.random.nextGaussian(), world.random.nextGaussian(), world.random.nextInt(3));
+                world.addParticle(ParticleTypes.NOTE, this.x - (double)0.5F + world.getRandom().nextDouble(), this.y + world.getRandom().nextDouble() + (double)1.0F, this.z - (double)0.5F + world.getRandom().nextDouble(), world.getRandom().nextGaussian(), world.getRandom().nextGaussian(), world.getRandom().nextInt(3));
             }
         }
         this.x = entity.getX();

@@ -16,7 +16,7 @@ public abstract class SoundPausedMixin {
     @Unique
     private boolean netmusiclistforge$isPause = false;
 
-    @Inject(method = "pause", at = @At("HEAD"))
+    @Inject(method = "pauseAllExcept", at = @At("HEAD"))
     private void onPause(CallbackInfo ci){
         netmusiclistforge$isPause = true;
     }

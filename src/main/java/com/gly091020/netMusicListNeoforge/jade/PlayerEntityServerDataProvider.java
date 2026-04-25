@@ -4,17 +4,18 @@ import com.github.tartaricacid.netmusic.item.ItemMusicCD;
 import com.gly091020.netMusicListNeoforge.NetMusicList;
 import com.gly091020.netMusicListNeoforge.entity.MusicPlayerEntity;
 import com.gly091020.netMusicListNeoforge.item.NetMusicListItem;
+import com.gly091020.netMusicListNeoforge.util.NetMusicListUtil;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import snownee.jade.api.EntityAccessor;
 import snownee.jade.api.IServerDataProvider;
 
 public class PlayerEntityServerDataProvider implements IServerDataProvider<EntityAccessor> {
     public static final PlayerEntityServerDataProvider INSTANCE = new PlayerEntityServerDataProvider();
-    private static final ResourceLocation UID = ResourceLocation.fromNamespaceAndPath(NetMusicList.ModID, "player_entity_server");
+    private static final Identifier UID = Identifier.fromNamespaceAndPath(NetMusicList.ModID, "player_entity_server");
     @Override
-    public ResourceLocation getUid() {
+    public Identifier getUid() {
         return UID;
     }
 
@@ -28,7 +29,7 @@ public class PlayerEntityServerDataProvider implements IServerDataProvider<Entit
                 if(info != null)
                     ItemMusicCD.setSongInfo(info, newStack);
                 NetMusicListItem.setSongIndex(newStack, 0);
-                compoundTag.put("item", newStack.save(entityAccessor.getLevel().registryAccess()));
+                compoundTag.put("item", NetMusicListUtil.itemToTag(newStack));
             }
         }
     }

@@ -4,12 +4,12 @@ import com.gly091020.netMusicListNeoforge.NetMusicList;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
 
 public record StopMusicPacket(int playerID, String url) implements CustomPacketPayload {
     public static final CustomPacketPayload.Type<StopMusicPacket> TYPE = new CustomPacketPayload.Type<>(
-            ResourceLocation.fromNamespaceAndPath(NetMusicList.ModID, "stop_music_packet"));
+            Identifier.fromNamespaceAndPath(NetMusicList.ModID, "stop_music_packet"));
 
     public static final StreamCodec<FriendlyByteBuf, StopMusicPacket> STREAM_CODEC = StreamCodec.of(
             StopMusicPacket::encode,

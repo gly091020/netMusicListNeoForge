@@ -1,11 +1,12 @@
 package com.gly091020.netMusicListNeoforge.config;
 
 import me.shedaniel.clothconfig2.api.AbstractConfigListEntry;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
@@ -54,17 +55,17 @@ public class ButtonEntry extends AbstractConfigListEntry<Object> {
     }
 
     @Override
-    public void render(GuiGraphics graphics, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean isHovered, float delta) {
-        super.render(graphics, index, y, x, entryWidth, entryHeight, mouseX, mouseY, isHovered, delta);
+    public void extractRenderState(GuiGraphicsExtractor graphics, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean isHovered, float delta) {
+        super.extractRenderState(graphics, index, y, x, entryWidth, entryHeight, mouseX, mouseY, isHovered, delta);
         button.setPosition(x, y);
         button.setWidth(entryWidth);
         button.setHeight(entryHeight);
-        button.render(graphics, mouseX, mouseY, delta);
+        button.extractRenderState(graphics, mouseX, mouseY, delta);
     }
 
     @Override
-    public boolean mouseClicked(double x, double y, int button) {
-        return this.button.mouseClicked(x, y, button);
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        return this.button.mouseClicked(event, doubleClick);
     }
 
     @Override
@@ -74,8 +75,8 @@ public class ButtonEntry extends AbstractConfigListEntry<Object> {
     }
 
     @Override
-    public boolean mouseReleased(double d, double e, int i) {
-        return this.button.mouseReleased(d, e, i);
+    public boolean mouseReleased(MouseButtonEvent event) {
+        return this.button.mouseReleased(event);
     }
 
     @Override

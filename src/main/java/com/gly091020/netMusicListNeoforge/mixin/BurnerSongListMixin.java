@@ -9,7 +9,7 @@ import com.gly091020.netMusicListNeoforge.util.URLType;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Checkbox;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.network.chat.Component;
@@ -66,9 +66,9 @@ public class BurnerSongListMixin {
         }
     }
 
-    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;drawString(Lnet/minecraft/client/gui/Font;Lnet/minecraft/network/chat/Component;IIIZ)I"), remap = true)
-    public int renderTip(GuiGraphics instance, Font font, Component component, int left, int top, int color, boolean b){
-        return instance.drawString(font, netmusiclistforge$idTip == null ? component : Component.literal(netmusiclistforge$idTip).withStyle(ChatFormatting.ITALIC), left, top, color, b);
+    @Redirect(method = "extractContents", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;text(Lnet/minecraft/client/gui/Font;Lnet/minecraft/network/chat/Component;IIIZ)V"), remap = true)
+    public void renderTip(GuiGraphicsExtractor instance, Font font, Component component, int left, int top, int color, boolean b){
+        instance.text(font, netmusiclistforge$idTip == null ? component : Component.literal(netmusiclistforge$idTip).withStyle(ChatFormatting.ITALIC), left, top, color, b);
     }
 
     @Inject(method = "init", at = @At("TAIL"), remap = true)

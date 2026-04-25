@@ -43,8 +43,7 @@
   "config.net_music_list.not_pause_sound.tip": "使游戏暂停时正在播放的声音继续播放",
   "config.net_music_list.max_import_list": "最大歌曲导入数量",
   "config.net_music_list.glowing_text": "快速选歌文字描边",
-  "config.net_music_list.enable_cache": "启用歌曲缓存[alpha]",
-  "config.net_music_list.cache_warning": "§c警告：缓存功能目前不稳定，请谨慎开启",
+  "config.net_music_list.enable_cache": "启用歌曲缓存",
   "config.net_music_list.global_cache": "全局缓存",
   "config.net_music_list.config.base.title": "基础设置",
   "config.net_music_list.config.hud.title": "HUD相关",
@@ -119,5 +118,7 @@
   "gui.net_music_list.iam.text1": "也试试 Iam Music Player Renewed？",
   "gui.net_music_list.iam.text2": "支持作者！",
   "gui.net_music_list.iam.yes": "详细信息",
-  "gui.net_music_list.iam.no": "不再显示"
+  "gui.net_music_list.iam.no": "不再显示",
+
+  "key.category.net_music_list.net_music_list": "网络音乐机：播放列表"
 }

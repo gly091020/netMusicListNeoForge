@@ -5,18 +5,14 @@ import com.gly091020.netMusicListNeoforge.NetMusicList;
 import com.gly091020.netMusicListNeoforge.item.NetMusicListItem;
 import com.gly091020.netMusicListNeoforge.item.NetMusicPlayerItem;
 import com.gly091020.netMusicListNeoforge.util.NetMusicListKeyMapping;
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.NotNull;
-import org.joml.Matrix4f;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +25,7 @@ public class MusicListLayer{
     public static int count = 0;
     public static int slot = -1;
 
-    public static void render(@NotNull GuiGraphics guiGraphics) {
+    public static void render(@NotNull GuiGraphicsExtractor guiGraphics) {
         if(!isRender){
             index = -1;
             slot = -1;
@@ -59,7 +55,7 @@ public class MusicListLayer{
         var songList = NetMusicListItem.getSongInfoList(disc);
         var pose = guiGraphics.pose();
         var length = NetMusicList.CONFIG.selectHudCount;
-        pose.pushPose();
+        pose.pushMatrix();
 
         var scale = NetMusicList.CONFIG.selectHudSize;
 
@@ -68,9 +64,6 @@ public class MusicListLayer{
             isRender = false;
             return;
         }
-
-        RenderSystem.enableBlend();
-
         List<Integer> indexList = getIndexList(index, length, count, false);
 
         // 计算总高度
@@ -78,9 +71,9 @@ public class MusicListLayer{
         float selectedSize = 1.3f;
         float totalHeight = (indexList.size() - 1) * (font.lineHeight + margin) + font.lineHeight * selectedSize;
 
-        pose.translate(width - 5, height / 2f, 0);
-        pose.scale(scale, scale, 1);
-        pose.translate(0, -totalHeight / 2, 0);
+        pose.translate(width - 5, height / 2f);
+        pose.scale(scale, scale);
+        pose.translate(0, -totalHeight / 2);
 
         float y = 0;
         // 计算衰减系数
@@ -95,38 +88,26 @@ public class MusicListLayer{
                     text.append(Component.literal(" [VIP]").withStyle(ChatFormatting.RED));
                 }
                 int textWidth = font.width(text);
-                pose.pushPose();
+                pose.pushMatrix();
                 if (listIndex == index) {
-                    pose.translate(-(textWidth * selectedSize + 4), y, 0);
-                    pose.scale(selectedSize, selectedSize, 1);
-                    drawString(guiGraphics, font, text, 0, 0, 0xFFFFFFFF);
+                    pose.translate(-(textWidth * selectedSize + 4), y);
+                    pose.scale(selectedSize, selectedSize);
+                    guiGraphics.text(font, text, 0, 0, 0xFFFFFFFF);
                     y += font.lineHeight * selectedSize + margin;
                 } else {
                     float alpha = (float) (b * Math.pow(v, - Math.abs(listIndex - index) + 1));
-                    pose.translate(-(textWidth + 4), y, 0);
-                    RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, alpha);
-                    drawString(guiGraphics, font, text, 0, 0, 0xFFFFFF);
-                    RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+                    int color = ((int)(alpha * 256) << 24) | 0xFFFFFF;
+                    pose.translate(-(textWidth + 4), y);
+                    guiGraphics.text(font, text, 0, 0, color);
                     y += font.lineHeight + margin;
                 }
-                pose.popPose();
+                pose.popMatrix();
             } else {
                 y += font.lineHeight + margin;
             }
         }
 
-        RenderSystem.disableBlend();
-        pose.popPose();
-    }
-
-    private static void drawString(GuiGraphics guiGraphics, Font font, MutableComponent text, int x, int y, int color) {
-        if (NetMusicList.CONFIG.glowingText) {
-            final int glowColor = 0xFF000000;
-            Matrix4f matrix = guiGraphics.pose().last().pose();
-            MultiBufferSource bufferSource = guiGraphics.bufferSource();
-            font.drawInBatch8xOutline(text.getVisualOrderText(), x, y, color, glowColor, matrix, bufferSource, 0xF000F0);
-        }
-        guiGraphics.drawString(font, text, x, y, color, !NetMusicList.CONFIG.glowingText);
+        pose.popMatrix();
     }
 
     private static String getMusicText(ItemMusicCD.SongInfo info){

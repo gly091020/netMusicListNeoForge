@@ -1,27 +1,23 @@
 package com.gly091020.netMusicListNeoforge.entity;
 
-
 import com.gly091020.netMusicListNeoforge.NetMusicList;
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
 import net.minecraft.client.model.geom.builders.*;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.Entity;
-import org.jetbrains.annotations.NotNull;
 
-public class MusicPlayerModel<T extends Entity> extends EntityModel<T> {
-	// This layer location should be baked with EntityRendererProvider.Context in the entity renderer and passed into this model's constructor
-	public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(ResourceLocation.fromNamespaceAndPath(NetMusicList.ModID,
+public class MusicPlayerModel<T extends Entity> extends EntityModel<MusicPlayerRenderer.MusicPlayerRenderState> {
+	public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(Identifier.fromNamespaceAndPath(NetMusicList.ModID,
             "music_player"), "main");
 	private final ModelPart group;
 	private final ModelPart bone;
 
 	public MusicPlayerModel(ModelPart root) {
-		this.group = root.getChild("group");
+        super(root);
+        this.group = root.getChild("group");
 		this.bone = root.getChild("bone");
 	}
 
@@ -37,15 +33,4 @@ public class MusicPlayerModel<T extends Entity> extends EntityModel<T> {
 
 		return LayerDefinition.create(meshdefinition, 64, 16);
 	}
-
-	@Override
-	public void setupAnim(@NotNull Entity entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-
-	}
-
-    @Override
-    public void renderToBuffer(@NotNull PoseStack poseStack, @NotNull VertexConsumer vertexConsumer, int packedLight, int packedOverlay, int color) {
-        group.render(poseStack, vertexConsumer, packedLight, packedOverlay, color);
-        bone.render(poseStack, vertexConsumer, packedLight, packedOverlay, color);
-    }
 }

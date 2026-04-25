@@ -13,7 +13,7 @@ import com.gly091020.netMusicListNeoforge.item.NetMusicPlayerItem;
 import com.gly091020.netMusicListNeoforge.packet.StopMusicPacketServer;
 import com.gly091020.netMusicListNeoforge.packet.UpdateMusicIndexCTSPacket;
 import com.gly091020.netMusicListNeoforge.util.NetMusicListUtil;
-import net.minecraft.Util;
+import net.minecraft.util.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.resources.sounds.AbstractTickableSoundInstance;
@@ -138,7 +138,7 @@ public class PlayerNetMusicSound extends AbstractTickableSoundInstance {
                 }
                 if (level.getGameTime() % 8L == 0L) {
                     for(int i = 0; i < 2; ++i) {
-                        level.addParticle(ParticleTypes.NOTE, player.getX() - (double)0.5F + level.random.nextDouble(), player.getY() + (double)2F + level.random.nextDouble(), player.getZ() - (double)0.5F + level.random.nextDouble(), level.random.nextGaussian(), level.random.nextGaussian(), level.random.nextInt(3));
+                        level.addParticle(ParticleTypes.NOTE, player.getX() - (double)0.5F + level.getRandom().nextDouble(), player.getY() + (double)2F + level.getRandom().nextDouble(), player.getZ() - (double)0.5F + level.getRandom().nextDouble(), level.getRandom().nextGaussian(), level.getRandom().nextGaussian(), level.getRandom().nextInt(3));
                     }
                 }
             }

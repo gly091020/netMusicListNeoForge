@@ -6,16 +6,14 @@
   "refmap": "net_music_list.refmap.json",
   "mixins": [
     "AbstractContainerMenuMixin",
-    "CanBurnerCDListComputerMixin",
     "CanBurnerCDListMixin",
     "CanPlayListMixin",
+    "CdOutputAndInputMixin$Input",
+    "CdOutputAndInputMixin$Output",
     "CommandMixin",
     "FuckTelemetryMixin",
-    "MusicPlayerBackpackMixin",
     "PlayListIsOKMixin",
-    "PlayModeMixin",
-    "PlayNextSongMixin",
-    "create.ArmDancingMixin"
+    "PlayModeMixin"
   ],
   "injectors": {
     "defaultRequire": 1
@@ -27,7 +25,6 @@
     "BurnerSongListMixin",
     "GamePauseMixin",
     "LyricCacheMixin",
-    "NetMusicSoundLyricMixin",
     "PlayMusicCacheMixin",
     "SoundPausedMixin",
     "TickableSoundGetterMixins$SoundEngineMixin",

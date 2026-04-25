@@ -8,7 +8,6 @@ import com.gly091020.netMusicListNeoforge.item.NetMusicPlayerItem;
 import com.gly091020.netMusicListNeoforge.packet.MusicPlayerEntityPlayMusicPacket;
 import com.gly091020.netMusicListNeoforge.util.NetMusicListUtil;
 import net.minecraft.ChatFormatting;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -27,12 +26,13 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.fluids.FluidType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.Collections;
-import java.util.Objects;
+import org.jspecify.annotations.NonNull;
 
 public class MusicPlayerEntity extends LivingEntity {
     private ItemStack musicCD = ItemStack.EMPTY;
@@ -52,11 +52,6 @@ public class MusicPlayerEntity extends LivingEntity {
         super.defineSynchedData(builder);
         builder.define(DATA_PLAYING, isPlaying);
         builder.define(DATA_RAW_URL, "");
-    }
-
-    @Override
-    public @NotNull Iterable<ItemStack> getArmorSlots() {
-        return Collections.emptyList();
     }
 
     @Override
@@ -96,12 +91,7 @@ public class MusicPlayerEntity extends LivingEntity {
     protected void dropAllDeathLoot(@NotNull ServerLevel level, @NotNull DamageSource damageSource) {
         if(!damageSource.is(DamageTypeTags.ALWAYS_KILLS_ARMOR_STANDS) &&
                 !damageSource.is(DamageTypeTags.BYPASSES_INVULNERABILITY))
-            this.spawnAtLocation(toPlayerItem(this));
-    }
-
-    @Override
-    public void kill() {
-        this.remove(RemovalReason.KILLED);
+            this.spawnAtLocation(level, toPlayerItem(this));
     }
 
     @Override
@@ -110,25 +100,23 @@ public class MusicPlayerEntity extends LivingEntity {
     }
 
     @Override
-    public void readAdditionalSaveData(@NotNull CompoundTag compound) {
-        super.readAdditionalSaveData(compound);
+    public void readAdditionalSaveData(ValueInput input) {
+        super.readAdditionalSaveData(input);
         try{
-            isPlaying = compound.contains("is_playing") && compound.getBoolean("is_playing");
-            if(compound.contains("Item"))
-                musicCD = ItemStack.parse(level().registryAccess(), Objects.requireNonNull(compound.get("Item"))).orElseThrow();
-            else musicCD = ItemStack.EMPTY;
+            isPlaying = input.getBooleanOr("is_playing", false);
+            musicCD = input.read("item", ItemStack.CODEC).orElse(ItemStack.EMPTY);
         }catch (Exception exception){
             NetMusicList.LOGGER.error("实体加载失败", exception);
         }
     }
 
     @Override
-    public void addAdditionalSaveData(@NotNull CompoundTag compound) {
-        super.addAdditionalSaveData(compound);
+    public void addAdditionalSaveData(ValueOutput output) {
+        super.addAdditionalSaveData(output);
         try{
-            compound.putBoolean("is_playing", isPlaying);
+            output.putBoolean("is_playing", isPlaying);
             if(!musicCD.isEmpty()) {
-                compound.put("Item", musicCD.save(level().registryAccess()));
+                output.store("item", ItemStack.CODEC, musicCD);
             }
         }catch (Exception exception){
             NetMusicList.LOGGER.error("实体保存失败", exception);
@@ -136,13 +124,23 @@ public class MusicPlayerEntity extends LivingEntity {
     }
 
     @Override
-    public boolean hurt(@NotNull DamageSource source, float amount) {
+    public boolean hurtClient(DamageSource source) {
         if(source.is(DamageTypeTags.CAN_BREAK_ARMOR_STAND) || source.is(DamageTypeTags.ALWAYS_KILLS_ARMOR_STANDS)){
             die(source);
             return true;
         }
         if(source.is(DamageTypeTags.IS_FALL) || source.is(DamageTypes.IN_WALL) || source.is(DamageTypes.MAGIC))return false;
-        return super.hurt(source, amount);
+        return super.hurtClient(source);
+    }
+
+    @Override
+    public boolean hurtServer(ServerLevel level, DamageSource source, float damage) {
+        if(source.is(DamageTypeTags.CAN_BREAK_ARMOR_STAND) || source.is(DamageTypeTags.ALWAYS_KILLS_ARMOR_STANDS)){
+            die(source);
+            return true;
+        }
+        if(source.is(DamageTypeTags.IS_FALL) || source.is(DamageTypes.IN_WALL) || source.is(DamageTypes.MAGIC))return false;
+        return super.hurtServer(level, source, damage);
     }
 
     @Override
@@ -176,17 +174,17 @@ public class MusicPlayerEntity extends LivingEntity {
 
     public void setPlaying(boolean playing) {
         isPlaying = playing;
-        if(!level().isClientSide)
+        if(!level().isClientSide())
             entityData.set(DATA_PLAYING, isPlaying);
     }
 
     @Override
-    public @NotNull InteractionResult interact(@NotNull Player player, @NotNull InteractionHand hand) {
-        if(level().isClientSide)return InteractionResult.SUCCESS;
+    public @NotNull InteractionResult interact(@NotNull Player player, @NotNull InteractionHand hand, @NonNull Vec3 location) {
+        if(level().isClientSide())return InteractionResult.SUCCESS;
         var useItem = player.getItemInHand(hand);
         var info = ItemMusicCD.getSongInfo(useItem);
         if(info != null && info.vip && (NetMusicList.CONFIG.noVIP || NetMusicListUtil.hasLoginNeed())){
-            if(level().isClientSide)
+            if(level().isClientSide())
                 player.sendSystemMessage(Component.translatable("message.netmusic.music_player.need_vip")
                         .withStyle(ChatFormatting.RED));
             return InteractionResult.SUCCESS;
@@ -213,7 +211,7 @@ public class MusicPlayerEntity extends LivingEntity {
         } else if (useItem.isEmpty()) {
             die(level().damageSources().playerAttack(player));
         }
-        return super.interact(player, hand);
+        return super.interact(player, hand, location);
     }
 
     public static ItemStack toPlayerItem(MusicPlayerEntity entity){
@@ -238,7 +236,7 @@ public class MusicPlayerEntity extends LivingEntity {
             var info = ItemMusicCD.getSongInfo(this.getMusicCD());
             if(info == null)return;
             this.setPlaying(true);
-            if(level().isClientSide)
+            if(level().isClientSide())
                 NetworkHandler.sendToServer(new MusicPlayerEntityPlayMusicPacket(this.getId(),
                         info.songUrl, info.songTime, info.songName));
             else

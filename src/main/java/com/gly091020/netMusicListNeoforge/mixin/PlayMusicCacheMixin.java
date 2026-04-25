@@ -2,7 +2,7 @@ package com.gly091020.netMusicListNeoforge.mixin;
 
 import com.github.tartaricacid.netmusic.client.audio.MusicPlayManager;
 import com.gly091020.netMusicListNeoforge.util.CacheManager;
-import com.gly091020.netMusicListNeoforge.util.NetMusicListUtil;
+import com.gly091020.netMusicListNeoforge.util.NetMusicListClientUtil;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -22,7 +22,7 @@ public abstract class PlayMusicCacheMixin {
     @Inject(method = "play", at = @At("HEAD"), cancellable = true)
     private static void onPlayMusic(String url, String songName, Function<URL, SoundInstance> sound, CallbackInfo ci){
         try{
-            var id = NetMusicListUtil.getIdFromUrl(url);
+            var id = NetMusicListClientUtil.getIdFromUrl(url);
             if(CacheManager.hasCache(id)){
                 var songUrl = CacheManager.getSongCache(id);
                 if(songUrl != null){

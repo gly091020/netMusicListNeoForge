@@ -72,13 +72,6 @@ public class ServerHandler {
         }
     }
 
-    public static void handleUpdateBlockLyricPacket(UpdateBlockLyricPacket updateBlockLyricPacket, IPayloadContext context) {
-        var level = context.player().level();
-        if(level.getBlockEntity(updateBlockLyricPacket.pos()) instanceof TileEntityMusicPlayer musicPlayer){
-            musicPlayer.lyricRecord = updateBlockLyricPacket.lyric().toLyricRecord();
-        }
-    }
-
     public static void handleServerMusicPlayerEntityPlayMusicPacket(MusicPlayerEntityPlayMusicPacket packet, IPayloadContext iPayloadContext) {
         // 这名字这么越来越长了？
         PacketDistributor.sendToAllPlayers(packet);

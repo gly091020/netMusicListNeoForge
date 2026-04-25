@@ -7,6 +7,7 @@ import com.github.tartaricacid.netmusic.item.ItemMusicCD;
 import com.gly091020.netMusicListNeoforge.NetMusicList;
 import com.gly091020.netMusicListNeoforge.item.NetMusicListItem;
 import com.gly091020.netMusicListNeoforge.util.CacheManager;
+import com.gly091020.netMusicListNeoforge.util.NetMusicListClientUtil;
 import com.gly091020.netMusicListNeoforge.util.NetMusicListUtil;
 import com.google.gson.Gson;
 import com.mojang.brigadier.arguments.BoolArgumentType;
@@ -32,7 +33,7 @@ import java.util.UUID;
 public class CommandMixin {
     @Inject(method = "get", at = @At("RETURN"), remap = false)
     private static void addCommand(CallbackInfoReturnable<LiteralArgumentBuilder<CommandSourceStack>> cir){
-        if(FMLEnvironment.dist == Dist.DEDICATED_SERVER){return;}
+        if(FMLEnvironment.getDist() == Dist.DEDICATED_SERVER){return;}
         cir.getReturnValue().then(Commands.literal("music_list_to_item").then(Commands.argument("id",
                 LongArgumentType.longArg()).executes(CommandMixin::netMusicListNeoForge$toItem)));
         if(NetMusicList.CONFIG.enableCache){
@@ -55,7 +56,7 @@ public class CommandMixin {
             var songs = NetMusicListUtil.getMusicList(id);
             for(ItemMusicCD.SongInfo info: songs){
                 try {
-                    var songId = NetMusicListUtil.getIdFromInfo(info);
+                    var songId = NetMusicListClientUtil.getIdFromInfo(info);
                     var uuid = UUID.randomUUID().toString();
                     if(!CacheManager.hasCache(songId)){
                         CacheManager.startSongDownload(songId, uuid);

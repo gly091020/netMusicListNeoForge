@@ -4,11 +4,11 @@ import com.gly091020.netMusicListNeoforge.NetMusicList;
 import com.gly091020.netMusicListNeoforge.hud.MusicInfoHud;
 import com.gly091020.netMusicListNeoforge.util.NetMusicListUtil;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
-import org.jetbrains.annotations.NotNull;
 
 import static com.gly091020.netMusicListNeoforge.NetMusicList.CONFIG;
 
@@ -41,23 +41,23 @@ public class MoveHudScreen extends Screen {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        renderBackground(guiGraphics, mouseX, mouseY, partialTick);
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
-        guiGraphics.fill(x, y, x + 100, y + 40, 0xFFAAAAAA);
-        guiGraphics.drawCenteredString(Minecraft.getInstance().font,
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
+        extractBackground(graphics, mouseX, mouseY, a);
+        super.extractRenderState(graphics, mouseX, mouseY, a);
+        graphics.fill(x, y, x + 100, y + 40, 0xFFAAAAAA);
+        graphics.centeredText(Minecraft.getInstance().font,
                 Component.translatable("config.net_music_list.hud.text"),
                 x + 50, y + 20 - Minecraft.getInstance().font.lineHeight / 2, 0xFFFFFFFF);
-        guiGraphics.drawCenteredString(Minecraft.getInstance().font,
+        graphics.centeredText(Minecraft.getInstance().font,
                 Component.translatable("config.net_music_list.hud.title"),
                 width / 2, 10, 0xFFFFFFFF);
     }
 
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-        if(super.mouseDragged(mouseX, mouseY, button, dragX, dragY))return false;
-        x = (int) mouseX - 50;
-        y = (int) mouseY - 20;
+    public boolean mouseDragged(MouseButtonEvent event, double dx, double dy) {
+        if(super.mouseDragged(event, dx, dy))return false;
+        x = (int) event.x() - 50;
+        y = (int) event.y() - 20;
         return true;
     }
 

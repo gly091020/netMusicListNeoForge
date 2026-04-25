@@ -26,10 +26,6 @@ public class NetMusicListConfig implements ConfigData {
 
     public boolean only5Second = false;
 
-    public boolean allowLyricToServer = false;
-
     // gly特有的突然扭曲
     public boolean glyMusicEntity = false;
-
-    public boolean showedIAM = false;
 }

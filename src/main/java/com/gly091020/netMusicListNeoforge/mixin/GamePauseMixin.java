@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(Minecraft.class)
 public class GamePauseMixin {
-    @Inject(method = "pauseGame", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/sounds/SoundManager;pause()V"), cancellable = true)
+    @Inject(method = "runTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/sounds/SoundManager;pauseAllExcept([Lnet/minecraft/sounds/SoundSource;)V"), cancellable = true)
     public void pauseSound(boolean p_91359_, CallbackInfo ci){
         if(NetMusicList.CONFIG.notPauseSoundOnGamePause)ci.cancel();
     }

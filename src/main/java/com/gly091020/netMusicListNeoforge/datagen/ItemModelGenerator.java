@@ -1,24 +1,34 @@
 package com.gly091020.netMusicListNeoforge.datagen;
 
 import com.gly091020.netMusicListNeoforge.NetMusicList;
+import net.minecraft.client.data.models.BlockModelGenerators;
+import net.minecraft.client.data.models.ItemModelGenerators;
+import net.minecraft.client.data.models.ModelProvider;
+import net.minecraft.client.data.models.model.ModelTemplates;
+import net.minecraft.core.Holder;
 import net.minecraft.data.PackOutput;
-import net.neoforged.neoforge.client.model.generators.ItemModelProvider;
-import net.neoforged.neoforge.common.data.ExistingFileHelper;
-import net.neoforged.neoforge.registries.DeferredHolder;
+import net.minecraft.world.item.Item;
+import org.jspecify.annotations.NonNull;
 
-public class ItemModelGenerator extends ItemModelProvider {
-    public ItemModelGenerator(PackOutput output, ExistingFileHelper existingFileHelper) {
-        super(output, NetMusicList.ModID, existingFileHelper);
+import java.util.stream.Stream;
+
+public class ItemModelGenerator extends ModelProvider {
+
+    public ItemModelGenerator(PackOutput output) {
+        super(output, NetMusicList.ModID);
     }
+
     @Override
-    protected void registerModels() {
-        basicItem(NetMusicList.MUSIC_LIST_ITEM.get());
-        basicItem(NetMusicList.MUSIC_PLAYER_ITEM.get());
-        blockItem(NetMusicList.ENDER_MUSIC_PLAYER);
+    protected void registerModels(@NonNull BlockModelGenerators blockModels, @NonNull ItemModelGenerators itemModels) {
+        itemModels.generateFlatItem(NetMusicList.MUSIC_LIST_ITEM.get(), ModelTemplates.FLAT_ITEM);
+        itemModels.generateFlatItem(NetMusicList.MUSIC_PLAYER_ITEM.get(), ModelTemplates.FLAT_ITEM);
     }
 
-    public void blockItem(DeferredHolder<?, ?> block) {
-        withExistingParent(block.getId().getPath(),
-                modLoc("block/" + block.getId().getPath()));
+    @Override
+    protected @NonNull Stream<? extends Holder<Item>> getKnownItems() {
+        return Stream.of(
+                NetMusicList.MUSIC_LIST_ITEM,
+                NetMusicList.MUSIC_PLAYER_ITEM
+        );
     }
 }

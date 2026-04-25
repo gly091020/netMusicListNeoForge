@@ -4,19 +4,15 @@ import com.gly091020.netMusicListNeoforge.NetMusicList;
 import com.gly091020.netMusicListNeoforge.client.CacheManagerScreen;
 import com.gly091020.netMusicListNeoforge.client.MoveHudScreen;
 import com.gly091020.netMusicListNeoforge.util.CacheManager;
-import com.gly091020.netMusicListNeoforge.util.MUIUtil;
 import com.gly091020.netMusicListNeoforge.util.NetMusicListUtil;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.toasts.SystemToast;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.fml.ModList;
 import net.neoforged.fml.loading.FMLEnvironment;
 
 import static com.gly091020.netMusicListNeoforge.NetMusicList.CONFIG;
@@ -31,12 +27,12 @@ public class ConfigScreenGetter {
 
         var base = builder.getOrCreateCategory(Component.translatable("config.net_music_list.config.base.title"));
 
-        if(NetMusicListUtil.isGLY() || !FMLEnvironment.production){
-            base.addEntry(new ImageEntry(ResourceLocation.fromNamespaceAndPath(NetMusicList.ModID, "textures/gui/server.png")));
+        if(NetMusicListUtil.isGLY() || !FMLEnvironment.isProduction()){
+            base.addEntry(new ImageEntry(Identifier.fromNamespaceAndPath(NetMusicList.ModID, "textures/gui/server.png")));
         }
         if(NetMusicListUtil.isWangRenZe9788() || NetMusicListUtil.isN44()){
             // gly特有的自黑
-            base.addEntry(new ImageEntry(ResourceLocation.fromNamespaceAndPath(NetMusicList.ModID, "textures/gui/gly_is_suck.png")));
+            base.addEntry(new ImageEntry(Identifier.fromNamespaceAndPath(NetMusicList.ModID, "textures/gui/gly_is_suck.png")));
         }
 
         base.addEntry(entryBuilder.startBooleanToggle(Component.translatable("config.net_music_list.not_pause_sound"),
@@ -49,9 +45,6 @@ public class ConfigScreenGetter {
                 .build());
         base.addEntry(entryBuilder.startBooleanToggle(Component.translatable("config.net_music_list.old_gui"),
                                 CONFIG.oldGUI).setSaveConsumer(b -> CONFIG.oldGUI = b).setDefaultValue(false).build());
-        base.addEntry(entryBuilder.startBooleanToggle(Component.translatable("config.net_music_list.allow_lyric_to_server"),
-                CONFIG.allowLyricToServer).setSaveConsumer(b -> CONFIG.allowLyricToServer = b)
-                .requireRestart().setDefaultValue(false).build());
         if(!NetMusicListUtil.hasLoginNeed()){
             base.addEntry(entryBuilder.startBooleanToggle(Component.translatable("config.net_music_list.no_vip"), CONFIG.noVIP)
                     .setSaveConsumer(aBoolean -> CONFIG.noVIP = aBoolean)
@@ -96,7 +89,6 @@ public class ConfigScreenGetter {
         var cache = builder.getOrCreateCategory(Component.translatable("config.net_music_list.config.cache.title"));
         cache.addEntry(entryBuilder.startBooleanToggle(Component.translatable("config.net_music_list.enable_cache"),
                         CONFIG.enableCache)
-                .setTooltip(Component.translatable("config.net_music_list.cache_warning"))
                 .setDefaultValue(false)
                 .setSaveConsumer(b -> CONFIG.enableCache = b)
                 .build());
@@ -107,39 +99,25 @@ public class ConfigScreenGetter {
                 .build()
         );
 
-        if(!FMLEnvironment.production || CONFIG.debug){
+        if(!FMLEnvironment.isProduction() || CONFIG.debug){
             var debug = builder.getOrCreateCategory(Component.literal("调试功能"));
-            var button = new ButtonEntry(Component.literal("打开FuckBlitNineSlicedScreen"), button1 -> {});
-            button.setTooltip(Tooltip.create(Component.literal("这下不用Fuck了").withStyle(ChatFormatting.AQUA), null));
-            button.isEnable(false);
-            debug.addEntry(button);
             debug.addEntry(new ButtonEntry(Component.literal("打开缓存管理界面"), b ->
                     Minecraft.getInstance().setScreen(new CacheManagerScreen())));
             debug.addEntry(new ButtonEntry(Component.literal("检查缓存"), b -> {
                 var count = CacheManager.checkCache(true);
                 if(count > 0){
-                    Minecraft.getInstance().getToasts().addToast(new SystemToast(SystemToast.SystemToastId.NARRATOR_TOGGLE,
+                    Minecraft.getInstance().getToastManager().addToast(new SystemToast(SystemToast.SystemToastId.NARRATOR_TOGGLE,
                             Component.literal("清理了无效缓存"), Component.literal(String.format("清理了%d个缓存", count))));
                 }else{
-                    Minecraft.getInstance().getToasts().addToast(new SystemToast(SystemToast.SystemToastId.NARRATOR_TOGGLE,
+                    Minecraft.getInstance().getToastManager().addToast(new SystemToast(SystemToast.SystemToastId.NARRATOR_TOGGLE,
                             Component.literal("所有缓存都有效"), null));
                 }
             }));
             debug.addEntry(new ButtonEntry(Component.literal("导入歌曲无上限"), button1 -> {
                 CONFIG.maxImportList = Integer.MAX_VALUE;
                 NetMusicListUtil.reloadConfig();
-                Minecraft.getInstance().getToasts().addToast(new SystemToast(SystemToast.SystemToastId.NARRATOR_TOGGLE,
+                Minecraft.getInstance().getToastManager().addToast(new SystemToast(SystemToast.SystemToastId.NARRATOR_TOGGLE,
                         Component.literal("不是哥们？"), Component.literal("已提高上限至Integer.MAX_VALUE")));
-            }));
-            var button1 = new ButtonEntry(Component.literal("打开摩登手册界面"), b ->
-                    MUIUtil.openDirectoryScreen());
-            button1.isEnable(ModList.get().isLoaded("modernui"));
-            debug.addEntry(button1);
-            debug.addEntry(new ButtonEntry(Component.literal("重载手册"), b ->
-            {
-                NetMusicListUtil.loadAllMD();
-                Minecraft.getInstance().getToasts().addToast(new SystemToast(SystemToast.SystemToastId.NARRATOR_TOGGLE,
-                        Component.literal("手册重载成功"), null));
             }));
             debug.addEntry(entryBuilder.startBooleanToggle(Component.literal("导入歌曲只有5秒"), CONFIG.only5Second)
                             .setDefaultValue(false)

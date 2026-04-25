@@ -9,13 +9,14 @@ import com.gly091020.netMusicListNeoforge.util.PlayMode;
 import net.minecraft.ChatFormatting;
 import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import org.apache.commons.lang3.StringUtils;
@@ -24,10 +25,11 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 public class NetMusicListItem extends ItemMusicCD {
-    public NetMusicListItem() {
-        super();
+    public NetMusicListItem(Identifier identifier) {
+        super(identifier);
     }
 
     @Override
@@ -121,35 +123,35 @@ public class NetMusicListItem extends ItemMusicCD {
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flagIn) {
+    public void appendHoverText(ItemStack stack, TooltipContext context, TooltipDisplay tooltipDisplay, Consumer<Component> tooltip, TooltipFlag flagIn) {
         String name;
         String text;
         name = Component.translatable("tooltip.net_music_list.play_mode").getString();
         text = "§a▍ §7" + name + ": §6" + getPlayMode(stack).getName().getString();
         if(getSongInfoList(stack).isEmpty()){
-            tooltip.add(Component.translatable("tooltips.netmusic.cd.empty").withStyle(ChatFormatting.RED));
+            tooltip.accept(Component.translatable("tooltips.netmusic.cd.empty").withStyle(ChatFormatting.RED));
         }
 
-        tooltip.add(Component.literal(text));
+        tooltip.accept(Component.literal(text));
         SongInfo info = getSongInfo(stack);
         Language language = Language.getInstance();
         if (info != null) {
             if(info.transName != null && !info.transName.isEmpty()){
                 name = language.getOrDefault("tooltips.netmusic.cd.trans_name");
                 text = "§a▍ §7" + name + ": §6" + info.transName;
-                tooltip.add(Component.literal(text));
+                tooltip.accept(Component.literal(text));
             }
 
             if (info.artists != null && !info.artists.isEmpty()) {
                 text = StringUtils.join(info.artists, " | ");
                 name = language.getOrDefault("tooltips.netmusic.cd.artists");
                 text = "§a▍ §7" + name + ": §3" + text;
-                tooltip.add(Component.literal(text));
+                tooltip.accept(Component.literal(text));
             }
 
             name = language.getOrDefault("tooltips.netmusic.cd.time");
             text = "§a▍ §7" + name + ": §5" + this.getSongTime(info.songTime);
-            tooltip.add(Component.literal(text));
+            tooltip.accept(Component.literal(text));
         }
     }
 
@@ -186,7 +188,7 @@ public class NetMusicListItem extends ItemMusicCD {
             }
             return InteractionResult.PASS;
         }
-        if(context.getLevel().isClientSide){
+        if(context.getLevel().isClientSide()){
             var l = getSongInfoList(stack);
             // 只要我直接移到新版本就行了（简单粗暴）
             MusicSelectionScreen.open(l, getPlayMode(stack), getSongIndex(stack));
@@ -195,21 +197,21 @@ public class NetMusicListItem extends ItemMusicCD {
     }
 
     @Override
-    public @NotNull InteractionResultHolder<ItemStack> use(@NotNull Level level, @NotNull Player player, @NotNull InteractionHand hand) {
+    public InteractionResult use(@NotNull Level level, @NotNull Player player, @NotNull InteractionHand hand) {
         var stack = player.getItemInHand(hand);
         if(!stack.is(NetMusicList.MUSIC_LIST_ITEM.get())){
-            return InteractionResultHolder.pass(stack);
+            return InteractionResult.PASS;
         }
-        if(level.isClientSide){
+        if(level.isClientSide()){
             var l = getSongInfoList(stack);
             MusicSelectionScreen.open(l, getPlayMode(stack), getSongIndex(stack));
         }
-        return InteractionResultHolder.success(stack);
+        return InteractionResult.SUCCESS;
     }
 
     @Override
     public @NotNull Component getName(@NotNull ItemStack stack) {
-        if(Objects.equals(super.getName(stack), Component.translatable(getDescriptionId(stack)))){
+        if(Objects.equals(super.getName(stack), Component.translatable(getDescriptionId()))){
             return Component.translatable("item.net_music_list.name", getSongInfoList(stack).size());
         }
         return Component.translatable("item.net_music_list.info", super.getName(stack));

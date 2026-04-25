@@ -4,50 +4,36 @@ import com.github.tartaricacid.netmusic.NetMusic;
 import com.github.tartaricacid.netmusic.api.ExtraMusicList;
 import com.github.tartaricacid.netmusic.api.lyric.LyricRecord;
 import com.github.tartaricacid.netmusic.api.pojo.NetEaseMusicList;
-import com.github.tartaricacid.netmusic.compat.cloth.MenuIntegration;
 import com.github.tartaricacid.netmusic.item.ItemMusicCD;
 import com.gly091020.netMusicListNeoforge.NetMusicList;
-import com.gly091020.netMusicListNeoforge.client.PauseSoundManager;
-import com.gly091020.netMusicListNeoforge.client.manual.Entries;
-import com.gly091020.netMusicListNeoforge.client.manual.EntriesRegistry;
-import com.gly091020.netMusicListNeoforge.config.ConfigScreenGetter;
 import com.gly091020.netMusicListNeoforge.config.NetMusicListConfig;
 import com.gly091020.netMusicListNeoforge.hud.MusicInfoHud;
-import com.gly091020.netMusicListNeoforge.mixin.TickableSoundGetterMixins;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.reflect.TypeToken;
-import com.mojang.blaze3d.platform.NativeImage;
 import it.unimi.dsi.fastutil.ints.Int2ObjectRBTreeMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectSortedMap;
 import me.shedaniel.autoconfig.AutoConfig;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.texture.AbstractTexture;
-import net.minecraft.client.renderer.texture.DynamicTexture;
-import net.minecraft.client.resources.sounds.SimpleSoundInstance;
-import net.minecraft.client.resources.sounds.TickableSoundInstance;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.sounds.SoundEvent;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.loading.FMLEnvironment;
 import oshi.util.tuples.Pair;
 
 import javax.annotation.Nullable;
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -61,91 +47,6 @@ public class NetMusicListUtil {
     // 自己的石山还得让别人来修……
     public static final UUID WANG_REN_ZE_9788 = UUID.fromString("21b900df-8ea3-47e4-81cb-ed1146714b14");
     public static boolean globalStopMusic = false;
-    public static boolean needReload = false;
-
-    @OnlyIn(Dist.CLIENT)
-    public static void playSound(SoundEvent event){
-        Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(event, 1));
-    }
-
-    @OnlyIn(Dist.CLIENT)
-    public static long getIdFromInfo(ItemMusicCD.SongInfo info) throws IllegalAccessException {
-        var s = info.songUrl;
-        return getIdFromUrl(s);
-    }
-
-    public static long getIdFromUrl(String url) throws IllegalAccessException {
-        String[] parts = url.split("[?&]id=");  // 为 什 么 要 用 这 种 代 码
-        String idPart;
-        if (parts.length > 1) {
-            idPart = parts[1].split("&")[0];
-        } else {
-            throw new IllegalAccessException("解析失败");
-        }
-        return Long.parseLong(idPart.replace(".mp3", ""));
-    }
-
-    @OnlyIn(Dist.CLIENT)
-    @SuppressWarnings("all")
-    public static URL getIconUrl(String json) throws Exception{
-        var data = (Map<String, Object>)GSON.fromJson(json, new TypeToken<Map<String, Object>>(){}.getType());
-        var song = (Map<String, Object>)((List<Object>)data.get("songs")).get(0);
-        var album = song.get("album");
-        // 大力出奇迹.png
-        return new URL((String) ((Map<String, Object>)album).get("picUrl"));
-    }
-
-    @OnlyIn(Dist.CLIENT)
-    public static AbstractTexture getTextureFromURL(URL imageUrl) throws IOException {
-        try (InputStream stream = imageUrl.openConnection().getInputStream()) {
-            BufferedImage bufferedImage = ImageIO.read(stream);
-            if (bufferedImage == null) {
-                throw new IOException("无法读取图片 - 不支持的格式或损坏的文件");
-            }
-            NativeImage nativeImage = new NativeImage(bufferedImage.getWidth(), bufferedImage.getHeight(), false);
-            for (int y = 0; y < bufferedImage.getHeight(); y++) {
-                for (int x = 0; x < bufferedImage.getWidth(); x++) {
-                    int argb = bufferedImage.getRGB(x, y);
-                    int a = (argb >> 24) & 0xFF;
-                    int r = (argb >> 16) & 0xFF;
-                    int g = (argb >> 8) & 0xFF;
-                    int b = argb & 0xFF;
-                    int rgba = (a << 24) | (b << 16) | (g << 8) | r;
-                    nativeImage.setPixelRGBA(x, y, rgba | 0xFF000000);
-                }
-            }
-            return new DynamicTexture(nativeImage);
-        }
-    }
-
-    @OnlyIn(Dist.CLIENT)
-    public static AbstractTexture getTextureFromPath(Path imagePath) throws IOException {
-        try (InputStream stream = Files.newInputStream(imagePath)) {
-            BufferedImage bufferedImage = ImageIO.read(stream);
-            if (bufferedImage == null) {
-                throw new IOException("无法读取图片 - 不支持的格式或损坏的文件");
-            }
-            NativeImage nativeImage = new NativeImage(bufferedImage.getWidth(), bufferedImage.getHeight(), false);
-            for (int y = 0; y < bufferedImage.getHeight(); y++) {
-                for (int x = 0; x < bufferedImage.getWidth(); x++) {
-                    int argb = bufferedImage.getRGB(x, y);
-                    int a = (argb >> 24) & 0xFF;
-                    int r = (argb >> 16) & 0xFF;
-                    int g = (argb >> 8) & 0xFF;
-                    int b = argb & 0xFF;
-                    int rgba = (a << 24) | (b << 16) | (g << 8) | r;
-                    nativeImage.setPixelRGBA(x, y, rgba | 0xFF000000);
-                }
-            }
-            return new DynamicTexture(nativeImage);
-        }
-    }
-
-    public static boolean isNeedReload(){
-        var b = needReload;
-        needReload = false;
-        return b;
-    }
 
     public static class Lyric {
         @SerializedName("lyric")
@@ -318,10 +219,6 @@ public class NetMusicListUtil {
         return Objects.equals(Minecraft.getInstance().getUser().getProfileId(), N44);
     }
 
-    public static List<TickableSoundInstance> getTickableSounds(){
-        return ((TickableSoundGetterMixins.SoundEngineMixin)((TickableSoundGetterMixins.SoundManagerMixin) Minecraft.getInstance().getSoundManager()).getSoundEngine()).getTickableSoundInstances();
-    }
-
     public static boolean isWangRenZe9788(){
         return Objects.equals(Minecraft.getInstance().getUser().getProfileId(), WANG_REN_ZE_9788);
     }
@@ -330,15 +227,10 @@ public class NetMusicListUtil {
         var holder = AutoConfig.getConfigHolder(NetMusicListConfig.class);
         holder.setConfig(CONFIG);
         holder.save();
-        if(FMLEnvironment.dist.isClient()){
+        if(FMLEnvironment.getDist().isClient()){
             MusicInfoHud.setPos(CONFIG.x, CONFIG.y);
         }
         CacheManager.reload();
-    }
-
-    @OnlyIn(Dist.CLIENT)
-    public static boolean isPaused(){
-        return ((PauseSoundManager)Minecraft.getInstance().getSoundManager()).isPaused();
     }
 
     public static boolean hasLoginNeed(){
@@ -436,80 +328,6 @@ public class NetMusicListUtil {
         }
     }
 
-    public static void loadAllMD(){
-        EntriesRegistry.clear();
-        List<Object> data;
-        var language = Minecraft.getInstance().getLanguageManager().getSelected();
-        try{
-            initMDButtons();
-            try{
-                data = GSON.fromJson(loadStringFromFile("manual/" + language + "/all_entries.json"),
-                        new TypeToken<List<Object>>(){}.getType());
-                registryMD(null, data);
-            }catch (RuntimeException e){
-                data = GSON.fromJson(loadStringFromFile("manual/en_us/all_entries.json"),
-                        new TypeToken<List<Object>>(){}.getType());
-                registryMD(null, data);
-            }
-            if(!FMLEnvironment.production)
-                EntriesRegistry.registryNewEntries(Entries.createFromMD("dev.md"));
-        }catch (Exception e){
-            NetMusicList.LOGGER.error("加载手册出现错误：", e);
-        }
-        NetMusicList.LOGGER.info("已加载{}手册", language);
-    }
-
-    @SuppressWarnings("all")
-    private static void registryMD(@Nullable EntriesRegistry.Directory directory, List<Object> data){
-        for(Object item: data){
-            if(item instanceof List list){
-                EntriesRegistry.Directory d;
-                if(directory == null){
-                    d = EntriesRegistry.registryNewParent();
-                }else{
-                    d = directory.registryNewParent();
-                }
-                registryMD(d, (List<Object>) list);
-            }else if(item instanceof String path){
-                if(directory == null){
-                    EntriesRegistry.registryNewEntries(Entries.createFromMD(path));
-                }else{
-                    directory.registryNewEntries(Entries.createFromMD(path));
-                }
-            }
-        }
-    }
-
-    public static void initMDButtons(){
-        EntriesRegistry.registryButtonGroup("example", List.of(
-                new Entries.Button("示例按钮", () -> {})
-        ));
-
-        var buttons = new ArrayList<Entries.Button>();
-        buttons.add(new Entries.Button(
-                Component.translatable("itemGroup.netmusic").getString() +
-                        Component.translatable("text.cloth-config.config").getString(),
-                () -> Minecraft.getInstance().setScreen(MenuIntegration.getConfigBuilder()
-                        .setParentScreen(Minecraft.getInstance().screen).build())
-        ));
-        buttons.add(new Entries.Button(
-                Component.translatable("modmenu.nameTranslation.net_music_list").getString() +
-                        Component.translatable("text.cloth-config.config").getString(),
-                () -> Minecraft.getInstance().setScreen(
-                        ConfigScreenGetter.getConfigScreen(Minecraft.getInstance().screen))
-        ));
-        if(ModList.get().isLoaded("net_music_login_need")){
-            buttons.add(new Entries.Button(
-                    ModList.get().getModContainerById("net_music_login_need").orElseThrow()
-                            .getModInfo().getDisplayName() +
-                            Component.translatable("text.cloth-config.config").getString(),
-                    () -> Minecraft.getInstance().setScreen(
-                            LoginNeedUtil.getConfigScreen())
-            ));
-        }
-        EntriesRegistry.registryButtonGroup("all_config", buttons);
-    }
-
     public static String getSongTime(int songTime) {
         int min = songTime / 60;
         int sec = songTime % 60;
@@ -525,5 +343,17 @@ public class NetMusicListUtil {
 
     public static boolean hasAdvancedPlayer(){
         return ModList.get().isLoaded("netmusicadvancedplayer");
+    }
+
+    public static Tag itemToTag(ItemStack stack) {
+        return ItemStack.CODEC.encodeStart(NbtOps.INSTANCE, stack)
+                .result()
+                .orElse(new CompoundTag());
+    }
+
+    public static ItemStack tagToItem(Tag tag) {
+        return ItemStack.CODEC.parse(NbtOps.INSTANCE, tag)
+                .result()
+                .orElse(ItemStack.EMPTY);
     }
 }

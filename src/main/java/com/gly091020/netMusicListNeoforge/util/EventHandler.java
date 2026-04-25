@@ -44,7 +44,7 @@ public class EventHandler {
     }
 
     private static void playerPlayMusic(Player player){
-        for(ItemStack stack: player.getInventory().items){
+        for(ItemStack stack: player.getInventory()){
             if(stack.is(NetMusicList.MUSIC_PLAYER_ITEM.get())){
                 NetMusicPlayerItem.playSound(stack, player,
                         player.getInventory().findSlotMatchingItem(stack));

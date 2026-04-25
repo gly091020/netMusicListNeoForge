@@ -113,7 +113,7 @@ public class CacheManager {
                 while (true){
                     json = NetMusic.NET_EASE_WEB_API.song(resourceId);
                     try{
-                        startDownload(NetMusicListUtil.getIconUrl(json)
+                        startDownload(NetMusicListClientUtil.getIconUrl(json)
                                 .toString(), resourceId, ".png", uuid);
                     } catch (Exception e) {
                         NetMusicList.LOGGER.error("出现错误(405?):{}", json);
@@ -155,10 +155,10 @@ public class CacheManager {
 
     @SuppressWarnings("all")
     public static String pasteUrl(long resourceId){
-        if(NetMusicListUtil.hasLoginNeed()){
-            var r = LoginNeedUtil.getUrl("?id=" + resourceId);
-            if(r != null)return r;
-        }
+//        if(NetMusicListUtil.hasLoginNeed()){
+//            var r = LoginNeedUtil.getUrl("?id=" + resourceId);
+//            if(r != null)return r;
+//        }
         try {
             return NetMusicListUtil.resolveRedirect(new URL(String.format("https://music.163.com/song/media/outer/url?id=%s.mp3", resourceId)), 3, Map.of()).toString();
         } catch (IOException e) {

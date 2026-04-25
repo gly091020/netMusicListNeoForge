@@ -17,8 +17,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class PlayModeMixin {
     @Inject(method = "tick", at = @At("RETURN"), remap = false)
     private static void nextMusic(Level level, BlockPos blockPos, BlockState blockState, TileEntityMusicPlayer te, CallbackInfo ci){
-        if(!te.isPlay() && te.getPlayerInv().getStackInSlot(0).is(NetMusicList.MUSIC_LIST_ITEM.get())){
-            ItemStack stackInSlot = te.getPlayerInv().getStackInSlot(0);
+        if(!te.isPlay() && te.getPlayerInv().getResource(0).is(NetMusicList.MUSIC_LIST_ITEM.get())){
+            ItemStack stackInSlot = te.getPlayerInv().getResource(0).toStack();
             if (stackInSlot.isEmpty()) {
                 return;
             }

@@ -7,15 +7,18 @@ import com.gly091020.netMusicListNeoforge.packet.MoveMusicDataPacket;
 import com.gly091020.netMusicListNeoforge.packet.MusicListDataPacket;
 import com.gly091020.netMusicListNeoforge.util.PlayMode;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ObjectSelectionList;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.minecraft.resources.Identifier;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 
@@ -24,7 +27,7 @@ import java.util.List;
 
 public class OldMusicSelectionScreen extends Screen {
     private final List<String> musicList;
-    private static final ResourceLocation BACKGROUND_TEXTURE = ResourceLocation.fromNamespaceAndPath(NetMusicList.ModID,
+    private static final Identifier BACKGROUND_TEXTURE = Identifier.fromNamespaceAndPath(NetMusicList.ModID,
             "textures/gui/old_bg.png");
     private final int backgroundWidth = 256;
     private final int backgroundHeight = 230;
@@ -103,52 +106,52 @@ public class OldMusicSelectionScreen extends Screen {
     }
 
     @Override
-    public void renderBackground(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        super.renderBackground(guiGraphics, mouseX, mouseY, partialTick);
-        guiGraphics.blit(BACKGROUND_TEXTURE, left, top, 0, 0, backgroundWidth, backgroundHeight);
+    public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
+        super.extractBackground(graphics, mouseX, mouseY, a);
+        graphics.blit(RenderPipelines.GUI_TEXTURED, BACKGROUND_TEXTURE, left, top, 0, 0, backgroundWidth, backgroundHeight, 256, 256);
     }
 
     @Override
-    public void render(@NotNull GuiGraphics context, int mouseX, int mouseY, float delta) {
-        super.render(context, mouseX, mouseY, delta);
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
+        super.extractRenderState(graphics, mouseX, mouseY, a);
         var fontHeight = font.lineHeight;
 
-        context.drawCenteredString(
+        graphics.centeredText(
                 font,
                 this.title,
                 left + backgroundWidth / 2,
                 top + 6,
-                0x404040
+                0xFF404040
         );
 
-        context.drawString(
+        graphics.text(
                 font,
                 Component.translatable("gui.net_music_list.play_list"),
                 left + 10,
                 top + 6 + fontHeight + 6,
-                0x000000, false
+                0xFF000000, false
         );
     }
 
     @Override
-    public boolean keyPressed(int p_96552_, int p_96553_, int p_96554_) {
-        if (p_96552_ == GLFW.GLFW_KEY_DELETE && canDelete()) {
+    public boolean keyPressed(KeyEvent event) {
+        if (event.key() == GLFW.GLFW_KEY_DELETE && canDelete()) {
             deleteMusic();
             return true;
         }
-        if(p_96552_ == GLFW.GLFW_KEY_UP && canMove(true)){
+        if(event.key() == GLFW.GLFW_KEY_UP && canMove(true)){
             moveMusic(true);
             return true;
         }
-        if(p_96552_ == GLFW.GLFW_KEY_DOWN && canMove(false)){
+        if(event.key() == GLFW.GLFW_KEY_DOWN && canMove(false)){
             moveMusic(false);
             return true;
         }
-        if(p_96552_ == GLFW.GLFW_KEY_ESCAPE && super.keyPressed(p_96552_, p_96553_, p_96554_)){
+        if(event.key() == GLFW.GLFW_KEY_ESCAPE && super.keyPressed(event)){
             sendPackage();
             return true;
         }
-        return super.keyPressed(p_96552_, p_96553_, p_96554_);
+        return super.keyPressed(event);
     }
 
     public void deleteMusic(){
@@ -191,7 +194,7 @@ public class OldMusicSelectionScreen extends Screen {
     }
 
     public static void sendToServer(CustomPacketPayload payload){
-        PacketDistributor.sendToServer(payload);
+        ClientPacketDistributor.sendToServer(payload);
     }
 
     public void updateButton(){
@@ -227,25 +230,25 @@ public class OldMusicSelectionScreen extends Screen {
         }
 
         @Override
-        public void render(@NotNull GuiGraphics context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+        public void extractContent(GuiGraphicsExtractor guiGraphicsExtractor, int i, int i1, boolean b, float v) {
             // 渲染背景
-            if (hovered) {
-                context.fill(x, y, x + entryWidth - 4, y + entryHeight, 0x80FFFFFF);
+            if (b) {
+                guiGraphicsExtractor.fill(getX(), getY(), getX() + getContentWidth() + 3, getY() + getContentHeight() + 3, 0x80FFFFFF);
             }
 
             // 渲染文本
-            context.drawString(
+            guiGraphicsExtractor.text(
                     font,
                     Component.literal(musicName),
-                    x + 5,
-                    y + (entryHeight - 10) / 2 + 1,
-                    0xFFFFFF
+                    getX() + 5,
+                    getY() + (getContentHeight() - 10) / 2 + 3,
+                    0xFFFFFFFF
             );
         }
 
         @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            super.mouseClicked(mouseX, mouseY, button);
+        public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+            super.mouseClicked(event, doubleClick);
             OldMusicSelectionScreen.this.index = listWidget.children().indexOf(this);
             listWidget.setSelectedIndex(index);
             sendPackage();
@@ -268,8 +271,8 @@ public class OldMusicSelectionScreen extends Screen {
         }
 
         @Override
-        protected int getScrollbarPosition() {
-            return this.getX() + this.width - 6;
+        protected int scrollBarX() {
+            return super.scrollBarX() - 6;
         }
 
         @Override
@@ -279,11 +282,6 @@ public class OldMusicSelectionScreen extends Screen {
 
         public void addMusicEntry(String musicName) {
             this.addEntry(new MusicListEntry(musicName));
-        }
-
-        @Override
-        protected void renderListBackground(@NotNull GuiGraphics guiGraphics) {
-            super.renderListBackground(guiGraphics);
         }
 
         public int getSelectedIndex(){
@@ -336,16 +334,16 @@ public class OldMusicSelectionScreen extends Screen {
         }
 
         @Override
-        protected void renderWidget(@NotNull GuiGraphics context, int p_282682_, int p_281714_, float p_282542_) {
-            super.renderWidget(context, p_282682_, p_281714_, p_282542_);
-            var x = 0;
+        protected void extractContents(GuiGraphicsExtractor guiGraphicsExtractor, int i, int i1, float v) {
+            extractDefaultSprite(guiGraphicsExtractor);
+            float x = 0;
             switch (this.playMode){
                 case SEQUENTIAL -> x = 44;
                 case RANDOM -> x = 66;
                 case LOOP -> x = 88;
             }
-            context.blit(BACKGROUND_TEXTURE, this.getX(), this.getY(),
-                    x, 230, this.width, this.height);
+            guiGraphicsExtractor.blit(RenderPipelines.GUI_TEXTURED, BACKGROUND_TEXTURE, this.getX(), this.getY(),
+                    x, 230f, this.width, this.height, 256, 256);
         }
     }
 
@@ -357,10 +355,10 @@ public class OldMusicSelectionScreen extends Screen {
         }
 
         @Override
-        protected void renderWidget(@NotNull GuiGraphics context, int p_282682_, int p_281714_, float p_282542_) {
-            super.renderWidget(context, p_282682_, p_281714_, p_282542_);
-            context.blit(BACKGROUND_TEXTURE, this.getX(), this.getY(),
-                    isUp ? 110 : 132, 230, this.width, this.height);
+        protected void extractContents(GuiGraphicsExtractor guiGraphicsExtractor, int i, int i1, float v) {
+            extractDefaultSprite(guiGraphicsExtractor);
+            guiGraphicsExtractor.blit(RenderPipelines.GUI_TEXTURED, BACKGROUND_TEXTURE, this.getX(), this.getY(),
+                    isUp ? 110 : 132, 230, this.width, this.height, 256, 256);
         }
     }
 }

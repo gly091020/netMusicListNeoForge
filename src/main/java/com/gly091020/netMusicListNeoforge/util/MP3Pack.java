@@ -29,7 +29,7 @@ public class MP3Pack implements RepositorySource {
 
     private PathPackResources.PathResourcesSupplier getLegacyPack() {
         net.neoforged.neoforgespi.locating.IModFile file = net.neoforged.fml.ModList.get().getModFileById(NetMusicList.ModID).getFile();
-        return new PathPackResources.PathResourcesSupplier(file.getSecureJar().getRootPath().resolve("mp3"));
+        return new PathPackResources.PathResourcesSupplier(file.getFilePath().resolve("mp3"));
     }
 
     @Override

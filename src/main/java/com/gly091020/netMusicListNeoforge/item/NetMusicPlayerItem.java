@@ -12,15 +12,18 @@ import com.gly091020.netMusicListNeoforge.hud.MusicListLayer;
 import com.gly091020.netMusicListNeoforge.packet.PlayerPlayMusicPacket;
 import com.gly091020.netMusicListNeoforge.packet.UpdateMusicIndexCTSPacket;
 import com.gly091020.netMusicListNeoforge.packet.UpdatePlayerMusicPacket;
+import com.gly091020.netMusicListNeoforge.util.NetMusicListClientUtil;
 import com.gly091020.netMusicListNeoforge.util.NetMusicListUtil;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.arguments.EntityAnchorArgument;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.SlotAccess;
@@ -31,17 +34,18 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.ItemContainerContents;
+import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
+import java.util.function.Consumer;
 
 public class NetMusicPlayerItem extends Item{
-    public NetMusicPlayerItem() {
-        super(new Properties().stacksTo(1));
+    public NetMusicPlayerItem(Identifier identifier) {
+        super(new Properties().stacksTo(1).setId(ResourceKey.create(Registries.ITEM, identifier)));
     }
 
     @Override
@@ -75,13 +79,13 @@ public class NetMusicPlayerItem extends Item{
         }
         var info = ItemMusicCD.getSongInfo(i);
         if(info == null)return;
-        if(!NetMusicList.CONFIG.noVIP && !NetMusicListUtil.hasLoginNeed() && info.vip && player.level().isClientSide){
+        if(!NetMusicList.CONFIG.noVIP && !NetMusicListUtil.hasLoginNeed() && info.vip && player.level().isClientSide()){
             player.sendSystemMessage(Component.translatable("message.netmusic.music_player.need_vip")
                     .withStyle(ChatFormatting.RED));
             return;
         }
 
-        if(!player.level().isClientSide){return;}
+        if(!player.level().isClientSide()){return;}
         NetworkHandler.sendToServer(new PlayerPlayMusicPacket(player.getId(), info.songUrl, info.songTime, info.songName, slot, info));
     }
 
@@ -95,7 +99,7 @@ public class NetMusicPlayerItem extends Item{
         if(!NetMusicListUtil.hasLoginNeed() && info.vip){
             return;
         }
-        if(!player.level().isClientSide){
+        if(!player.level().isClientSide()){
             PacketDistributor.sendToAllPlayers(new PlayerPlayMusicPacket(player.getId(), info.songUrl, info.songTime, info.songName, slot, info));
         }else {
             NetworkHandler.sendToServer(new PlayerPlayMusicPacket(player.getId(), info.songUrl, info.songTime, info.songName, slot, info));
@@ -107,17 +111,17 @@ public class NetMusicPlayerItem extends Item{
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
+    public void appendHoverText(ItemStack itemStack, TooltipContext context, TooltipDisplay display, Consumer<Component> builder, TooltipFlag tooltipFlag) {
         Component t;
-        var c = getContainer(stack);
+        var c = getContainer(itemStack);
         if(c.isEmpty()){
             t = Component.translatable("item.net_music_player.empty").withStyle(ChatFormatting.RED);
         }else{
             t = c.getItem(0).getHoverName();
         }
-        tooltipComponents.add(Component.translatable("item.net_music_player.tip", t));
-        var i = getContainer(stack).getItem(0);
-        i.getItem().appendHoverText(i, context, tooltipComponents, tooltipFlag);
+        builder.accept(Component.translatable("item.net_music_player.tip", t));
+        var i = getContainer(itemStack).getItem(0);
+        i.getItem().appendHoverText(i, context, display, builder, tooltipFlag);
     }
 
     @Override
@@ -147,14 +151,14 @@ public class NetMusicPlayerItem extends Item{
     }
 
     @Override
-    public @NotNull InteractionResultHolder<ItemStack> use(@NotNull Level level, @NotNull Player player, @NotNull InteractionHand usedHand) {
+    public @NotNull InteractionResult use(@NotNull Level level, @NotNull Player player, @NotNull InteractionHand usedHand) {
         if(player.isShiftKeyDown())
-            return InteractionResultHolder.success(player.getItemInHand(usedHand));
-        if(!level.isClientSide){
+            return InteractionResult.SUCCESS;
+        if(!level.isClientSide()){
             return super.use(level, player, usedHand);
         }
         if(MusicListLayer.isRender){
-            NetMusicListUtil.playSound(SoundEvents.EXPERIENCE_ORB_PICKUP);
+            NetMusicListClientUtil.playSound(SoundEvents.EXPERIENCE_ORB_PICKUP);
             var container = getContainer(player.getItemInHand(usedHand));
             var item = container.getItem(0);
             var index = NetMusicListItem.getSongIndex(item);
@@ -168,11 +172,11 @@ public class NetMusicPlayerItem extends Item{
                 NetworkHandler.sendToServer(new UpdateMusicIndexCTSPacket(slot, MusicListLayer.index));
             }
             MusicListLayer.isRender = false;
-            return InteractionResultHolder.success(player.getMainHandItem());
+            return InteractionResult.SUCCESS;
         }
         MusicListLayer.isRender = true;
         MusicListLayer.slot = player.getInventory().findSlotMatchingItem(player.getMainHandItem());
-        return InteractionResultHolder.success(player.getMainHandItem());
+        return InteractionResult.SUCCESS;
     }
 
     @Override

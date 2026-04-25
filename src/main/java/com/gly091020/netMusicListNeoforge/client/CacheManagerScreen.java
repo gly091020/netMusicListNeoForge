@@ -2,8 +2,7 @@ package com.gly091020.netMusicListNeoforge.client;
 
 import com.gly091020.netMusicListNeoforge.util.CacheManager;
 import com.gly091020.netMusicListNeoforge.util.FileDownloadThread;
-import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
@@ -24,44 +23,43 @@ public class CacheManagerScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
-        // 绘制半透明背景
-        super.render(guiGraphics, mouseX, mouseY, partialTicks);
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
+        super.extractRenderState(graphics, mouseX, mouseY, a);
 
-        PoseStack poseStack = guiGraphics.pose();
-        poseStack.pushPose();
+        var poseStack = graphics.pose();
+        poseStack.pushMatrix();
 
         // 绘制标题
-        guiGraphics.drawCenteredString(this.font, "下载任务监控", this.width / 2, 20, 0xFFFFFF);
+        graphics.centeredText(this.font, "下载任务监控", this.width / 2, 20, 0xFFFFFF);
 
         // 获取下载线程列表
         List<FileDownloadThread> downloads = CacheManager.getThreads();
 
         // 显示下载数量
         String countText = "活跃下载任务: " + downloads.size();
-        guiGraphics.drawString(this.font, countText, 10, 50, 0xFFFFFF);
+        graphics.text(this.font, countText, 10, 50, 0xFFFFFF);
 
         // 绘制下载列表
         int startY = 80;
         int lineHeight = 30;
 
         if (downloads.isEmpty()) {
-            guiGraphics.drawCenteredString(this.font, "没有活跃的下载任务", this.width / 2, startY, 0x888888);
+            graphics.centeredText(this.font, "没有活跃的下载任务", this.width / 2, startY, 0x888888);
         } else {
             for (int i = 0; i < downloads.size(); i++) {
                 FileDownloadThread thread = downloads.get(i);
-                renderDownloadEntry(guiGraphics, thread, 10, startY + i * lineHeight, this.width - 20);
+                renderDownloadEntry(graphics, thread, 10, startY + i * lineHeight, this.width - 20);
             }
         }
 
-        poseStack.popPose();
+        poseStack.popMatrix();
     }
 
-    private void renderDownloadEntry(GuiGraphics guiGraphics, FileDownloadThread thread, int x, int y, int width) {
+    private void renderDownloadEntry(GuiGraphicsExtractor guiGraphics, FileDownloadThread thread, int x, int y, int width) {
         // 线程基本信息
         String threadInfo = String.format("ID: %s | 资源: %d | 类型: %s",
                 thread.getThreadId(), thread.getResourceId(), thread.getFileType());
-        guiGraphics.drawString(this.font, threadInfo, x, y, 0xFFFFFF);
+        guiGraphics.text(this.font, threadInfo, x, y, 0xFFFFFF);
 
         // 进度信息
         float progress = thread.getProgress();
@@ -77,7 +75,7 @@ public class CacheManagerScreen extends Screen {
             progressText = String.format("%s / 未知大小 (%s)", formatFileSize(downloaded), PROGRESS_FORMAT.format(progress));
         }
 
-        guiGraphics.drawString(this.font, progressText, x, y + 10, 0xCCCCCC);
+        guiGraphics.text(this.font, progressText, x, y + 10, 0xCCCCCC);
 
         // 进度条
         int progressBarWidth = width - 20;
@@ -100,7 +98,7 @@ public class CacheManagerScreen extends Screen {
         // 状态文本
         String statusText = getStatusText(thread);
         int statusColor = getStatusColor(thread);
-        guiGraphics.drawString(this.font, statusText, x + progressBarWidth + 5, progressBarY, statusColor);
+        guiGraphics.text(this.font, statusText, x + progressBarWidth + 5, progressBarY, statusColor);
     }
 
     private String getStatusText(FileDownloadThread thread) {
@@ -158,16 +156,6 @@ public class CacheManagerScreen extends Screen {
         if (refreshTicks >= REFRESH_INTERVAL) {
             refreshTicks = 0;
         }
-    }
-
-    @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        // ESC键关闭界面
-        if (keyCode == 256) { // ESC
-            this.minecraft.setScreen(null);
-            return true;
-        }
-        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     @Override

@@ -1,24 +1,23 @@
-// MusicPlayerRenderer.java
 package com.gly091020.netMusicListNeoforge.entity;
 
 import com.gly091020.netMusicListNeoforge.NetMusicList;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
-import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.client.renderer.entity.state.EntityRenderState;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.Entity;
-import org.jetbrains.annotations.NotNull;
+import net.minecraft.resources.Identifier;
+import org.jspecify.annotations.NonNull;
 
 import java.awt.*;
 
-public class MusicPlayerRenderer<T extends Entity> extends EntityRenderer<T> {
+public class MusicPlayerRenderer<T extends MusicPlayerEntity> extends EntityRenderer<MusicPlayerEntity, MusicPlayerRenderer.MusicPlayerRenderState> {
     private final MusicPlayerModel<T> model;
-    private static final ResourceLocation TEXTURE =
-            ResourceLocation.fromNamespaceAndPath(NetMusicList.ModID, "textures/entity/music_player.png");
+    private static final Identifier TEXTURE =
+            Identifier.fromNamespaceAndPath(NetMusicList.ModID, "textures/entity/music_player.png");
 
     public MusicPlayerRenderer(EntityRendererProvider.Context context) {
         super(context);
@@ -26,37 +25,67 @@ public class MusicPlayerRenderer<T extends Entity> extends EntityRenderer<T> {
         this.shadowRadius = 0.5F;
     }
 
-    @Override
-    public void render(@NotNull T entity, float entityYaw, float partialTicks,
-                       @NotNull PoseStack poseStack, @NotNull MultiBufferSource buffer,
-                       int packedLight) {
-        poseStack.pushPose();
-        poseStack.mulPose(Axis.YP.rotationDegrees(180.0F - entityYaw));
-        var color = 0xFFFFFFFF;
+    public static class MusicPlayerRenderState extends EntityRenderState {
 
-        if(NetMusicList.CONFIG.glyMusicEntity && entity instanceof MusicPlayerEntity entity1 && entity1.isPlaying()){
-            var time = System.currentTimeMillis();
-            var v1 = (Math.sin(time / 300d) * 0.5 + 0.5) + 0.5;
-            var v2 = (Math.cos(time / 300d) * 0.5 + 0.5) + 0.5;
-            poseStack.scale((float) (1 * v1), (float) (1 * v2), 1);
-            color = hsvToArgb((float) (Math.cos(time / 500d) * 0.5 + 0.5) * 360f, 1, 1, 1);
-        }
+        public float time;
 
-        poseStack.scale(-1, -1, -1);
-        poseStack.translate(0, -1.5, 0.5 / 16);
+        public float scaleX = 1.0F;
+        public float scaleY = 1.0F;
 
-        VertexConsumer vertexConsumer = buffer.getBuffer(
-                this.model.renderType(this.getTextureLocation(entity)));
-        this.model.renderToBuffer(poseStack, vertexConsumer, packedLight,
-                OverlayTexture.NO_OVERLAY, color);
+        public int color = 0xFFFFFFFF;
 
-        poseStack.popPose();
-        super.render(entity, entityYaw, partialTicks, poseStack, buffer, packedLight);
+        public float yRot = 0;
     }
 
     @Override
-    public @NotNull ResourceLocation getTextureLocation(@NotNull T entity) {
-        return TEXTURE;
+    public MusicPlayerRenderState createRenderState() {
+        return new MusicPlayerRenderState();
+    }
+
+    @Override
+    public void extractRenderState(MusicPlayerEntity entity, MusicPlayerRenderState state, float partialTicks) {
+        super.extractRenderState(entity, state, partialTicks);
+
+        float time = entity.tickCount + partialTicks;
+        state.time = time;
+
+        if (NetMusicList.CONFIG.glyMusicEntity && entity.isPlaying()) {
+
+            state.scaleX = (float)(1.0 + Math.sin(time * 0.1) * 0.2);
+            state.scaleY = (float)(1.0 + Math.cos(time * 0.1) * 0.2);
+
+            state.color = hsvToArgb(
+                    (float)(Math.cos(time * 0.05) * 0.5 + 0.5) * 360f,
+                    1, 1, 1
+            );
+        } else {
+            state.scaleX = 1.0F;
+            state.scaleY = 1.0F;
+            state.color = 0xFFFFFFFF;
+        }
+        state.yRot = entity.getYRot();
+    }
+
+    @Override
+    public void submit(MusicPlayerRenderState state,
+                       PoseStack poseStack,
+                       SubmitNodeCollector collector,
+                       @NonNull CameraRenderState cameraState) {
+
+        poseStack.pushPose();
+
+        poseStack.mulPose(Axis.YP.rotationDegrees(180.0F - state.yRot));
+
+        poseStack.scale(state.scaleX, state.scaleY, 1.0F);
+
+        poseStack.scale(-1, -1, -1);
+        poseStack.translate(0, -1.5, 0.5 / 16.0);
+
+        collector.submitModel(model, state, poseStack, TEXTURE, state.lightCoords, OverlayTexture.NO_OVERLAY, 0, null);
+
+        poseStack.popPose();
+
+        super.submit(state, poseStack, collector, cameraState);
     }
 
     public static int hsvToArgb(float h, float s, float v, int alpha) {

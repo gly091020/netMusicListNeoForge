@@ -4,12 +4,12 @@ import com.gly091020.netMusicListNeoforge.NetMusicList;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
 
 public record MoveMusicDataPacket(int fromIndex, int toIndex) implements CustomPacketPayload {
     public static final CustomPacketPayload.Type<MoveMusicDataPacket> TYPE = new CustomPacketPayload.Type<>(
-            ResourceLocation.fromNamespaceAndPath(NetMusicList.ModID, "move_music_data_packet"));
+            Identifier.fromNamespaceAndPath(NetMusicList.ModID, "move_music_data_packet"));
 
     public static final StreamCodec<FriendlyByteBuf, MoveMusicDataPacket> STREAM_CODEC = StreamCodec.of(
             MoveMusicDataPacket::encode,

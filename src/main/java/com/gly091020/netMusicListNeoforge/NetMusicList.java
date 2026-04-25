@@ -1,14 +1,13 @@
 package com.gly091020.netMusicListNeoforge;
 
 import com.github.tartaricacid.netmusic.init.InitItems;
-import com.gly091020.netMusicListNeoforge.block.EnderMusicPlayer;
-import com.gly091020.netMusicListNeoforge.block.EnderMusicPlayerEntity;
 import com.gly091020.netMusicListNeoforge.config.ConfigScreenGetter;
 import com.gly091020.netMusicListNeoforge.config.NetMusicListConfig;
-import com.gly091020.netMusicListNeoforge.create.CreateRegistry;
-import com.gly091020.netMusicListNeoforge.datagen.*;
+import com.gly091020.netMusicListNeoforge.datagen.AdvancementGenerator;
+import com.gly091020.netMusicListNeoforge.datagen.ItemModelGenerator;
+import com.gly091020.netMusicListNeoforge.datagen.LootTableGenerator;
+import com.gly091020.netMusicListNeoforge.datagen.RecipeGenerator;
 import com.gly091020.netMusicListNeoforge.entity.MusicPlayerEntity;
-import com.gly091020.netMusicListNeoforge.item.EnderMusicPlayerItem;
 import com.gly091020.netMusicListNeoforge.item.NetMusicListItem;
 import com.gly091020.netMusicListNeoforge.item.NetMusicListManual;
 import com.gly091020.netMusicListNeoforge.item.NetMusicPlayerItem;
@@ -24,6 +23,7 @@ import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.PackOutput;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.BlockItem;
@@ -33,12 +33,10 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.neoforged.bus.api.IEventBus;
-import net.neoforged.fml.ModList;
 import net.neoforged.fml.ModLoadingContext;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
-import net.neoforged.neoforge.common.data.ExistingFileHelper;
 import net.neoforged.neoforge.data.event.GatherDataEvent;
 import net.neoforged.neoforge.event.AddPackFindersEvent;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
@@ -63,15 +61,12 @@ public class NetMusicList {
     public static final DeferredHolder<Item, NetMusicPlayerItem> MUSIC_PLAYER_ITEM = ITEMS.register("music_player",
             NetMusicPlayerItem::new);
     public static final DeferredHolder<Item, Item> MANUAL_MODEL = ITEMS.register("manual_model",
-            () -> new Item(new Item.Properties()));  // 俺寻思之力
+            id -> new Item(new Item.Properties().setId(ResourceKey.create(Registries.ITEM, id))));  // 俺寻思之力
     public static final DeferredHolder<Item, NetMusicListManual> MANUAL = ITEMS.register("manual",
             NetMusicListManual::new);
 
     public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(Registries.BLOCK, ModID);
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITY_TYPES = DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, ModID);
-    public static final DeferredHolder<Block, EnderMusicPlayer> ENDER_MUSIC_PLAYER = BLOCKS.register("ender_music_player", EnderMusicPlayer::new);
-    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<EnderMusicPlayerEntity>> ENDER_MUSIC_PLAYER_TYPE = BLOCK_ENTITY_TYPES.register("ender_music_player_entity", () -> BlockEntityType.Builder.of(EnderMusicPlayerEntity::new, ENDER_MUSIC_PLAYER.get()).build(null));
-    public static final DeferredHolder<Item, BlockItem> ENDER_PLAYER_ITEM = ITEMS.register("ender_music_player", EnderMusicPlayerItem::new);
 
     public static final DeferredRegister<DataComponentType<?>> DATA_COMPONENTS = DeferredRegister.create(Registries.DATA_COMPONENT_TYPE, ModID);
     public static final Supplier<DataComponentType<MusicListComponent>> MUSIC_LIST_COMPONENT = DATA_COMPONENTS.register("music_list", () ->
@@ -81,10 +76,10 @@ public class NetMusicList {
                     .build());
 
     public static final DeferredRegister<EntityType<?>> ENTITY_TYPE = DeferredRegister.create(Registries.ENTITY_TYPE, ModID);
-    public static final Supplier<EntityType<MusicPlayerEntity>> MUSIC_PLAYER_ENTITY = ENTITY_TYPE.register("music_player", resourceLocation ->
+    public static final Supplier<EntityType<MusicPlayerEntity>> MUSIC_PLAYER_ENTITY = ENTITY_TYPE.register("music_player", identifier ->
         EntityType.Builder.of(MusicPlayerEntity::new, MobCategory.MISC)
                 .sized(12 / 16f, 6 / 16f)
-                .build("music_player")
+                .build(ResourceKey.create(Registries.ENTITY_TYPE, identifier))
     );
     public static NetMusicListConfig CONFIG;
 
@@ -107,15 +102,12 @@ public class NetMusicList {
                         ConfigScreenGetter.getConfigScreen(screen)
         );
 
-        if(ModList.get().isLoaded("create")) {
-            CreateRegistry.registry(modEventBus);
-        }
-
-        if(FMLEnvironment.dist.isClient()){
+        if(FMLEnvironment.getDist().isClient()){
             NetMusicListKeyMapping.init();
             modEventBus.addListener(NetMusicListKeyMapping::registerKeyBindings);
         }
-        modEventBus.addListener(NetMusicList::gatherData);
+        modEventBus.addListener(NetMusicList::gatherDataClient);
+        modEventBus.addListener(NetMusicList::gatherDataServer);
         modEventBus.addListener(NetMusicList::registerEntityAttributes);
         CacheManager.load();
     }
@@ -125,17 +117,21 @@ public class NetMusicList {
                 MusicPlayerEntity.createAttributes().build());
     }
 
-    public static void gatherData(GatherDataEvent event){
+    public static void gatherDataServer(GatherDataEvent.Server event){
         DataGenerator generator = event.getGenerator();
         PackOutput output = generator.getPackOutput();
-        ExistingFileHelper existingFileHelper = event.getExistingFileHelper();
         CompletableFuture<HolderLookup.Provider> lookupProvider = event.getLookupProvider();
 
-        generator.addProvider(event.includeClient(), new BlockModelGenerator(output, existingFileHelper));
-        generator.addProvider(event.includeClient(), new ItemModelGenerator(output, existingFileHelper));
-        generator.addProvider(event.includeServer(), new LootTableGenerator(output, lookupProvider));
-        generator.addProvider(event.includeServer(), new AdvancementGenerator(output, lookupProvider, existingFileHelper));
-        generator.addProvider(event.includeServer(), new RecipeGenerator(output, lookupProvider));
+        generator.addProvider(true, new LootTableGenerator(output, lookupProvider));
+        generator.addProvider(true, new AdvancementGenerator(output, lookupProvider));
+        generator.addProvider(true, new RecipeGenerator.Runner(output, lookupProvider));
+    }
+
+    public static void gatherDataClient(GatherDataEvent.Client event){
+        DataGenerator generator = event.getGenerator();
+        PackOutput output = generator.getPackOutput();
+
+        generator.addProvider(true, new ItemModelGenerator(output));
     }
 
     private void addItemsToCreativeTab(BuildCreativeModeTabContentsEvent event) {
@@ -150,17 +146,11 @@ public class NetMusicList {
                     new ItemStack(MUSIC_PLAYER_ITEM.get()),
                     CreativeModeTab.TabVisibility.PARENT_AND_SEARCH_TABS
             );
-            event.insertBefore(
-                    new ItemStack(MUSIC_PLAYER_ITEM.get()),
-                    new ItemStack(ENDER_PLAYER_ITEM.get()),
-                    CreativeModeTab.TabVisibility.PARENT_AND_SEARCH_TABS
-            );
-            if(!NetMusicListUtil.hasAdvancedPlayer())
-                event.insertBefore(
-                        new ItemStack(ENDER_PLAYER_ITEM.get()),
-                        new ItemStack(MANUAL.get()),
-                        CreativeModeTab.TabVisibility.PARENT_AND_SEARCH_TABS
-                );
+//            event.insertBefore(
+//                    new ItemStack(MUSIC_PLAYER_ITEM.get()),
+//                    new ItemStack(MANUAL.get()),
+//                    CreativeModeTab.TabVisibility.PARENT_AND_SEARCH_TABS
+//            );
         }
     }
 
