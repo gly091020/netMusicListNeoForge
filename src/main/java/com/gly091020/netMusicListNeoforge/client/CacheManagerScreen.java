@@ -30,14 +30,14 @@ public class CacheManagerScreen extends Screen {
         poseStack.pushMatrix();
 
         // 绘制标题
-        graphics.centeredText(this.font, "下载任务监控", this.width / 2, 20, 0xFFFFFF);
+        graphics.centeredText(this.font, "下载任务监控", this.width / 2, 20, 0xFFFFFFFF);
 
         // 获取下载线程列表
         List<FileDownloadThread> downloads = CacheManager.getThreads();
 
         // 显示下载数量
         String countText = "活跃下载任务: " + downloads.size();
-        graphics.text(this.font, countText, 10, 50, 0xFFFFFF);
+        graphics.text(this.font, countText, 10, 50, 0xFFFFFFFF);
 
         // 绘制下载列表
         int startY = 80;
@@ -59,7 +59,7 @@ public class CacheManagerScreen extends Screen {
         // 线程基本信息
         String threadInfo = String.format("ID: %s | 资源: %d | 类型: %s",
                 thread.getThreadId(), thread.getResourceId(), thread.getFileType());
-        guiGraphics.text(this.font, threadInfo, x, y, 0xFFFFFF);
+        guiGraphics.text(this.font, threadInfo, x, y, 0xFFFFFFFF);
 
         // 进度信息
         float progress = thread.getProgress();

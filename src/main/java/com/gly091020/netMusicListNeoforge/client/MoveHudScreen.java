@@ -42,7 +42,6 @@ public class MoveHudScreen extends Screen {
 
     @Override
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
-        extractBackground(graphics, mouseX, mouseY, a);
         super.extractRenderState(graphics, mouseX, mouseY, a);
         graphics.fill(x, y, x + 100, y + 40, 0xFFAAAAAA);
         graphics.centeredText(Minecraft.getInstance().font,

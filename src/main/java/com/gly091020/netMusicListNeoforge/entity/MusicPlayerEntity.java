@@ -34,7 +34,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NonNull;
 
-public class MusicPlayerEntity extends LivingEntity {
+public class MusicPlayerEntity extends LivingEntity implements Leashable {
     private ItemStack musicCD = ItemStack.EMPTY;
     private boolean isPlaying = false;
     private static final EntityDataAccessor<Boolean> DATA_PLAYING =
@@ -42,6 +42,8 @@ public class MusicPlayerEntity extends LivingEntity {
     public static final EntityDataAccessor<String> DATA_RAW_URL =
             SynchedEntityData.defineId(MusicPlayerEntity.class, EntityDataSerializers.STRING);
     private int tick = 0;
+
+    private @Nullable LeashData leashData;
 
     public MusicPlayerEntity(EntityType<? extends LivingEntity> entityType, Level level) {
         super(entityType, level);
@@ -84,6 +86,8 @@ public class MusicPlayerEntity extends LivingEntity {
                 dropAllDeathLoot(level, damageSource);
             }
         }
+        if(isLeashed())
+            dropLeash();
         this.remove(RemovalReason.KILLED);
     }
 
@@ -103,6 +107,7 @@ public class MusicPlayerEntity extends LivingEntity {
     public void readAdditionalSaveData(ValueInput input) {
         super.readAdditionalSaveData(input);
         try{
+            readLeashData(input);
             isPlaying = input.getBooleanOr("is_playing", false);
             musicCD = input.read("item", ItemStack.CODEC).orElse(ItemStack.EMPTY);
         }catch (Exception exception){
@@ -114,6 +119,7 @@ public class MusicPlayerEntity extends LivingEntity {
     public void addAdditionalSaveData(ValueOutput output) {
         super.addAdditionalSaveData(output);
         try{
+            writeLeashData(output, getLeashData());
             output.putBoolean("is_playing", isPlaying);
             if(!musicCD.isEmpty()) {
                 output.store("item", ItemStack.CODEC, musicCD);
@@ -251,7 +257,7 @@ public class MusicPlayerEntity extends LivingEntity {
     public void tick() {
         super.tick();
         tick++;
-        if(isPlaying())return;
+//        if(isPlaying())return;
         if(this.isRightItem(this.getMusicCD())){
             var info = ItemMusicCD.getSongInfo(this.getMusicCD());
             if(info != null && tick > info.songTime * 20 + 5){
@@ -271,5 +277,15 @@ public class MusicPlayerEntity extends LivingEntity {
     @Override
     public boolean canDrownInFluidType(@NotNull FluidType type) {
         return false;
+    }
+
+    @Override
+    public @Nullable LeashData getLeashData() {
+        return leashData;
+    }
+
+    @Override
+    public void setLeashData(@Nullable LeashData leashData) {
+        this.leashData = leashData;
     }
 }

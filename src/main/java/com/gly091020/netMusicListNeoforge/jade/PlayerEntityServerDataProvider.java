@@ -23,12 +23,15 @@ public class PlayerEntityServerDataProvider implements IServerDataProvider<Entit
     public void appendServerData(CompoundTag compoundTag, EntityAccessor entityAccessor) {
         if(entityAccessor.getEntity() instanceof MusicPlayerEntity entity){
             var cd = entity.getMusicCD();
+            var data = cd.get(NetMusicList.MUSIC_LIST_COMPONENT);
             var info = ItemMusicCD.getSongInfo(cd);
             if(!cd.isEmpty()){
                 var newStack = new ItemStack(cd.getItem());
                 if(info != null)
                     ItemMusicCD.setSongInfo(info, newStack);
                 NetMusicListItem.setSongIndex(newStack, 0);
+                if(data != null)
+                    NetMusicListItem.setPlayMode(newStack, data.playMode());
                 compoundTag.put("item", NetMusicListUtil.itemToTag(newStack));
             }
         }
