@@ -253,7 +253,7 @@ public class MusicPlayerEntity extends LivingEntity {
     public void tick() {
         super.tick();
         tick++;
-        if(isPlaying())return;
+//        if(isPlaying())return;
         if(this.isRightItem(this.getMusicCD())){
             var info = ItemMusicCD.getSongInfo(this.getMusicCD());
             if(info != null && tick > info.songTime * 20 + 5){

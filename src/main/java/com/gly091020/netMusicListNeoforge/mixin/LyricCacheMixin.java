@@ -19,10 +19,10 @@ public class LyricCacheMixin {
         // 很烂的Mixin
         // TODO:为什么女仆的代码我不写呢？因为我不会
         try {
-            var id = NetMusicListUtil.getIdFromUrl(message.getUrl());
+            var id = NetMusicListUtil.getIdFromUrl(message.url());
             var lyric = CacheManager.getLycCache(id);
             if(lyric == null)return;
-            MusicPlayManager.play(message.getUrl(), message.getSongName(), (url) -> new NetMusicSound(message.getPos(), url, message.getTimeSecond(), lyric.toLyricRecord()));
+            MusicPlayManager.play(message.url(), message.songName(), (url) -> new NetMusicSound(message.pos(), url, message.timeSecond(), lyric.toLyricRecord()));
             ci.cancel();
         } catch (IllegalAccessException ignored) {
 

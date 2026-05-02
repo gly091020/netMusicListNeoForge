@@ -123,14 +123,14 @@ dependencies {
     // For more info:
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
-    implementation "curse.maven:net-music-978569:7263238"
-    implementation "curse.maven:touhou-little-maid-355044:7198494"
+    implementation "curse.maven:net-music-978569:8024333"
+    implementation "curse.maven:touhou-little-maid-355044:7894267"
     implementation "curse.maven:cloth-config-348521:5623420"
     implementation "curse.maven:patchouli-306770:6842247"
 
     implementation "curse.maven:modern-ui-352491:6956436"
     implementation("org.commonmark:commonmark:0.21.0")
-    compileOnly files("libs/net_music_login_need-1.21.1-0.3.jar")
+    compileOnly files("libs/net_music_login_need-1.21.1-0.4.jar")
     implementation files("libs/netmusiccanneedqq-0.1.2-neoforge-mc1.21.1-beta.jar")
 
     // create
