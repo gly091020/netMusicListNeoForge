@@ -1,5 +1,6 @@
 package com.gly091020.netMusicListNeoforge.mixin;
 
+import com.github.tartaricacid.netmusic.api.resolver.MusicPlayResolverManager;
 import com.github.tartaricacid.netmusic.compat.tlm.backpack.data.MusicPlayerBackpackData;
 import com.github.tartaricacid.netmusic.compat.tlm.message.MaidMusicToClientMessage;
 import com.github.tartaricacid.netmusic.item.ItemMusicCD;
@@ -7,6 +8,8 @@ import com.github.tartaricacid.netmusic.network.NetworkHandler;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.gly091020.netMusicListNeoforge.NetMusicList;
 import com.gly091020.netMusicListNeoforge.item.NetMusicListItem;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
 import net.neoforged.neoforge.items.wrapper.CombinedInvWrapper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -40,10 +43,15 @@ public abstract class PlayNextSongMixin {
         var i = availableInv.getStackInSlot(slotId);
         if(i.is(NetMusicList.MUSIC_LIST_ITEM.get())){
             ItemMusicCD.SongInfo info = NetMusicListItem.getSongInfo(i);
-            if (info != null) {
-                this.playTick = info.songTime * 20 + 64;
-                MaidMusicToClientMessage msg = new MaidMusicToClientMessage(entityMaid.getId(), info.songUrl, info.songTime, info.songName);
-                NetworkHandler.sendToNearby(entityMaid.level(), entityMaid.blockPosition(), msg);
+            if (info != null && entityMaid.level() instanceof ServerLevel serverLevel) {
+                MinecraftServer server = serverLevel.getServer();
+                ItemMusicCD.SongInfo clone = info.clone();
+                MusicPlayResolverManager.resolve(clone).thenAcceptAsync((resolved) -> {
+                    this.playTick = resolved.songTime * 20 + 64;
+                    MaidMusicToClientMessage msg = new MaidMusicToClientMessage(entityMaid.getId(), resolved.songUrl, info.songUrl, resolved.songTime, resolved.songName);
+                    MaidMusicToClientMessage.showLyric(entityMaid, info.songUrl, resolved.songName, resolved.songTime);
+                    NetworkHandler.sendToNearby(entityMaid.level(), entityMaid.blockPosition(), msg);
+                }, server);
                 cir.setReturnValue(true);
             }
         }

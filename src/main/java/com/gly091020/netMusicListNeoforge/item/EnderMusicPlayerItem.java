@@ -35,7 +35,7 @@ public class EnderMusicPlayerItem extends BlockItem {
 
     @Override
     public @NotNull InteractionResultHolder<ItemStack> use(@NotNull Level level, @NotNull Player player, @NotNull InteractionHand usedHand) {
-        if(player.isShiftKeyDown()){
+        if(!level.isClientSide && player.isShiftKeyDown()){
             var stack = player.getItemInHand(usedHand);
             stack.shrink(1);
             player.addItem(new ItemStack(InitBlocks.MUSIC_PLAYER.asItem(), 1));

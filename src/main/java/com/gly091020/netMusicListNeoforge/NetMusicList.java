@@ -151,16 +151,10 @@ public class NetMusicList {
                     CreativeModeTab.TabVisibility.PARENT_AND_SEARCH_TABS
             );
             event.insertBefore(
-                    new ItemStack(MUSIC_PLAYER_ITEM.get()),
                     new ItemStack(ENDER_PLAYER_ITEM.get()),
+                    new ItemStack(MANUAL.get()),
                     CreativeModeTab.TabVisibility.PARENT_AND_SEARCH_TABS
             );
-            if(!NetMusicListUtil.hasAdvancedPlayer())
-                event.insertBefore(
-                        new ItemStack(ENDER_PLAYER_ITEM.get()),
-                        new ItemStack(MANUAL.get()),
-                        CreativeModeTab.TabVisibility.PARENT_AND_SEARCH_TABS
-                );
         }
     }
 
