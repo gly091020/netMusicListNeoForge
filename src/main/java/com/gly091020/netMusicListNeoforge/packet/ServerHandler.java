@@ -1,5 +1,7 @@
 package com.gly091020.netMusicListNeoforge.packet;
 
+import com.github.tartaricacid.netmusic.api.resolver.MusicPlayResolverManager;
+import com.github.tartaricacid.netmusic.item.ItemMusicCD;
 import com.github.tartaricacid.netmusic.tileentity.TileEntityMusicPlayer;
 import com.gly091020.netMusicListNeoforge.item.NetMusicListItem;
 import com.gly091020.netMusicListNeoforge.item.NetMusicPlayerItem;
@@ -43,7 +45,8 @@ public class ServerHandler {
     }
 
     public static void handleServerPlayerPlayPacket(PlayerPlayMusicPacket packet, IPayloadContext ctx){
-        PacketDistributor.sendToAllPlayers(packet);
+        MusicPlayResolverManager.resolve(packet.info().clone()).thenAcceptAsync((resolved) ->
+                PacketDistributor.sendToAllPlayers(new PlayerPlayMusicPacket(packet.playerID(), resolved.songUrl, packet.rawUrl(), packet.timeSecond(), packet.songName(), packet.slot(), packet.info())));
     }
 
     public static void handleServerUpdateMusicPacket(UpdatePlayerMusicPacket packet, IPayloadContext ctx){
@@ -81,6 +84,10 @@ public class ServerHandler {
 
     public static void handleServerMusicPlayerEntityPlayMusicPacket(MusicPlayerEntityPlayMusicPacket packet, IPayloadContext iPayloadContext) {
         // 这名字这么越来越长了？
-        PacketDistributor.sendToAllPlayers(packet);
+        MusicPlayResolverManager.resolve(new ItemMusicCD.SongInfo(
+                packet.url(), packet.songName(), packet.timeSecond(), false
+        )).thenAcceptAsync((resolved) ->
+                PacketDistributor.sendToAllPlayers(new MusicPlayerEntityPlayMusicPacket(packet.entityID(), resolved.songUrl, packet.timeSecond(), packet.songName()))
+        );
     }
 }
