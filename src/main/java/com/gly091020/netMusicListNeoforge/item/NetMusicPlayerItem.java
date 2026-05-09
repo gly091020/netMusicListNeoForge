@@ -3,6 +3,7 @@
 // 加油啊Iam Music Player Renewed，干翻网络音乐机：播放列表
 package com.gly091020.netMusicListNeoforge.item;
 
+import com.github.tartaricacid.netmusic.api.resolver.MusicPlayResolverManager;
 import com.github.tartaricacid.netmusic.init.InitItems;
 import com.github.tartaricacid.netmusic.item.ItemMusicCD;
 import com.github.tartaricacid.netmusic.network.NetworkHandler;
@@ -82,7 +83,7 @@ public class NetMusicPlayerItem extends Item{
         }
 
         if(!player.level().isClientSide){return;}
-        NetworkHandler.sendToServer(new PlayerPlayMusicPacket(player.getId(), info.songUrl, info.songTime, info.songName, slot, info));
+        NetworkHandler.sendToServer(new PlayerPlayMusicPacket(player.getId(), info.songUrl, info.songUrl, info.songTime, info.songName, slot, info));
     }
 
     public static void sendPacket(ItemStack stack, Player player, int slot){
@@ -95,10 +96,13 @@ public class NetMusicPlayerItem extends Item{
         if(!NetMusicListUtil.hasLoginNeed() && info.vip){
             return;
         }
-        if(!player.level().isClientSide){
-            PacketDistributor.sendToAllPlayers(new PlayerPlayMusicPacket(player.getId(), info.songUrl, info.songTime, info.songName, slot, info));
-        }else {
-            NetworkHandler.sendToServer(new PlayerPlayMusicPacket(player.getId(), info.songUrl, info.songTime, info.songName, slot, info));
+        if (player.level().isClientSide) {
+            NetworkHandler.sendToServer(new PlayerPlayMusicPacket(player.getId(), info.songUrl, info.songUrl, info.songTime, info.songName, slot, info));
+        } else {
+            ItemMusicCD.SongInfo clone = info.clone();
+            MusicPlayResolverManager.resolve(clone).thenAcceptAsync((resolved) -> {
+                PacketDistributor.sendToAllPlayers(new PlayerPlayMusicPacket(player.getId(), clone.songUrl, info.songUrl, info.songTime, info.songName, slot, info));
+            });
         }
     }
 

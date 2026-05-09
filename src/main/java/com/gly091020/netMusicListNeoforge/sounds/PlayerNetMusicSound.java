@@ -44,8 +44,10 @@ public class PlayerNetMusicSound extends AbstractTickableSoundInstance {
 
     @Nullable
     String clientUrl;
+    @NotNull
+    String rawUrl;
 
-    public PlayerNetMusicSound(Player player, URL songUrl, int second, int slot) {
+    public PlayerNetMusicSound(Player player, URL songUrl, String rawUrl, int second, int slot) {
         super(InitSounds.NET_MUSIC.get(), SoundSource.RECORDS, SoundInstance.createUnseededRandom());
         this.player = player;
         this.url = songUrl;
@@ -55,6 +57,7 @@ public class PlayerNetMusicSound extends AbstractTickableSoundInstance {
         this.y = player.getY();
         this.z = player.getZ();
         this.slot = slot;
+        this.rawUrl = rawUrl;
 
         // 我终于搞清楚relative怎么用了
         // 不用relative会导致声音不稳定
@@ -91,7 +94,7 @@ public class PlayerNetMusicSound extends AbstractTickableSoundInstance {
                 c.setChanged();
                 NetworkHandler.sendToServer(new UpdateMusicIndexCTSPacket(slot, i));
                 NetMusicPlayerItem.playSound(musicPlayer, player, slot);
-                MusicInfoHud.setInfo(NetMusicListItem.getSongInfo(c.getItem(0)), c.getItem(0), slot);
+                MusicInfoHud.setInfo(NetMusicListItem.getSongInfo(c.getItem(0)), c.getItem(0), slot, rawUrl);
             }
             stopMusic();
             return;
@@ -196,5 +199,9 @@ public class PlayerNetMusicSound extends AbstractTickableSoundInstance {
 
     public int getSlot() {
         return slot;
+    }
+
+    public @NotNull String getRawUrl() {
+        return rawUrl;
     }
 }

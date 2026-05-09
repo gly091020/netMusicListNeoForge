@@ -37,6 +37,7 @@ public class MusicInfoHud{
     private static int slot;
     private static int left = 10;
     private static int top = 10;
+    private static String rawUrl;
 
     private static Thread thread;
 
@@ -48,7 +49,7 @@ public class MusicInfoHud{
             var sounds = MusicManager.getSelfSounds();
             if(!sounds.isEmpty()){
                 var sound = sounds.getFirst();
-                setInfo(sound.getInfo(), sound.getPlayer().getInventory().getItem(sound.getSlot()), sound.getSlot());
+                setInfo(sound.getInfo(), sound.getPlayer().getInventory().getItem(sound.getSlot()), sound.getSlot(), sound.getRawUrl());
                 return;
             }
             return;
@@ -102,7 +103,7 @@ public class MusicInfoHud{
         top = y;
     }
 
-    public static void setInfo(@Nullable ItemMusicCD.SongInfo info, @NotNull ItemStack playerStack, int slot){
+    public static void setInfo(@Nullable ItemMusicCD.SongInfo info, @NotNull ItemStack playerStack, int slot, @NotNull String rawUrl){
         if(info == null){
             MusicInfoHud.info = null;
             return;
@@ -120,9 +121,10 @@ public class MusicInfoHud{
         }
         lyric = null;
         stack = playerStack;
+        MusicInfoHud.rawUrl = rawUrl;
         getData();
         try {
-            var id = NetMusicListUtil.getIdFromInfo(info);
+            var id = NetMusicListUtil.getIdFromUrl(rawUrl);
             if(!CacheManager.hasCache(id)){
                 var uuid = UUID.randomUUID().toString();
                 CacheManager.startImgDownload(id, uuid);
@@ -136,12 +138,13 @@ public class MusicInfoHud{
 
     public static void clearInfo(){
         info = null;
+        rawUrl = null;
     }
 
     public static void getData(){
         if(info != null){
             try {
-                var id = NetMusicListUtil.getIdFromInfo(info);
+                var id = NetMusicListUtil.getIdFromUrl(rawUrl);
                 if(CacheManager.hasCache(id)){
                     lyric = CacheManager.getLycCache(id);
                     var imagePath = CacheManager.getImageCache(id);
@@ -163,7 +166,7 @@ public class MusicInfoHud{
             } catch (IllegalAccessException ignored) {}
             try {
                 getTextureFromLocal(info);
-                id = NetMusicListUtil.getIdFromInfo(info);
+                id = NetMusicListUtil.getIdFromUrl(rawUrl);
                 thread = new Thread(() -> getDataByThread(id));
                 thread.start();
             } catch (Exception e) {

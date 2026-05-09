@@ -17,6 +17,10 @@ repositories {
     }
     maven { url = "https://maven.createmod.net" } // Create, Ponder, Flywheel
     maven { url = "https://maven.ithundxr.dev/snapshots" }
+    maven {
+        name = "Modrinth"
+        url = "https://api.modrinth.com/maven"
+    }
 }
 
 base {
@@ -123,7 +127,7 @@ dependencies {
     // For more info:
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
-    implementation "curse.maven:net-music-978569:8043433"
+    implementation "maven.modrinth:net-music:1.5.1-neoforge+mc1.21.1"
     implementation "curse.maven:touhou-little-maid-355044:7894267"
     implementation "curse.maven:cloth-config-348521:5623420"
     implementation "curse.maven:patchouli-306770:6842247"

@@ -1,7 +1,9 @@
 package com.gly091020.netMusicListNeoforge.entity;
 
+import com.github.tartaricacid.netmusic.api.resolver.MusicPlayResolverManager;
 import com.github.tartaricacid.netmusic.item.ItemMusicCD;
 import com.github.tartaricacid.netmusic.network.NetworkHandler;
+import com.github.tartaricacid.netmusic.network.message.MusicToClientMessage;
 import com.gly091020.netMusicListNeoforge.NetMusicList;
 import com.gly091020.netMusicListNeoforge.item.NetMusicListItem;
 import com.gly091020.netMusicListNeoforge.item.NetMusicPlayerItem;
@@ -13,6 +15,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
@@ -241,11 +244,14 @@ public class MusicPlayerEntity extends LivingEntity {
             if(level().isClientSide)
                 NetworkHandler.sendToServer(new MusicPlayerEntityPlayMusicPacket(this.getId(),
                         info.songUrl, info.songTime, info.songName));
-            else
-                ((ServerLevel)level()).getPlayers(player -> player.distanceTo(this) < 100)
-                        .forEach(player ->
-                        NetworkHandler.sendToClientPlayer(new MusicPlayerEntityPlayMusicPacket(this.getId(),
-                        info.songUrl, info.songTime, info.songName), player));
+            else{
+                MinecraftServer server = this.level().getServer();
+                ItemMusicCD.SongInfo clone = info.clone();
+                MusicPlayResolverManager.resolve(clone).thenAcceptAsync((resolved) -> {
+                    NetworkHandler.sendToNearby(level(), blockPosition(), new MusicPlayerEntityPlayMusicPacket(this.getId(),
+                            clone.songUrl, info.songTime, info.songName));
+                }, server);
+            }
         }
     }
 

@@ -31,7 +31,7 @@ public class ClientHandler {
                         if(url1 != null)finalUrl = url1;
                     }
                     MusicPlayManager.play(finalUrl, packet.songName(), url -> {
-                        var sound = new PlayerNetMusicSound(player, url, packet.timeSecond(), packet.slot());
+                        var sound = new PlayerNetMusicSound(player, url, packet.rawUrl(), packet.timeSecond(), packet.slot());
                         MusicManager.addSound(sound);
                         return sound;
                     });
@@ -42,7 +42,7 @@ public class ClientHandler {
                             var stack1 = NetMusicPlayerItem.getContainer(stack).getItem(0);
                             if (stack1.getItem() instanceof ItemMusicCD) {
                                 Minecraft.getInstance().execute(() ->
-                                        MusicInfoHud.setInfo(packet.info(), stack, packet.slot()));
+                                        MusicInfoHud.setInfo(packet.info(), stack, packet.slot(), packet.rawUrl()));
                             }
                         }
                     }
