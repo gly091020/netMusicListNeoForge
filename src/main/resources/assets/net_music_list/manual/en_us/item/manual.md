@@ -1,7 +1,7 @@
 <!-- entry.title:Manual -->
 <!-- entry.ico:manual/addition/manual.png -->
 
-# Net Music: Play List Manual
+# Net Music: Better Experience Manual
 
 Used to open this mod's tutorial.
 

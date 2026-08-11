@@ -1,6 +1,6 @@
 # Repository Guidelines
 
-NeoForge 1.21.1 port of the *Net Music: Play List* mod (网络音乐机：播放列表), built with Gradle and the NeoGradle `moddev` plugin and MIT licensed.
+NeoForge 1.21.1 port of the *Net Music: Better Experience* mod (网络音乐机：更好的体验), built with Gradle and the NeoGradle `moddev` plugin and licensed under the PolyForm Shield License 1.0.0.
 
 ## 回答
 - 回答统一用中文

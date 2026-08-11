@@ -1,7 +1,7 @@
 <!-- entry.title:序言 -->
 <!-- entry.button:all_config -->
 <!-- entry.ico:manual/net_music_list.png -->
-# 网络音乐机：播放列表
+# 网络音乐机：更好的体验
 
 此模组给网络音乐机添加了许多新的东西（其实就是梦到啥写啥）
 

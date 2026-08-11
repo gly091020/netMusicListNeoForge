@@ -1,6 +1,6 @@
 // 回来吧我的IAM MUSIC PLAYER
 // Iam Music Player Renewed的前置已经有1.21.1了
-// 加油啊Iam Music Player Renewed，干翻网络音乐机：播放列表
+// 加油啊Iam Music Player Renewed，干翻网络音乐机：更好的体验
 package com.gly091020.netMusicListNeoforge.item;
 
 import com.github.tartaricacid.netmusic.api.resolver.MusicPlayResolverManager;

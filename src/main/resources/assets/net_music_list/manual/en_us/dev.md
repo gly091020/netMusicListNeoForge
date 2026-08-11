@@ -7,7 +7,7 @@
 <!-- entry.img:gui/server.png,img3 -->
 <!-- entry.img:gui/default.png,img4 -->
 
-# 网络音乐机：播放列表手册编写方法
+# 网络音乐机：更好的体验手册编写方法
 
 写完markdown手册系统才发现已经有模组实现了啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊
 

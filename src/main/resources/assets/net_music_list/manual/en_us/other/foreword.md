@@ -1,7 +1,7 @@
 <!-- entry.title:Preface -->
 <!-- entry.button:all_config -->
 <!-- entry.ico:manual/net_music_list.png -->
-# Net Music: Play List
+# Net Music: Better Experience
 
 This mod adds many new features to the Net Music (essentially implementing whatever features I dreamt up).
 

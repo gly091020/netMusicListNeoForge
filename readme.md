@@ -1,11 +1,7 @@
-# 网络音乐机：播放列表
+# 网络音乐机：更好的体验
 
-此项目是[fabric版](https://gitee.com/gly091020/netMusicListForge)的移植（同一作者）
-
-由于代码更改很大，分为两个项目
-
-给网络音乐机添加了一个播放列表物品，可以方便的播放多首歌曲
+给网络音乐机添加了各种方便的机制（播放列表、随身播放器）
 
 万恶之源：https://www.mcmod.cn/post/4332.html
 
-等[IAM](https://github.com/Mod-Sauce/IamMusicPlayer_FIX)有1.21.1了我立马停更
+项目已更换为`PolyForm Shield License 1.0.0`协议，请确保在使用代码时遵守了协议。

@@ -1,7 +1,7 @@
 <!-- entry.title:手册 -->
 <!-- entry.ico:manual/addition/manual.png -->
 
-# 网络音乐机：播放列表手册
+# 网络音乐机：更好的体验手册
 
 用于打开本模组的教程。
 

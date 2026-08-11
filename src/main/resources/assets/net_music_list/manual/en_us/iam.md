@@ -20,6 +20,4 @@ Mod Links:
 - CurseForge: [https://www.curseforge.com/minecraft/mc-mods/iammusicplayer-renewed](https://www.curseforge.com/minecraft/mc-mods/iammusicplayer-renewed)
 
 Features currently missing from Iam compared to this mod:
-1. Music caching
-2. Android support
-3. Create mod integration
+1. Android support
