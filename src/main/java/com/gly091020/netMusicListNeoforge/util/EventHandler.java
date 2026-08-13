@@ -1,56 +1,29 @@
 package com.gly091020.netMusicListNeoforge.util;
 
 import com.gly091020.netMusicListNeoforge.NetMusicList;
-import com.gly091020.netMusicListNeoforge.item.NetMusicPlayerItem;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
+import com.gly091020.netMusicListNeoforge.server.music.MusicRingManager;
+import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.entity.player.ItemEntityPickupEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 
+/**
+ * 玩家下线/换维度时把名下的物品 Ringer 移出活跃集合。
+ * 播放状态保留在 SavedData 中，重新上线后由 ServerRingerEvents 的周期扫描恢复续播。
+ */
 @EventBusSubscriber(modid = NetMusicList.ModID)
 public class EventHandler {
     @SubscribeEvent
-    public static void onChangedDimension(PlayerEvent.PlayerChangedDimensionEvent event){
-        handlePlayerEvent(event);
-    }
-
-    @SubscribeEvent
-    public static void onSpawn(PlayerEvent.PlayerRespawnEvent event){
-        handlePlayerEvent(event);
-    }
-
-    @SubscribeEvent
-    public static void onLogin(PlayerEvent.PlayerLoggedInEvent event){
-        handlePlayerEvent(event);
-    }
-
-    @SubscribeEvent
-    public static void onGetItem(ItemEntityPickupEvent.Post event){
-        if(event.getOriginalStack().is(NetMusicList.MUSIC_PLAYER_ITEM)){
-            playerPlayMusic(event.getPlayer());
+    public static void onChangedDimension(PlayerEvent.PlayerChangedDimensionEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player) {
+            MusicRingManager.get(player.server).removeOwner(player.getUUID());
         }
     }
 
-    private static void handlePlayerEvent(PlayerEvent event){
-        if(hasPlayer(event.getEntity())){
-            playerPlayMusic(event.getEntity());
-        }
-    }
-
-    private static boolean hasPlayer(Player player){
-        return player.getInventory().countItem(NetMusicList.MUSIC_PLAYER_ITEM.get()) > 0;
-    }
-
-    private static void playerPlayMusic(Player player){
-        for(ItemStack stack: player.getInventory().items){
-            if(stack.is(NetMusicList.MUSIC_PLAYER_ITEM.get())){
-                NetMusicPlayerItem.playSound(stack, player,
-                        player.getInventory().findSlotMatchingItem(stack));
-                NetMusicPlayerItem.sendPacket(stack, player,
-                        player.getInventory().findSlotMatchingItem(stack));
-            }
+    @SubscribeEvent
+    public static void onLogout(PlayerEvent.PlayerLoggedOutEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player) {
+            MusicRingManager.get(player.server).removeOwner(player.getUUID());
         }
     }
 }

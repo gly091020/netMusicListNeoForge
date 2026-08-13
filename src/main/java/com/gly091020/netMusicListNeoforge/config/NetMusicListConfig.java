@@ -9,7 +9,11 @@ public class NetMusicListConfig implements ConfigData {
     public boolean debug = false;
 
     public boolean musicHUD = true;
+
+    @Deprecated
+    // todo:由于底层重写，此功能失效
     public boolean notPauseSoundOnGamePause = false;
+
     public int x = 10;
     public int y = 10;
     public int maxImportList = 300;
@@ -26,7 +30,7 @@ public class NetMusicListConfig implements ConfigData {
 
     public boolean only5Second = false;
 
-    public boolean allowLyricToServer = false;
+    public boolean allowLyricToServer = true;
 
     // gly特有的突然扭曲
     public boolean glyMusicEntity = false;

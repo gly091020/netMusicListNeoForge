@@ -39,10 +39,10 @@ public class ConfigScreenGetter {
             base.addEntry(new ImageEntry(ResourceLocation.fromNamespaceAndPath(NetMusicList.ModID, "textures/gui/gly_is_suck.png")));
         }
 
-        base.addEntry(entryBuilder.startBooleanToggle(Component.translatable("config.net_music_list.not_pause_sound"),
-                        CONFIG.notPauseSoundOnGamePause)
-                        .setTooltip(Component.translatable("config.net_music_list.not_pause_sound.tip"))
-                .setDefaultValue(false).setSaveConsumer(b -> CONFIG.notPauseSoundOnGamePause = b).build());
+//        base.addEntry(entryBuilder.startBooleanToggle(Component.translatable("config.net_music_list.not_pause_sound"),
+//                        CONFIG.notPauseSoundOnGamePause)
+//                        .setTooltip(Component.translatable("config.net_music_list.not_pause_sound.tip"))
+//                .setDefaultValue(false).setSaveConsumer(b -> CONFIG.notPauseSoundOnGamePause = b).build());
         base.addEntry(entryBuilder.startIntSlider(Component.translatable("config.net_music_list.max_import_list"), CONFIG.maxImportList, 100, 1000)
                 .setDefaultValue(300)
                 .setSaveConsumer(i -> CONFIG.maxImportList = i)

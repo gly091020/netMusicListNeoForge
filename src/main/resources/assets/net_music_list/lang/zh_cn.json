@@ -119,5 +119,7 @@
   "gui.net_music_list.iam.text1": "也试试 Iam Music Player Renewed？",
   "gui.net_music_list.iam.text2": "支持作者！",
   "gui.net_music_list.iam.yes": "详细信息",
-  "gui.net_music_list.iam.no": "不再显示"
+  "gui.net_music_list.iam.no": "不再显示",
+
+  "text.net_music_list.meng_sa_ma_net_music.warning": "由于音乐机模组使用了本模组的代码，同时安装时可能会导致冲突，请考虑卸载其中之一。"
 }

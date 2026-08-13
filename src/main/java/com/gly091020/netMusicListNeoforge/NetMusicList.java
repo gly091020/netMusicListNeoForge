@@ -20,6 +20,7 @@ import com.gly091020.netMusicListNeoforge.util.NetMusicListUtil;
 import me.shedaniel.autoconfig.AutoConfig;
 import me.shedaniel.autoconfig.serializer.Toml4jConfigSerializer;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.DataGenerator;
@@ -35,6 +36,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.ModLoadingContext;
+import net.neoforged.fml.ModLoadingIssue;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
@@ -50,6 +52,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
+import java.util.UUID;
 
 @Mod(NetMusicList.ModID)
 public class NetMusicList {
@@ -78,6 +81,11 @@ public class NetMusicList {
             DataComponentType.<MusicListComponent>builder()
                     .persistent(MusicListComponent.CODEC)
                     .networkSynchronized(MusicListComponent.STREAM_CODEC)
+                    .build());
+    public static final Supplier<DataComponentType<UUID>> RINGER_COMPONENT = DATA_COMPONENTS.register("ringer_id", () ->
+            DataComponentType.<UUID>builder()
+                    .persistent(UUIDUtil.CODEC)
+                    .networkSynchronized(UUIDUtil.STREAM_CODEC)
                     .build());
 
     public static final DeferredRegister<EntityType<?>> ENTITY_TYPE = DeferredRegister.create(Registries.ENTITY_TYPE, ModID);
@@ -118,6 +126,10 @@ public class NetMusicList {
         modEventBus.addListener(NetMusicList::gatherData);
         modEventBus.addListener(NetMusicList::registerEntityAttributes);
         CacheManager.load();
+        NetMusicListUtil.testMengSamaNetMusic();
+
+        LOGGER.info("网络音乐机：更好的体验加载完成");
+        LOGGER.info("再次踏上旅途……");
     }
 
     private static void registerEntityAttributes(EntityAttributeCreationEvent event) {

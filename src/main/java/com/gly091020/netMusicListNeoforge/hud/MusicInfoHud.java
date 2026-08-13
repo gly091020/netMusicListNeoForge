@@ -9,7 +9,6 @@ import com.gly091020.netMusicListNeoforge.util.NetMusicListUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.NotNull;
@@ -33,7 +32,6 @@ public class MusicInfoHud{
     @Nullable
     private static Long id = null;
     private static NetMusicListUtil.Lyric lyric;
-    private static ItemStack stack;
     private static int slot;
     private static int left = 10;
     private static int top = 10;
@@ -49,7 +47,7 @@ public class MusicInfoHud{
             var sounds = MusicManager.getSelfSounds();
             if(!sounds.isEmpty()){
                 var sound = sounds.getFirst();
-                setInfo(sound.getInfo(), sound.getPlayer().getInventory().getItem(sound.getSlot()), sound.getSlot(), sound.getRawUrl());
+                setInfo(sound.getInfo(), sound.getSlot(), sound.getRawUrl(), sound.getRingerId());
                 return;
             }
             return;
@@ -103,7 +101,7 @@ public class MusicInfoHud{
         top = y;
     }
 
-    public static void setInfo(@Nullable ItemMusicCD.SongInfo info, @NotNull ItemStack playerStack, int slot, @NotNull String rawUrl){
+    public static void setInfo(@Nullable ItemMusicCD.SongInfo info, int slot, @NotNull String rawUrl, @Nullable UUID ringerId){
         if(info == null){
             MusicInfoHud.info = null;
             return;
@@ -120,7 +118,6 @@ public class MusicInfoHud{
             icon = null;
         }
         lyric = null;
-        stack = playerStack;
         MusicInfoHud.rawUrl = rawUrl;
         getData();
         try {

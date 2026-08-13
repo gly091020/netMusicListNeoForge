@@ -119,5 +119,7 @@
   "gui.net_music_list.iam.text1": "Try Iam Music Player Renewed?",
   "gui.net_music_list.iam.text2": "Support the Author!",
   "gui.net_music_list.iam.yes": "Details",
-  "gui.net_music_list.iam.no": "Hide"
+  "gui.net_music_list.iam.no": "Hide",
+
+  "text.net_music_list.meng_sa_ma_net_music.warning": "Since the MengSamaNetMusic mod uses code from this mod, installing them together may cause conflicts. Please consider uninstalling one of them."
 }

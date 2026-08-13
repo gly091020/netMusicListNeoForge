@@ -1,6 +1,5 @@
 package com.gly091020.netMusicListNeoforge.client;
 
-import com.github.tartaricacid.netmusic.network.NetworkHandler;
 import com.gly091020.netMusicListNeoforge.NetMusicList;
 import com.gly091020.netMusicListNeoforge.entity.MusicPlayerModel;
 import com.gly091020.netMusicListNeoforge.entity.MusicPlayerRenderer;
@@ -8,18 +7,16 @@ import com.gly091020.netMusicListNeoforge.hud.MusicInfoHud;
 import com.gly091020.netMusicListNeoforge.hud.MusicListLayer;
 import com.gly091020.netMusicListNeoforge.item.NetMusicListItem;
 import com.gly091020.netMusicListNeoforge.item.NetMusicPlayerItem;
-import com.gly091020.netMusicListNeoforge.packet.UpdateMusicIndexCTSPacket;
-import com.gly091020.netMusicListNeoforge.packet.UpdatePlayerMusicPacket;
-import com.gly091020.netMusicListNeoforge.sounds.PlayerNetMusicSound;
+import com.gly091020.netMusicListNeoforge.packet.MusicPlayerActionPacket;
 import com.gly091020.netMusicListNeoforge.util.CacheManager;
 import com.gly091020.netMusicListNeoforge.util.MusicManager;
 import com.gly091020.netMusicListNeoforge.util.NetMusicListKeyMapping;
 import com.gly091020.netMusicListNeoforge.util.NetMusicListUtil;
+import com.gly091020.netMusicListNeoforge.util.PlayMode;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
-import net.minecraft.client.resources.sounds.TickableSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.packs.resources.PreparableReloadListener;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -33,6 +30,7 @@ import net.neoforged.neoforge.client.event.*;
 import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
 import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent;
 import net.neoforged.neoforge.event.level.LevelEvent;
+import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.CompletableFuture;
@@ -77,7 +75,6 @@ public class ClientEventHandler {
 
     @SubscribeEvent
     public static void onClientTick(ClientTickEvent.Post event){
-        soundFix();
         fastStop();
         CacheManager.tick();
         tickKey();
@@ -97,22 +94,6 @@ public class ClientEventHandler {
     private static void fastStop(){
         if(NetMusicListKeyMapping.FAST_STOP.consumeClick()){
             NetMusicListUtil.globalStopMusic = !NetMusicListUtil.globalStopMusic;
-        }
-    }
-
-    private static void soundFix(){
-        var server = Minecraft.getInstance().getSingleplayerServer();
-        if(!Minecraft.getInstance().isLocalServer() || (server != null && server.isPublished())){return;}
-        var sounds = NetMusicListUtil.getTickableSounds();
-        var screen = Minecraft.getInstance().screen;
-        // 猜猜我用了几个Mixin？
-        // SB MOJANG
-        if(screen != null && !NetMusicListUtil.isPaused() && screen.isPauseScreen()){
-            for(TickableSoundInstance instance: sounds){
-                if(instance instanceof PlayerNetMusicSound playerNetMusicSound){
-                    playerNetMusicSound.onlyTickUpdate();
-                }
-            }
         }
     }
 
@@ -155,22 +136,15 @@ public class ClientEventHandler {
             if(MusicListLayer.isRender){
                 MusicListLayer.isRender = false;
                 NetMusicListUtil.playSound(SoundEvents.EXPERIENCE_ORB_PICKUP);
-                var slot = MusicListLayer.slot;
-                var musicPlayer = player.getInventory().getItem(slot);
-                if(!musicPlayer.is(NetMusicList.MUSIC_PLAYER_ITEM.get()))return;
-                var container = NetMusicPlayerItem.getContainer(musicPlayer);
-                var item = container.getItem(0);
-                var index = NetMusicListItem.getSongIndex(item);
-//                if(MusicListLayer.index != index){
-                    NetMusicListItem.setSongIndex(item, MusicListLayer.index);
-                    container.setItem(0, item);
-                    player.getInventory().setChanged();
-                    NetMusicPlayerItem.playSound(musicPlayer, player, slot);
-                    NetworkHandler.sendToServer(new UpdatePlayerMusicPacket(MusicListLayer.index,
-                            slot));
-                    NetworkHandler.sendToServer(new UpdateMusicIndexCTSPacket(slot, MusicListLayer.index));
-//                }
-                MusicListLayer.isRender = false;
+                var musicPlayer = player.getInventory().getItem(MusicListLayer.slot);
+                if(MusicListLayer.index >= 0 && musicPlayer.is(NetMusicList.MUSIC_PLAYER_ITEM.get())){
+                    var disc = NetMusicPlayerItem.getContainer(musicPlayer).getItem(0);
+                    if(MusicListLayer.index == NetMusicListItem.getSongIndex(disc)){
+                        return;
+                    }
+                    PacketDistributor.sendToServer(new MusicPlayerActionPacket(
+                            MusicPlayerActionPacket.Action.SELECT_INDEX, MusicListLayer.slot, MusicListLayer.index, PlayMode.LOOP, null));
+                }
             }
         }
 

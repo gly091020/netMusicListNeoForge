@@ -1,21 +1,14 @@
-// 回来吧我的IAM MUSIC PLAYER
-// Iam Music Player Renewed的前置已经有1.21.1了
-// 加油啊Iam Music Player Renewed，干翻网络音乐机：更好的体验
 package com.gly091020.netMusicListNeoforge.item;
 
-import com.github.tartaricacid.netmusic.api.resolver.MusicPlayResolverManager;
-import com.github.tartaricacid.netmusic.init.InitItems;
 import com.github.tartaricacid.netmusic.item.ItemMusicCD;
-import com.github.tartaricacid.netmusic.network.NetworkHandler;
 import com.gly091020.netMusicListNeoforge.NetMusicList;
 import com.gly091020.netMusicListNeoforge.entity.MusicPlayerEntity;
 import com.gly091020.netMusicListNeoforge.hud.MusicListLayer;
-import com.gly091020.netMusicListNeoforge.packet.PlayerPlayMusicPacket;
-import com.gly091020.netMusicListNeoforge.packet.UpdateMusicIndexCTSPacket;
-import com.gly091020.netMusicListNeoforge.packet.UpdatePlayerMusicPacket;
+import com.gly091020.netMusicListNeoforge.packet.MusicPlayerActionPacket;
 import com.gly091020.netMusicListNeoforge.util.NetMusicListUtil;
-import net.minecraft.ChatFormatting;
+import com.gly091020.netMusicListNeoforge.util.PlayMode;
 import net.minecraft.commands.arguments.EntityAnchorArgument;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
@@ -39,84 +32,91 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.UUID;
 
-public class NetMusicPlayerItem extends Item{
+public class NetMusicPlayerItem extends Item {
     public NetMusicPlayerItem() {
         super(new Properties().stacksTo(1));
+    }
+
+    @Nullable
+    public static UUID getRingerId(ItemStack stack) {
+        return stack.get(NetMusicList.RINGER_COMPONENT.get());
+    }
+
+    public static UUID getOrCreateRingerId(ItemStack stack) {
+        var id = getRingerId(stack);
+        if (id == null) {
+            id = UUID.randomUUID();
+            stack.set(NetMusicList.RINGER_COMPONENT.get(), id);
+        }
+        return id;
+    }
+
+    /** CD 或播放列表统一取当前歌曲信息（播放列表由 CanPlayListMixin 兼容）。 */
+    @Nullable
+    private static ItemMusicCD.SongInfo getSongInfo(ItemStack stack) {
+        if (stack.is(NetMusicList.MUSIC_LIST_ITEM.get())) {
+            return NetMusicListItem.getSongInfo(stack);
+        }
+        return ItemMusicCD.getSongInfo(stack);
+    }
+
+    /**
+     * 客户端：插入唱片后延迟一 tick 再向服务端发送播放意图。
+     * 延迟是为了保证意图包在容器点击包之后到达服务端（此时容器内已写入唱片）。
+     */
+    private static void requestServerPlay(int slotIndex) {
+        if (slotIndex < 0) {
+            return;
+        }
+        Minecraft.getInstance().execute(() -> {
+            var player = Minecraft.getInstance().player;
+            if (player == null) {
+                return;
+            }
+            var stack = player.getInventory().getItem(slotIndex);
+            if (!stack.is(NetMusicList.MUSIC_PLAYER_ITEM.get())) {
+                return;
+            }
+            var info = getSongInfo(getContainer(stack).getItem(0));
+            PacketDistributor.sendToServer(new MusicPlayerActionPacket(
+                    MusicPlayerActionPacket.Action.PLAY, slotIndex, 0, PlayMode.LOOP, info));
+        });
     }
 
     @Override
     public boolean overrideOtherStackedOnMe(@NotNull ItemStack stack, @NotNull ItemStack stack1,
                                             @NotNull Slot slot, @NotNull ClickAction action,
                                             @NotNull Player player, @NotNull SlotAccess access) {
-        if(action == ClickAction.SECONDARY && !getContainer(stack).isEmpty() && access.get().isEmpty()){
+        if (action == ClickAction.SECONDARY && !getContainer(stack).isEmpty() && access.get().isEmpty()) {
             access.set(getContainer(stack).removeItem(0, 1));
             return true;
         }
-        if(action == ClickAction.PRIMARY && getContainer(stack).isEmpty()){
-            if(stack1.is(NetMusicList.MUSIC_LIST_ITEM) && ItemMusicCD.getSongInfo(stack1) == null) {
+        if (action == ClickAction.PRIMARY && getContainer(stack).isEmpty()) {
+            if (stack1.is(NetMusicList.MUSIC_LIST_ITEM) && getSongInfo(stack1) == null) {
                 NetMusicListItem.setSongIndex(stack1, 0);
                 NetMusicListItem.nextMusic(stack1);
             }
-            if(ItemMusicCD.getSongInfo(stack1) != null){
+            if (getSongInfo(stack1) != null) {
                 getContainer(stack).setItem(0, stack1);
                 access.set(ItemStack.EMPTY);
-                if(slot.container == player.getInventory())
-                    playSound(stack, player, slot.getSlotIndex());
+                if (slot.container == player.getInventory() && player.level().isClientSide) {
+                    requestServerPlay(slot.getSlotIndex());
+                }
                 return true;
             }
         }
         return super.overrideOtherStackedOnMe(stack, stack1, slot, action, player, access);
     }
 
-    public static void playSound(ItemStack stack, Player player, int slot){
-        var i = getContainer(stack).getItem(0);
-        if(!i.is(InitItems.MUSIC_CD.get()) && !i.is(NetMusicList.MUSIC_LIST_ITEM.get())){
-            return;
-        }
-        var info = ItemMusicCD.getSongInfo(i);
-        if(info == null)return;
-        if(!NetMusicList.CONFIG.noVIP && !NetMusicListUtil.hasLoginNeed() && info.vip && player.level().isClientSide){
-            player.sendSystemMessage(Component.translatable("message.netmusic.music_player.need_vip")
-                    .withStyle(ChatFormatting.RED));
-            return;
-        }
-
-        if(!player.level().isClientSide){return;}
-        NetworkHandler.sendToServer(new PlayerPlayMusicPacket(player.getId(), info.songUrl, info.songUrl, info.songTime, info.songName, slot, info));
-    }
-
-    public static void sendPacket(ItemStack stack, Player player, int slot){
-        var i = getContainer(stack).getItem(0);
-        if(!i.is(InitItems.MUSIC_CD.get()) && !i.is(NetMusicList.MUSIC_LIST_ITEM.get())){
-            return;
-        }
-        var info = ItemMusicCD.getSongInfo(i);
-        if(info == null)return;
-        if(!NetMusicListUtil.hasLoginNeed() && info.vip){
-            return;
-        }
-        if (player.level().isClientSide) {
-            NetworkHandler.sendToServer(new PlayerPlayMusicPacket(player.getId(), info.songUrl, info.songUrl, info.songTime, info.songName, slot, info));
-        } else {
-            ItemMusicCD.SongInfo clone = info.clone();
-            MusicPlayResolverManager.resolve(clone).thenAcceptAsync((resolved) -> {
-                PacketDistributor.sendToAllPlayers(new PlayerPlayMusicPacket(player.getId(), clone.songUrl, info.songUrl, info.songTime, info.songName, slot, info));
-            });
-        }
-    }
-
-    public static PlayerContainer getContainer(ItemStack stack){
-        return new PlayerContainer(stack);
-    }
-
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
         Component t;
         var c = getContainer(stack);
-        if(c.isEmpty()){
-            t = Component.translatable("item.net_music_player.empty").withStyle(ChatFormatting.RED);
-        }else{
+        if (c.isEmpty()) {
+            t = Component.translatable("item.net_music_player.empty").withStyle(net.minecraft.ChatFormatting.RED);
+        } else {
             t = c.getItem(0).getHoverName();
         }
         tooltipComponents.add(Component.translatable("item.net_music_player.tip", t));
@@ -130,46 +130,22 @@ public class NetMusicPlayerItem extends Item{
     }
 
     @Override
-    public boolean overrideStackedOnOther(@NotNull ItemStack stack, @NotNull Slot slot,
-                                          @NotNull ClickAction action, @NotNull Player player) {
-        var i = getContainer(stack).getItem(0);
-        if(ItemMusicCD.getSongInfo(i) != null){
-            playSound(stack, player, slot.getSlotIndex());
-        }
-        return false;
-    }
-
-    public static void nextMusic(ItemStack stack, Player player, int slot){
-        var c = getContainer(stack);
-        var i = c.getItem(0);
-        if(i.is(NetMusicList.MUSIC_LIST_ITEM.get())){
-            NetMusicListItem.nextMusic(i);
-        }
-        c.setChanged();
-        player.getInventory().setChanged();
-        playSound(stack, player, slot);
-    }
-
-    @Override
     public @NotNull InteractionResultHolder<ItemStack> use(@NotNull Level level, @NotNull Player player, @NotNull InteractionHand usedHand) {
-        if(player.isShiftKeyDown())
+        if (player.isShiftKeyDown()) {
             return InteractionResultHolder.success(player.getItemInHand(usedHand));
-        if(!level.isClientSide){
+        }
+        if (!level.isClientSide) {
             return super.use(level, player, usedHand);
         }
-        if(MusicListLayer.isRender){
+        if (MusicListLayer.isRender) {
             NetMusicListUtil.playSound(SoundEvents.EXPERIENCE_ORB_PICKUP);
-            var container = getContainer(player.getItemInHand(usedHand));
-            var item = container.getItem(0);
-            var index = NetMusicListItem.getSongIndex(item);
-            if(MusicListLayer.index != index){
-                NetMusicListItem.setSongIndex(item, MusicListLayer.index);
-                container.setItem(0, item);
-                var slot = player.getInventory().findSlotMatchingItem(player.getItemInHand(usedHand));
-                playSound(player.getItemInHand(usedHand), player, slot);
-                NetworkHandler.sendToServer(new UpdatePlayerMusicPacket(MusicListLayer.index,
-                        slot));
-                NetworkHandler.sendToServer(new UpdateMusicIndexCTSPacket(slot, MusicListLayer.index));
+            var musicPlayer = player.getInventory().getItem(MusicListLayer.slot);
+            if (musicPlayer.is(NetMusicList.MUSIC_PLAYER_ITEM.get())) {
+                var disc = getContainer(musicPlayer).getItem(0);
+                if (MusicListLayer.index >= 0 && MusicListLayer.index != NetMusicListItem.getSongIndex(disc)) {
+                    PacketDistributor.sendToServer(new MusicPlayerActionPacket(
+                            MusicPlayerActionPacket.Action.SELECT_INDEX, MusicListLayer.slot, MusicListLayer.index, PlayMode.LOOP, null));
+                }
             }
             MusicListLayer.isRender = false;
             return InteractionResultHolder.success(player.getMainHandItem());
@@ -182,20 +158,29 @@ public class NetMusicPlayerItem extends Item{
     @Override
     public @NotNull InteractionResult useOn(UseOnContext context) {
         var player = context.getPlayer();
-        if(player == null)return super.useOn(context);
-        if(player.isShiftKeyDown()){
+        if (player == null) {
+            return super.useOn(context);
+        }
+        if (player.isShiftKeyDown()) {
             var usedHand = context.getHand();
             var level = context.getLevel();
             var item = player.getItemInHand(usedHand);
             var entity = MusicPlayerEntity.fromItem(item, level);
-            if(entity == null)
+            if (entity == null) {
                 return InteractionResult.SUCCESS;
+            }
             entity.setPos(context.getClickLocation());
             entity.lookAt(EntityAnchorArgument.Anchor.EYES, player.position());
-            entity.tryPlayMusic();
-            level.addFreshEntity(entity);
-            if(!player.isCreative())
-                player.getItemInHand(context.getHand()).shrink(1);
+            if (!level.isClientSide) {
+                entity.setRingerId(getOrCreateRingerId(item));
+                level.addFreshEntity(entity);
+                if (!player.isCreative()) {
+                    item.shrink(1);
+                }
+                // 播放由实体 tick 自动接管
+            } else {
+                level.addFreshEntity(entity);
+            }
             return InteractionResult.SUCCESS;
         }
         return super.useOn(context);
@@ -209,18 +194,26 @@ public class NetMusicPlayerItem extends Item{
     @Override
     public @Nullable Entity createEntity(@NotNull Level level, @NotNull Entity location, @NotNull ItemStack stack) {
         var entity = MusicPlayerEntity.fromItem(stack, level);
-        if(entity == null)
+        if (entity == null) {
             return null;
+        }
         entity.setPos(location.position());
         entity.setXRot(location.getXRot() + 90);
         entity.setYRot(location.getYRot());
         entity.setDeltaMovement(location.getDeltaMovement());
-        entity.tryPlayMusic();
+        if (!level.isClientSide) {
+            entity.setRingerId(getOrCreateRingerId(stack));
+        }
         return entity;
     }
 
-    public static class PlayerContainer extends SimpleContainer{
+    public static PlayerContainer getContainer(ItemStack stack) {
+        return new PlayerContainer(stack);
+    }
+
+    public static class PlayerContainer extends SimpleContainer {
         private final ItemStack stack;
+
         public PlayerContainer(ItemStack stack) {
             super(1);
             this.stack = stack;

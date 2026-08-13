@@ -25,7 +25,6 @@
   },
   "client": [
     "BurnerSongListMixin",
-    "GamePauseMixin",
     "LyricCacheMixin",
     "NetMusicSoundLyricMixin",
     "PlayMusicCacheMixin",

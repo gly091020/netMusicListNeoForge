@@ -35,6 +35,7 @@ import net.minecraft.sounds.SoundEvent;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.fml.ModList;
+import net.neoforged.fml.ModLoadingIssue;
 import net.neoforged.fml.loading.FMLEnvironment;
 import oshi.util.tuples.Pair;
 
@@ -44,10 +45,15 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -56,6 +62,11 @@ import static com.gly091020.netMusicListNeoforge.NetMusicList.CONFIG;
 
 public class NetMusicListUtil {
     public static final Gson GSON = new Gson();
+    private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(15))
+            .followRedirects(HttpClient.Redirect.ALWAYS)
+            .version(HttpClient.Version.HTTP_1_1)
+            .build();
     public static final UUID _5112151111121 = UUID.fromString("91bd580f-5f17-4e30-872f-2e480dd9a220");
     public static final UUID N44 = UUID.fromString("5a33e9b0-35bc-44ed-9b4e-03e3e180a3d2");
     // 自己的石山还得让别人来修……
@@ -97,7 +108,21 @@ public class NetMusicListUtil {
 
     @OnlyIn(Dist.CLIENT)
     public static AbstractTexture getTextureFromURL(URL imageUrl) throws IOException {
-        try (InputStream stream = imageUrl.openConnection().getInputStream()) {
+        HttpRequest request = HttpRequest.newBuilder(URI.create(imageUrl.toString()))
+                .timeout(Duration.ofSeconds(30))
+                .GET()
+                .build();
+        HttpResponse<InputStream> response;
+        try {
+            response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofInputStream());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException("图片下载被中断", e);
+        }
+        if (response.statusCode() != 200) {
+            throw new IOException("图片下载失败: HTTP " + response.statusCode());
+        }
+        try (InputStream stream = response.body()) {
             BufferedImage bufferedImage = ImageIO.read(stream);
             if (bufferedImage == null) {
                 throw new IOException("无法读取图片 - 不支持的格式或损坏的文件");
@@ -345,6 +370,11 @@ public class NetMusicListUtil {
         return ModList.get().isLoaded("net_music_login_need");
     }
 
+    /** 统一的服务端 VIP 拦截判断：登录模组就绪或配置允许时放行。 */
+    public static boolean isVipBlocked(ItemMusicCD.SongInfo info){
+        return info.vip && !CONFIG.noVIP && !hasLoginNeed();
+    }
+
     public static List<ItemMusicCD.SongInfo> getMusicList(long id) throws Exception {
         // 从网络音乐机里拿的代码
         var SONGS = new ArrayList<ItemMusicCD.SongInfo>();
@@ -525,5 +555,13 @@ public class NetMusicListUtil {
 
     public static boolean hasAdvancedPlayer(){
         return ModList.get().isLoaded("netmusicadvancedplayer");
+    }
+
+    public static void testMengSamaNetMusic(){
+        final String MODID = "mengsamanetmusic";
+        if(ModList.get().isLoaded(MODID))
+            ModLoadingIssue.warning("text.net_music_list.meng_sa_ma_net_music.warning")
+                    .withAffectedMod(ModList.get().getModContainerById(MODID).orElseThrow().getModInfo())
+                    .withSeverity(ModLoadingIssue.Severity.WARNING);
     }
 }

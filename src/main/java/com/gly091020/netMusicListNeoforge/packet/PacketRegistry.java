@@ -1,7 +1,6 @@
 package com.gly091020.netMusicListNeoforge.packet;
 
 import com.gly091020.netMusicListNeoforge.NetMusicList;
-import net.minecraft.network.protocol.PacketFlow;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.loading.FMLEnvironment;
@@ -12,7 +11,7 @@ import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 public class PacketRegistry {
     @SubscribeEvent
     public static void register(final RegisterPayloadHandlersEvent event) {
-        final PayloadRegistrar registrar = event.registrar("1.9"); // 协议版本
+        final PayloadRegistrar registrar = event.registrar("1.10"); // 协议版本
 
         registrar.playToServer(
                 MusicListDataPacket.TYPE,
@@ -33,21 +32,9 @@ public class PacketRegistry {
         );
 
         registrar.playToServer(
-                UpdatePlayerMusicPacket.TYPE,
-                UpdatePlayerMusicPacket.STREAM_CODEC,
-                ServerHandler::handleServerUpdateMusicPacket
-        );
-
-        registrar.playToServer(
-                StopMusicPacketServer.TYPE,
-                StopMusicPacketServer.STREAM_CODEC,
-                ServerHandler::handleStopMusicPacket
-        );
-
-        registrar.playToServer(
-                UpdateMusicIndexCTSPacket.TYPE,
-                UpdateMusicIndexCTSPacket.STREAM_CODEC,
-                ServerHandler::handleUpdateMusicIndexCTSPacket
+                MusicPlayerActionPacket.TYPE,
+                MusicPlayerActionPacket.STREAM_CODEC,
+                ServerHandler::handleMusicPlayerAction
         );
 
         if(NetMusicList.CONFIG.allowLyricToServer)
@@ -57,52 +44,53 @@ public class PacketRegistry {
                     ServerHandler::handleUpdateBlockLyricPacket
             );
 
-        registrar.playBidirectional(
-                PlayerPlayMusicPacket.TYPE,
-                PlayerPlayMusicPacket.STREAM_CODEC,
-                (playerPlayMusicPacket, iPayloadContext) -> {
-                    if(iPayloadContext.flow() == PacketFlow.SERVERBOUND){
-                        ServerHandler.handleServerPlayerPlayPacket(playerPlayMusicPacket, iPayloadContext);
-                    }else{
-                        ClientHandler.handleClientPlayerPlayPacket(playerPlayMusicPacket, iPayloadContext);
-                    }
-                }
-        );
-
-        registrar.playBidirectional(
-                MusicPlayerEntityPlayMusicPacket.TYPE,
-                MusicPlayerEntityPlayMusicPacket.STREAM_CODEC,
-                (musicPlayerEntityPlayMusicPacket, iPayloadContext) -> {
-                    if(iPayloadContext.flow() == PacketFlow.SERVERBOUND){
-                        ServerHandler.handleServerMusicPlayerEntityPlayMusicPacket(musicPlayerEntityPlayMusicPacket, iPayloadContext);
-                    }else{
-                        ClientHandler.handleClientMusicPlayerEntityPlayMusicPacket(musicPlayerEntityPlayMusicPacket, iPayloadContext);
-                    }
-                }
-        );
-
         if(FMLEnvironment.dist.isClient()){
+            registrar.playToClient(
+                    MusicPlayCommandPacket.TYPE,
+                    MusicPlayCommandPacket.STREAM_CODEC,
+                    ClientHandler::handleMusicPlayCommand
+            );
+
+            registrar.playToClient(
+                    MusicStopCommandPacket.TYPE,
+                    MusicStopCommandPacket.STREAM_CODEC,
+                    ClientHandler::handleMusicStopCommand
+            );
+
+            registrar.playToClient(
+                    MusicSyncCommandPacket.TYPE,
+                    MusicSyncCommandPacket.STREAM_CODEC,
+                    ClientHandler::handleMusicSyncCommand
+            );
+
             registrar.playToClient(
                     PlayEnderMusicPlayerPacket.TYPE,
                     PlayEnderMusicPlayerPacket.STREAM_CODEC,
                     ClientHandler::handleClientEnderPlayerPlayPacket
             );
 
-            registrar.playToClient(
-                    StopMusicPacket.TYPE,
-                    StopMusicPacket.STREAM_CODEC,
-                    ClientHandler::handleStopMusicPacket
-            );
         }else{
             registrar.playToClient(
-                    PlayEnderMusicPlayerPacket.TYPE,
-                    PlayEnderMusicPlayerPacket.STREAM_CODEC,
-                    (playEnderMusicPlayerPacket, iPayloadContext) -> {}
+                    MusicPlayCommandPacket.TYPE,
+                    MusicPlayCommandPacket.STREAM_CODEC,
+                    (musicPlayCommandPacket, iPayloadContext) -> {}
             );
 
             registrar.playToClient(
-                    StopMusicPacket.TYPE,
-                    StopMusicPacket.STREAM_CODEC,
+                    MusicStopCommandPacket.TYPE,
+                    MusicStopCommandPacket.STREAM_CODEC,
+                    (musicStopCommandPacket, iPayloadContext) -> {}
+            );
+
+            registrar.playToClient(
+                    MusicSyncCommandPacket.TYPE,
+                    MusicSyncCommandPacket.STREAM_CODEC,
+                    (musicSyncCommandPacket, iPayloadContext) -> {}
+            );
+
+            registrar.playToClient(
+                    PlayEnderMusicPlayerPacket.TYPE,
+                    PlayEnderMusicPlayerPacket.STREAM_CODEC,
                     (playEnderMusicPlayerPacket, iPayloadContext) -> {}
             );
         }

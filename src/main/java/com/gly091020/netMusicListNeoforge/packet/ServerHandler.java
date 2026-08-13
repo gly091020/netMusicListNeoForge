@@ -1,13 +1,13 @@
 package com.gly091020.netMusicListNeoforge.packet;
 
-import com.github.tartaricacid.netmusic.api.resolver.MusicPlayResolverManager;
-import com.github.tartaricacid.netmusic.item.ItemMusicCD;
 import com.github.tartaricacid.netmusic.tileentity.TileEntityMusicPlayer;
 import com.gly091020.netMusicListNeoforge.item.NetMusicListItem;
 import com.gly091020.netMusicListNeoforge.item.NetMusicPlayerItem;
+import com.gly091020.netMusicListNeoforge.server.music.MusicRingManager;
+import com.gly091020.netMusicListNeoforge.server.music.PortablePlayerRinger;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import static com.gly091020.netMusicListNeoforge.NetMusicList.MUSIC_LIST_ITEM;
@@ -44,35 +44,47 @@ public class ServerHandler {
         });
     }
 
-    public static void handleServerPlayerPlayPacket(PlayerPlayMusicPacket packet, IPayloadContext ctx){
-        MusicPlayResolverManager.resolve(packet.info().clone()).thenAcceptAsync((resolved) ->
-                PacketDistributor.sendToAllPlayers(new PlayerPlayMusicPacket(packet.playerID(), resolved.songUrl, packet.rawUrl(), packet.timeSecond(), packet.songName(), packet.slot(), packet.info())));
-    }
-
-    public static void handleServerUpdateMusicPacket(UpdatePlayerMusicPacket packet, IPayloadContext ctx){
-        var player = ctx.player();
-        var stack = player.getInventory().getItem(packet.slot());
-        if(stack.is(MUSIC_PLAYER_ITEM.get())){
-            var container = NetMusicPlayerItem.getContainer(stack);
-            var stack1 = container.getItem(0);
-            NetMusicListItem.setSongIndex(stack1, packet.index());
-            container.setItem(0, stack1);
-            NetMusicPlayerItem.playSound(stack, player, packet.slot());
-        }
-    }
-
-    public static void handleStopMusicPacket(StopMusicPacketServer packet, IPayloadContext ctx){
-        PacketDistributor.sendToAllPlayers(new StopMusicPacket(packet.playerID(),packet.url()));
-    }
-
-    public static void handleUpdateMusicIndexCTSPacket(UpdateMusicIndexCTSPacket packet, IPayloadContext context) {
-        var player = context.player();
-        var stack = player.getInventory().getItem(packet.slot());
-        if(stack.is(MUSIC_PLAYER_ITEM.get())){
-            var c = NetMusicPlayerItem.getContainer(stack);
-            NetMusicListItem.setSongIndex(c.getItem(0), packet.index());
-            c.setChanged();
-        }
+    public static void handleMusicPlayerAction(MusicPlayerActionPacket packet, IPayloadContext ctx) {
+        ctx.enqueueWork(() -> {
+            var player = ctx.player();
+            if (!(player instanceof ServerPlayer serverPlayer)) {
+                return;
+            }
+            var stack = serverPlayer.getInventory().getItem(packet.slot());
+            if (!stack.is(MUSIC_PLAYER_ITEM.get())) {
+                return;
+            }
+            switch (packet.action()) {
+                case SET_MODE -> {
+                    var inner = NetMusicPlayerItem.getContainer(stack).getItem(0);
+                    if (inner.is(MUSIC_LIST_ITEM.get())) {
+                        NetMusicListItem.setPlayMode(inner, packet.mode());
+                        var container = NetMusicPlayerItem.getContainer(stack);
+                        container.setItem(0, inner);
+                        container.setChanged();
+                    }
+                }
+                case STOP -> {
+                    var ringer = getRinger(serverPlayer, stack);
+                    if (ringer != null) {
+                        ringer.stop();
+                    }
+                }
+                case PLAY, NEXT, SELECT_INDEX -> {
+                    var ringer = getOrCreateRinger(serverPlayer, stack);
+                    if (ringer == null) {
+                        return;
+                    }
+                    switch (packet.action()) {
+                        case PLAY -> ringer.play(packet.info());
+                        case NEXT -> ringer.next();
+                        case SELECT_INDEX -> ringer.selectIndex(packet.index());
+                        default -> {
+                        }
+                    }
+                }
+            }
+        });
     }
 
     public static void handleUpdateBlockLyricPacket(UpdateBlockLyricPacket updateBlockLyricPacket, IPayloadContext context) {
@@ -82,12 +94,24 @@ public class ServerHandler {
         }
     }
 
-    public static void handleServerMusicPlayerEntityPlayMusicPacket(MusicPlayerEntityPlayMusicPacket packet, IPayloadContext iPayloadContext) {
-        // 这名字这么越来越长了？
-        MusicPlayResolverManager.resolve(new ItemMusicCD.SongInfo(
-                packet.url(), packet.songName(), packet.timeSecond(), false
-        )).thenAcceptAsync((resolved) ->
-                PacketDistributor.sendToAllPlayers(new MusicPlayerEntityPlayMusicPacket(packet.entityID(), resolved.songUrl, packet.timeSecond(), packet.songName()))
-        );
+    private static PortablePlayerRinger getRinger(ServerPlayer player, ItemStack stack) {
+        var ringerId = NetMusicPlayerItem.getRingerId(stack);
+        if (ringerId == null) {
+            return null;
+        }
+        var ringer = MusicRingManager.get(player.serverLevel()).getRinger(ringerId);
+        return ringer instanceof PortablePlayerRinger ppr ? ppr : null;
+    }
+
+    private static PortablePlayerRinger getOrCreateRinger(ServerPlayer player, ItemStack stack) {
+        var ringer = getRinger(player, stack);
+        if (ringer != null) {
+            return ringer;
+        }
+        var ringerId = NetMusicPlayerItem.getOrCreateRingerId(stack);
+        var manager = MusicRingManager.get(player.serverLevel());
+        var created = new PortablePlayerRinger(manager, player.serverLevel(), ringerId, player.getUUID());
+        manager.addRinger(created);
+        return created;
     }
 }
