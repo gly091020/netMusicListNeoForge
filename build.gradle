@@ -136,6 +136,7 @@ dependencies {
     implementation("org.commonmark:commonmark:0.21.0")
     compileOnly files("libs/net_music_login_need-1.21.1-0.4.jar")
     implementation files("libs/netmusiccanneedqq-0.1.2-neoforge-mc1.21.1-beta.jar")
+    implementation("maven.modrinth:UxzhxiVl:ZlH1lTYi")
 
     // create
     implementation("com.simibubi.create:create-${minecraft_version}:${create_version}:slim") { transitive = false }

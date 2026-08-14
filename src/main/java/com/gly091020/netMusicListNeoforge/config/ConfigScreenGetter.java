@@ -62,10 +62,11 @@ public class ConfigScreenGetter {
         }
 
         var cookie = builder.getOrCreateCategory(Component.translatable("config.net_music_list.config.cookie.title"));
-        cookie.addEntry(entryBuilder.startTextField(Component.translatable("config.net_music_list.netease_cookie"), CONFIG.neteaseCookie)
-                        .setSaveConsumer(s -> CONFIG.neteaseCookie = s)
-                        .setDefaultValue("")
-                        .build());
+        if(!NetMusicListUtil.hasBetterLogin())
+            cookie.addEntry(entryBuilder.startTextField(Component.translatable("config.net_music_list.netease_cookie"), CONFIG.neteaseCookie)
+                    .setSaveConsumer(s -> CONFIG.neteaseCookie = s)
+                    .setDefaultValue("")
+                    .build());
         cookie.addEntry(entryBuilder.startTextField(Component.translatable("config.net_music_list.qq_cookie"), CONFIG.qqCookie)
                 .setSaveConsumer(s -> CONFIG.qqCookie = s)
                 .setDefaultValue("")

@@ -1,5 +1,7 @@
 package com.gly091020.netMusicListNeoforge.media.netease;
 
+import com.gly091020.netMusicListNeoforge.util.NetMusicBetterLoginUtil;
+import com.gly091020.netMusicListNeoforge.util.NetMusicListUtil;
 import com.google.gson.Gson;
 import com.gly091020.netMusicListNeoforge.NetMusicList;
 
@@ -90,7 +92,9 @@ public class NeteaseSearch {
                 .header("Origin", "https://music.163.com")
                 .header("Content-Type", "application/x-www-form-urlencoded")
                 .header("Accept", "*/*")
-                .header("Cookie", NetMusicList.CONFIG.neteaseCookie)
+                .header("Cookie", NetMusicListUtil.hasBetterLogin() ?
+                        NetMusicBetterLoginUtil.getCookie() :
+                        NetMusicList.CONFIG.neteaseCookie)
                 .POST(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8))
                 .build();
 

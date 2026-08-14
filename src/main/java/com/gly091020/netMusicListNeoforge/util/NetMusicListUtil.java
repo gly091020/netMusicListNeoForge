@@ -602,4 +602,8 @@ public class NetMusicListUtil {
                     .withAffectedMod(ModList.get().getModContainerById(MODID).orElseThrow().getModInfo())
                     .withSeverity(ModLoadingIssue.Severity.WARNING);
     }
+
+    public static boolean hasBetterLogin(){
+        return ModList.get().isLoaded("netmusicbetterlogin");
+    }
 }

@@ -39,7 +39,7 @@ public abstract class PlayMusicHandleMixin {
             try{
                 var ms = MusicSource.pasteFromSongUrl(URI.create(url));
                 if(CacheManager.hasCache(ms)) {
-                    var songUrl = CacheManager.getCacheUUID(ms);
+                    var songUrl = CacheManager.getSongCache(ms);
                     if(songUrl != null){
                         Minecraft.getInstance().execute(
                                 () -> playMusic(songUrl, songName, sound)
