@@ -24,7 +24,6 @@
     "requireAnnotations": true
   },
   "client": [
-    "BurnerSongListMixin",
     "accessor.CDBurnerMenuScreenAccessor",
     "CDBurnerMenuMixin",
     "LyricPasteMixin",

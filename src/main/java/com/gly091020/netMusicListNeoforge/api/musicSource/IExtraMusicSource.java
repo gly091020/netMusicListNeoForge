@@ -118,4 +118,15 @@ public interface IExtraMusicSource {
     default String autoParseFromClipboard(String clipboardText) {
         return null;
     }
+
+    /**
+     * 从剪贴板自动识别播放列表
+     *
+     * @param clipboardText 剪贴板文本
+     * @return 播放列表 ID，不需要前缀，如果无法识别返回{@code null}
+     */
+    @Nullable
+    default String autoParseListFromClipboard(String clipboardText) {
+        return null;
+    }
 }

@@ -40,6 +40,46 @@ public class QQMusicUtil {
     }
 
     @Nullable
+    public static String getListIdFromUrl(String url) {
+        if (url == null) return null;
+        int queryIndex = url.indexOf('?');
+        String pathPart = queryIndex >= 0 ? url.substring(0, queryIndex) : url;
+        int playlistIndex = pathPart.indexOf("/playlist/");
+        if (playlistIndex >= 0) {
+            String id = pathPart.substring(playlistIndex + "/playlist/".length());
+            if (!id.isEmpty()) {
+                return id;
+            }
+        }
+        if (queryIndex < 0) return null;
+        for (String pair : url.substring(queryIndex + 1).split("&")) {
+            int eq = pair.indexOf('=');
+            if (eq > 0 && "id".equals(pair.substring(0, eq))) {
+                return pair.substring(eq + 1);
+            }
+        }
+        return null;
+    }
+
+    @Nullable
+    public static String getSongIdFromUrl(String url) {
+        if (url == null) return null;
+        int hashIndex = url.indexOf('#');
+        if (hashIndex >= 0) {
+            url = url.substring(0, hashIndex);
+        }
+        int queryIndex = url.indexOf('?');
+        if (queryIndex < 0) return null;
+        for (String pair : url.substring(queryIndex + 1).split("&")) {
+            int eq = pair.indexOf('=');
+            if (eq > 0 && "songid".equals(pair.substring(0, eq))) {
+                return pair.substring(eq + 1);
+            }
+        }
+        return null;
+    }
+
+    @Nullable
     public static QQMusicData getSongData(long musicID){
         try {
             var data = buildSongInfoData(musicID);

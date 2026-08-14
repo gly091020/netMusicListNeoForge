@@ -105,4 +105,20 @@ public class QQMusicExtraSource implements IExtraMusicSource {
     public @NotNull List<ItemMusicCD.SongInfo> search(String keywords) {
         return QQMusicUtil.searchMusicResult(keywords);
     }
+
+    @Override
+    public @Nullable String autoParseFromClipboard(String clipboardText) {
+        if (clipboardText == null || !clipboardText.toLowerCase(java.util.Locale.ROOT).contains("qq.com")) {
+            return null;
+        }
+        return QQMusicUtil.getSongIdFromUrl(clipboardText);
+    }
+
+    @Override
+    public @Nullable String autoParseListFromClipboard(String clipboardText) {
+        if (clipboardText == null || !clipboardText.toLowerCase(java.util.Locale.ROOT).contains("qq.com")) {
+            return null;
+        }
+        return QQMusicUtil.getListIdFromUrl(clipboardText);
+    }
 }
