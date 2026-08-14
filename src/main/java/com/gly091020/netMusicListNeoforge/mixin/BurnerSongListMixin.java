@@ -1,10 +1,7 @@
 package com.gly091020.netMusicListNeoforge.mixin;
 
 import com.github.tartaricacid.netmusic.client.gui.CDBurnerMenuScreen;
-import com.github.tartaricacid.netmusic.item.ItemMusicCD;
-import com.github.tartaricacid.netmusic.network.NetworkHandler;
-import com.github.tartaricacid.netmusic.network.message.SetMusicIDMessage;
-import com.gly091020.netMusicListNeoforge.util.NetMusicListUtil;
+import com.gly091020.netMusicListNeoforge.util.MSMixinFunctions;
 import com.gly091020.netMusicListNeoforge.util.URLType;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -21,10 +18,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.regex.Pattern;
-
-import static com.gly091020.netMusicListNeoforge.NetMusicList.CONFIG;
-
 @Mixin(value = CDBurnerMenuScreen.class, remap = false)
 public class BurnerSongListMixin {
     @Shadow
@@ -34,27 +27,12 @@ public class BurnerSongListMixin {
     @Shadow
     private Checkbox readOnlyButton;
     @Unique
-    private static final Pattern LIST_ID_REG = Pattern.compile("^list/(\\d+)$");
-    @Unique
     private String netmusiclistforge$idTip;
     @Inject(method = "handleCraftButton", at = @At(value = "INVOKE", target = "Ljava/util/regex/Matcher;matches()Z"), cancellable = true)
     public void onCraft(CallbackInfo ci){
-        var matcher = LIST_ID_REG.matcher(textField.getValue());
-        if(matcher.find()){
-            long listID = Long.parseLong(matcher.group(1));
-            try{
-                var songs = NetMusicListUtil.getMusicList(listID);
-                if(!songs.isEmpty()){
-                    for (ItemMusicCD.SongInfo info: songs){
-                        info.readOnly = readOnlyButton.selected();
-                        if(CONFIG.debug && CONFIG.only5Second)
-                            info.songTime = 5;
-                        NetworkHandler.sendToServer(new SetMusicIDMessage(info));
-                    }
-                }
-            } catch (Exception e) {
-                tips = Component.translatable("gui.netmusic.cd_burner.get_info_error");
-            }
+        if (MSMixinFunctions.isPlaylistInput(textField.getValue())) {
+            tips = MSMixinFunctions.tryCraftPlaylist(MSMixinFunctions.currentSource,
+                    MSMixinFunctions.getPlaylistId(textField.getValue()), readOnlyButton.selected());
             ci.cancel();
         }
     }

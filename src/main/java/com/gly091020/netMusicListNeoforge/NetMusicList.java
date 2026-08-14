@@ -1,6 +1,8 @@
 package com.gly091020.netMusicListNeoforge;
 
 import com.github.tartaricacid.netmusic.init.InitItems;
+import com.gly091020.netMusicListNeoforge.media.NetMusicListMedias;
+import com.gly091020.netMusicListNeoforge.api.musicSource.ExtraMusicSourceManager;
 import com.gly091020.netMusicListNeoforge.block.EnderMusicPlayer;
 import com.gly091020.netMusicListNeoforge.block.EnderMusicPlayerEntity;
 import com.gly091020.netMusicListNeoforge.config.ConfigScreenGetter;
@@ -36,7 +38,6 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.ModLoadingContext;
-import net.neoforged.fml.ModLoadingIssue;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
@@ -127,6 +128,7 @@ public class NetMusicList {
         modEventBus.addListener(NetMusicList::registerEntityAttributes);
         CacheManager.load();
         NetMusicListUtil.testMengSamaNetMusic();
+        NetMusicListMedias.init();
 
         LOGGER.info("网络音乐机：更好的体验加载完成");
         LOGGER.info("再次踏上旅途……");

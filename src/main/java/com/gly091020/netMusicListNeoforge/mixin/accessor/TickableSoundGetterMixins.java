@@ -1,4 +1,4 @@
-package com.gly091020.netMusicListNeoforge.mixin;
+package com.gly091020.netMusicListNeoforge.mixin.accessor;
 
 import net.minecraft.client.resources.sounds.TickableSoundInstance;
 import net.minecraft.client.sounds.SoundEngine;

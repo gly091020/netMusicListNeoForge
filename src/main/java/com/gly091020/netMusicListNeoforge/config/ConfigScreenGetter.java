@@ -39,10 +39,6 @@ public class ConfigScreenGetter {
             base.addEntry(new ImageEntry(ResourceLocation.fromNamespaceAndPath(NetMusicList.ModID, "textures/gui/gly_is_suck.png")));
         }
 
-//        base.addEntry(entryBuilder.startBooleanToggle(Component.translatable("config.net_music_list.not_pause_sound"),
-//                        CONFIG.notPauseSoundOnGamePause)
-//                        .setTooltip(Component.translatable("config.net_music_list.not_pause_sound.tip"))
-//                .setDefaultValue(false).setSaveConsumer(b -> CONFIG.notPauseSoundOnGamePause = b).build());
         base.addEntry(entryBuilder.startIntSlider(Component.translatable("config.net_music_list.max_import_list"), CONFIG.maxImportList, 100, 1000)
                 .setDefaultValue(300)
                 .setSaveConsumer(i -> CONFIG.maxImportList = i)
@@ -64,6 +60,16 @@ public class ConfigScreenGetter {
                     .setDefaultValue(false)
                     .build());
         }
+
+        var cookie = builder.getOrCreateCategory(Component.translatable("config.net_music_list.config.cookie.title"));
+        cookie.addEntry(entryBuilder.startTextField(Component.translatable("config.net_music_list.netease_cookie"), CONFIG.neteaseCookie)
+                        .setSaveConsumer(s -> CONFIG.neteaseCookie = s)
+                        .setDefaultValue("")
+                        .build());
+        cookie.addEntry(entryBuilder.startTextField(Component.translatable("config.net_music_list.qq_cookie"), CONFIG.qqCookie)
+                .setSaveConsumer(s -> CONFIG.qqCookie = s)
+                .setDefaultValue("")
+                .build());
 
         var hud = builder.getOrCreateCategory(Component.translatable("config.net_music_list.config.hud.title"));
         hud.addEntry(entryBuilder.startTextDescription(Component.translatable("config.net_music_list.config.select_hud.title")).build());

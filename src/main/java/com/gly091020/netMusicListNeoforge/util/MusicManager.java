@@ -22,7 +22,11 @@ public class MusicManager {
     }
 
     public static void addSound(RingerSound sound){
-        SOUNDS.put(sound.getRingerId(), sound);
+        var old = SOUNDS.put(sound.getRingerId(), sound);
+        if (old != null && old != sound) {
+            // 同 Ringer 的新声音接管前，确保旧声音被停止，避免残留播放
+            old.stopMusic();
+        }
     }
 
     public static void stop(UUID ringerId){

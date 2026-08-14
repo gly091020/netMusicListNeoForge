@@ -121,5 +121,17 @@
   "gui.net_music_list.iam.yes": "Details",
   "gui.net_music_list.iam.no": "Hide",
 
-  "text.net_music_list.meng_sa_ma_net_music.warning": "Since the MengSamaNetMusic mod uses code from this mod, installing them together may cause conflicts. Please consider uninstalling one of them."
+  "text.net_music_list.meng_sa_ma_net_music.warning": "Since the MengSamaNetMusic mod uses code from this mod, installing them together may cause conflicts. Please consider uninstalling one of them.",
+  "text.netmusiclib.musicSource": "Music Source",
+  "text.netmusiclib.music_source.netease": "NetEase",
+  "text.autoconfig.net_music_list.option.neteaseCookie": "NetEase Cloud Music Cookie",
+
+  "gui.net_music_list.search.title": "Search Music",
+  "gui.net_music_list.search.button": "Search",
+  "gui.net_music_list.search.source": "Source: %s",
+
+  "text.netmusiclib.music_source.qq_music": "QQ Music",
+  "config.net_music_list.qq_cookie": "QQ Music Cookie",
+  "config.net_music_list.netease_cookie": "NetEase Cloud Music Cookie",
+  "config.net_music_list.config.cookie.title": "Cookie"
 }

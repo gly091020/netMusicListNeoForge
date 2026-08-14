@@ -3,11 +3,14 @@ package com.gly091020.netMusicListNeoforge.hud;
 import com.github.tartaricacid.netmusic.NetMusic;
 import com.github.tartaricacid.netmusic.item.ItemMusicCD;
 import com.gly091020.netMusicListNeoforge.NetMusicList;
+import com.gly091020.netMusicListNeoforge.api.musicSource.ExtraMusicSourceManager;
+import com.gly091020.netMusicListNeoforge.api.musicSource.MusicSource;
 import com.gly091020.netMusicListNeoforge.util.CacheManager;
 import com.gly091020.netMusicListNeoforge.util.MusicManager;
 import com.gly091020.netMusicListNeoforge.util.NetMusicListUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
@@ -32,12 +35,16 @@ public class MusicInfoHud{
     @Nullable
     private static Long id = null;
     private static NetMusicListUtil.Lyric lyric;
-    private static int slot;
     private static int left = 10;
     private static int top = 10;
     private static String rawUrl;
 
     private static Thread thread;
+
+    @Nullable
+    private static MusicSource musicSource;
+    /** 歌曲切换代际：防止旧的后台任务把已释放的纹理写回 icon */
+    private static int generation = 0;
 
     public static void render(@NotNull GuiGraphics guiGraphics) {
         if(!NetMusicList.CONFIG.musicHUD)return;
@@ -89,7 +96,7 @@ public class MusicInfoHud{
     }
 
     public static float clamp(float value, float min, float max) {
-        return Math.max(min, Math.min(max, value));
+        return Math.clamp(value, min, max);
     }
 
     public static ItemMusicCD.SongInfo getInfo() {
@@ -108,7 +115,7 @@ public class MusicInfoHud{
         }
         id = null;
         MusicInfoHud.info = info;
-        MusicInfoHud.slot = slot;
+        final int gen = ++generation;
         if(thread != null){
             thread.interrupt();
             thread = null;
@@ -119,17 +126,27 @@ public class MusicInfoHud{
         }
         lyric = null;
         MusicInfoHud.rawUrl = rawUrl;
-        getData();
-        try {
-            var id = NetMusicListUtil.getIdFromUrl(rawUrl);
-            if(!CacheManager.hasCache(id)){
-                var uuid = UUID.randomUUID().toString();
-                CacheManager.startImgDownload(id, uuid);
-                CacheManager.startSongDownload(id, uuid);
-                CacheManager.startLycDownload(id, uuid);
-            }
-        } catch (IllegalAccessException ignored) {
+        musicSource = MusicSource.tryPasteFromSongInfo(info);
+        getData(gen);
+        if(musicSource == null){
+            try {
+                var id = NetMusicListUtil.getIdFromUrl(rawUrl);
+                if(!CacheManager.hasCache(id)){
+                    var uuid = UUID.randomUUID().toString();
+                    CacheManager.startImgDownload(id, uuid);
+                    CacheManager.startSongDownload(id, uuid);
+                    CacheManager.startLycDownload(id, uuid);
+                }
+            } catch (IllegalAccessException ignored) {
 
+            }
+        }else {
+            if(!CacheManager.hasCache(musicSource)){
+                var uuid = UUID.randomUUID().toString();
+                CacheManager.startImgDownload(musicSource, uuid);
+                CacheManager.startSongDownload(musicSource, uuid);
+                CacheManager.startLycDownload(musicSource, uuid);
+            }
         }
     }
 
@@ -139,52 +156,102 @@ public class MusicInfoHud{
     }
 
     public static void getData(){
+        getData(generation);
+    }
+
+    private static void getData(int gen){
         if(info != null){
             try {
-                var id = NetMusicListUtil.getIdFromUrl(rawUrl);
-                if(CacheManager.hasCache(id)){
-                    lyric = CacheManager.getLycCache(id);
-                    var imagePath = CacheManager.getImageCache(id);
-                    if(imagePath == null){
-                        icon = DEFAULT_TEXTURE;
-                    }else{
-                        Minecraft.getInstance().execute(() -> {
-                            var resourceLocation = ResourceLocation.fromNamespaceAndPath(NetMusicList.ModID,
-                                    String.format("icon_%s", UUID.randomUUID()));
-                            try {
-                                Minecraft.getInstance().getTextureManager().register(resourceLocation,
-                                        NetMusicListUtil.getTextureFromPath(imagePath));
-                            } catch (IOException ignored) {}
-                            icon = resourceLocation;
-                        });
-                        return;
+                Path imagePath;
+                if(musicSource == null) {
+                    var id = NetMusicListUtil.getIdFromUrl(rawUrl);
+                    if (CacheManager.hasCache(id)) {
+                        lyric = CacheManager.getLycCache(id);
+                        imagePath = CacheManager.getImageCache(id);
+                    } else {
+                        imagePath = null;
+                        try {
+                            getTextureFromLocal(info);
+                            id = NetMusicListUtil.getIdFromUrl(rawUrl);
+                            long finalId = id;
+                            thread = new Thread(() -> getDataByThread(gen, finalId));
+                            thread.start();
+                        } catch (Exception e) {
+                            NetMusicList.LOGGER.error("解析出现错误", e);
+                        }
+                    }
+                }else {
+                    if (CacheManager.hasCache(musicSource)) {
+                        lyric = CacheManager.getLycCache(musicSource);
+                        imagePath = CacheManager.getImageCache(musicSource);
+                    } else {
+                        imagePath = null;
+                        thread = new Thread(() -> getDataByThread(gen, 0)); // 自己会处理
+                        thread.start();
                     }
                 }
+                if(imagePath == null){
+                    icon = DEFAULT_TEXTURE;
+                }else{
+                    Minecraft.getInstance().execute(() -> {
+                        if (gen != generation) return;
+                        var resourceLocation = ResourceLocation.fromNamespaceAndPath(NetMusicList.ModID,
+                                String.format("icon_%s", UUID.randomUUID()));
+                        try {
+                            Minecraft.getInstance().getTextureManager().register(resourceLocation,
+                                    NetMusicListUtil.getTextureFromPath(imagePath));
+                        } catch (IOException ignored) {}
+                        icon = resourceLocation;
+                    });
+                    return;
+                }
             } catch (IllegalAccessException ignored) {}
-            try {
-                getTextureFromLocal(info);
-                id = NetMusicListUtil.getIdFromUrl(rawUrl);
-                thread = new Thread(() -> getDataByThread(id));
-                thread.start();
-            } catch (Exception e) {
-                NetMusicList.LOGGER.error("解析出现错误", e);
-            }
         }
     }
 
-    private static void getDataByThread(long id){
+    private static void getDataByThread(int gen, long id){
         try {
-            var icon_url = NetMusicListUtil.getIconUrl(NetMusic.NET_EASE_WEB_API.song(id));
-            var resourceLocation = ResourceLocation.fromNamespaceAndPath(NetMusicList.ModID,
-                    String.format("icon_%s", UUID.randomUUID()));
-            var texture = NetMusicListUtil.getTextureFromURL(icon_url);
-            Minecraft.getInstance().getTextureManager().register(resourceLocation,
-                    texture);
-            var l = NetMusicListUtil.getLyric(NetMusic.NET_EASE_WEB_API.lyric(id));
-            if(Thread.currentThread().isInterrupted()){return;}
-            icon = resourceLocation;
-            lyric = l;
+            var ms = musicSource;
+            if(ms == null){
+                var icon_url = NetMusicListUtil.getIconUrl(NetMusic.NET_EASE_WEB_API.song(id));
+                var resourceLocation = ResourceLocation.fromNamespaceAndPath(NetMusicList.ModID,
+                        String.format("icon_%s", UUID.randomUUID()));
+                var texture = NetMusicListUtil.getTextureFromURL(icon_url);
+                Minecraft.getInstance().execute(() -> {
+                    if (gen != generation) {
+                        texture.close();
+                        return;
+                    }
+                    Minecraft.getInstance().getTextureManager().register(resourceLocation, texture);
+                    icon = resourceLocation;
+                });
+                var l = NetMusicListUtil.getLyric(NetMusic.NET_EASE_WEB_API.lyric(id));
+                if (gen == generation) lyric = l;
+            }else{
+                var p = ExtraMusicSourceManager.getParser(ms);
+                if(p == null)return;
+                var iconNative = p.parseIcon(ms.identifier());
+                if (Thread.currentThread().isInterrupted()) return;
+                if(iconNative != null) {
+                    var resourceLocation = ResourceLocation.fromNamespaceAndPath(NetMusicList.ModID,
+                            String.format("icon_%s", UUID.randomUUID()));
+                    Minecraft.getInstance().execute(() -> {
+                        if (gen != generation) {
+                            iconNative.close();
+                            return;
+                        }
+                        Minecraft.getInstance().getTextureManager().register(resourceLocation,
+                                new DynamicTexture(iconNative));
+                        icon = resourceLocation;
+                    });
+                }else if (gen == generation) icon = DEFAULT_TEXTURE;
+                var l = p.parseLyric(ms.identifier());
+                if (gen == generation && l != null) lyric = NetMusicListUtil.Lyric.fromLyricRecord(l);
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         } catch (Exception e) {
+            if (Thread.currentThread().isInterrupted()) return;
             NetMusicList.LOGGER.error("解析出现错误", e);
         }
     }

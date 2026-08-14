@@ -1,13 +1,16 @@
 package com.gly091020.netMusicListNeoforge.util;
 
-import com.github.tartaricacid.netmusic.NetMusic;
 import com.gly091020.netMusicListNeoforge.NetMusicList;
+import com.gly091020.netMusicListNeoforge.api.musicParser.MusicParserManager;
+import com.gly091020.netMusicListNeoforge.api.musicSource.ExtraMusicSourceManager;
+import com.gly091020.netMusicListNeoforge.api.musicSource.MusicSource;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import net.neoforged.fml.loading.FMLPaths;
 import org.jetbrains.annotations.ApiStatus;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -21,6 +24,10 @@ import java.util.concurrent.Executors;
 
 @ApiStatus.Experimental
 public class CacheManager {
+    /**
+     * 缓存索引：键为 "loaderType:identifier"（网易云是 "netease:歌曲ID"），值为缓存文件的 UUID 前缀。
+     * index.json 与 <uuid>.mp3/.png/.lyc.json 的文件格式保持不变，旧版纯数字键会自动迁移。
+     */
     private static Map<String, String> musicCache = new HashMap<>();
     private static final Gson GSON = new Gson();
     private static final ExecutorService EXECUTOR_SERVICE = Executors.newFixedThreadPool(5);
@@ -29,10 +36,33 @@ public class CacheManager {
     public static Path PATH = FMLPaths.CONFIGDIR.get().resolve(DIR_NAME);
     public static final List<FileDownloadThread> threads = new CopyOnWriteArrayList<>();
 
+    /** 将音乐源转换为缓存键：loaderType:identifier */
+    public static String getKey(MusicSource source) {
+        return source.loaderType() + ":" + source.identifier();
+    }
+
+    /**
+     * 兼容旧调用：纯数字视为网易云 ID；netmusiclib:// URI 按新 API 解析；
+     * 已经是 "loaderType:identifier" 的字符串则直接使用。
+     */
+    private static MusicSource fromLegacy(String resourceId) {
+        if (resourceId == null || resourceId.isEmpty()) return MusicSource.EMPTY;
+        if (resourceId.matches("\\d+")) return new MusicSource("netease", resourceId, 0);
+        if (resourceId.startsWith("netmusiclib://")) {
+            try {
+                var ms = MusicSource.tryPasteFromURI(URI.create(resourceId));
+                if (ms != null) return ms;
+            } catch (IllegalArgumentException ignored) {
+            }
+        }
+        int idx = resourceId.indexOf(':');
+        if (idx > 0 && !resourceId.startsWith("http")) {
+            return new MusicSource(resourceId.substring(0, idx), resourceId.substring(idx + 1), 0);
+        }
+        return new MusicSource("netease", resourceId, 0);
+    }
+
     public static void firstTimeInit(){
-        // 这TM是第一次启动调用的！
-        // gly的英语一向很差的
-        // 已经重命名了
         if(!NetMusicList.CONFIG.enableCache)return;
         try {
             if (PATH.toFile().isFile()) {
@@ -53,10 +83,22 @@ public class CacheManager {
         try{
             musicCache = (Map<String, String>)GSON.fromJson(Files.readString(PATH.resolve(INDEX_FILE_NAME)),
                     TypeToken.get(Object.class));
+            if(musicCache == null)musicCache = new HashMap<>();
+            migrateLegacyKeys();
             checkCache();
         }catch (Exception e){
             NetMusicList.LOGGER.error("缓存读取失败：", e);
             firstTimeInit();
+        }
+    }
+
+    /** 把旧版纯数字键迁移为 "netease:ID"，保证 index.json 结构与文件格式不变 */
+    private static void migrateLegacyKeys() {
+        Map<String, String> migrated = new HashMap<>();
+        musicCache.forEach((k, v) -> migrated.put(getKey(fromLegacy(k)), v));
+        if(!migrated.equals(musicCache)){
+            musicCache = migrated;
+            save();
         }
     }
 
@@ -86,9 +128,9 @@ public class CacheManager {
                 keys.add(k);
             }
         });
-        keys.forEach(l -> {
-            if(andClear)deleteCache(Long.parseLong(l));
-            musicCache.remove(l);
+        keys.forEach(k -> {
+            if(andClear)deleteCache(k);
+            musicCache.remove(k);
         });
         if(!keys.isEmpty())save();
         return keys.size();
@@ -98,113 +140,180 @@ public class CacheManager {
         return checkCache(false);
     }
 
-    private static void startDownload(String downloadUrl, long resourceId, String fileType, String uuid){
+    private static void startDownload(String downloadUrl, String key, String fileType, String uuid){
         if(!NetMusicList.CONFIG.enableCache)return;
-        var thread = new FileDownloadThread(downloadUrl, resourceId, fileType, uuid);
+        var thread = new FileDownloadThread(downloadUrl, key, fileType, uuid);
         EXECUTOR_SERVICE.submit(thread);
         threads.add(thread);
     }
 
-    public static void startImgDownload(long resourceId, String uuid){
+    // ===== 新 API：以 MusicSource 为缓存对象 =====
+
+    public static void startImgDownload(MusicSource source, String uuid){
         if(!NetMusicList.CONFIG.enableCache)return;
         EXECUTOR_SERVICE.submit(() -> {
-            var json = "";
             try {
-                while (true){
-                    json = NetMusic.NET_EASE_WEB_API.song(resourceId);
-                    try{
-                        startDownload(NetMusicListUtil.getIconUrl(json)
-                                .toString(), resourceId, ".png", uuid);
-                    } catch (Exception e) {
-                        NetMusicList.LOGGER.error("出现错误(405?):{}", json);
-                        Thread.sleep(1000);
-                        continue;
-                    }
-                    break;
+                var extra = ExtraMusicSourceManager.getParser(source);
+                if(extra == null){
+                    NetMusicList.LOGGER.warn("没有找到音乐额外信息源：{}", source.loaderType());
+                    return;
                 }
+                var icon = extra.parseIcon(source.identifier());
+                if(icon == null)return;
+                Files.createDirectories(PATH);
+                icon.writeToFile(PATH.resolve(uuid + ".png"));
             } catch (Exception e) {
                 NetMusicList.LOGGER.error("出现错误：", e);
             }
         });
+    }
+
+    public static void startSongDownload(MusicSource source, String uuid){
+        if(!NetMusicList.CONFIG.enableCache)return;
+        EXECUTOR_SERVICE.submit(() -> {
+            try {
+                var parser = MusicParserManager.getParser(source);
+                if(parser == null){
+                    // 网易云目前未注册 IMusicParser，回退到旧的直链逻辑，保证旧缓存流程不变
+                    if("netease".equals(source.loaderType())){
+                        startDownload(pasteUrl(Long.parseLong(source.identifier())), getKey(source), ".mp3", uuid);
+                        return;
+                    }
+                    NetMusicList.LOGGER.warn("没有找到歌曲解析器：{}", source.loaderType());
+                    return;
+                }
+                var url = parser.parse(source);
+                if(url == null)return;
+                startDownload(url.toString(), getKey(source), ".mp3", uuid);
+            } catch (Exception e) {
+                NetMusicList.LOGGER.error("出现错误：", e);
+            }
+        });
+    }
+
+    public static void startLycDownload(MusicSource source, String uuid){
+        if(!NetMusicList.CONFIG.enableCache)return;
+        EXECUTOR_SERVICE.submit(() -> {
+            try {
+                var extra = ExtraMusicSourceManager.getParser(source);
+                if(extra == null){
+                    NetMusicList.LOGGER.warn("没有找到音乐额外信息源：{}", source.loaderType());
+                    return;
+                }
+                var record = extra.parseLyric(source.identifier());
+                if(record == null)return;
+                var lyric = NetMusicListUtil.Lyric.fromLyricRecord(record);
+                Files.createDirectories(PATH);
+                Files.writeString(PATH.resolve(uuid + ".lyc.json"), lyric.toJson(),
+                        StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
+            } catch (Exception e) {
+                NetMusicList.LOGGER.error("出现错误：", e);
+            }
+        });
+    }
+
+    // ===== 旧兼容入口：String/long 统一委托给 MusicSource =====
+
+    public static void startImgDownload(String resourceId, String uuid){
+        startImgDownload(fromLegacy(resourceId), uuid);
+    }
+
+    public static void startImgDownload(long resourceId, String uuid){
+        startImgDownload(fromLegacy(String.valueOf(resourceId)), uuid);
+    }
+
+    public static void startSongDownload(String resourceId, String uuid){
+        startSongDownload(fromLegacy(resourceId), uuid);
     }
 
     public static void startSongDownload(long resourceId, String uuid){
-        if(!NetMusicList.CONFIG.enableCache)return;
-        EXECUTOR_SERVICE.submit(() -> {
-            try {
-                startDownload(pasteUrl(resourceId), resourceId, ".mp3", uuid);
-            } catch (Exception e) {
-                NetMusicList.LOGGER.error("出现错误：", e);
-            }
-        });
+        startSongDownload(fromLegacy(String.valueOf(resourceId)), uuid);
+    }
+
+    public static void startLycDownload(String resourceId, String uuid){
+        startLycDownload(fromLegacy(resourceId), uuid);
     }
 
     public static void startLycDownload(long resourceId, String uuid){
-        if(!NetMusicList.CONFIG.enableCache)return;
-        EXECUTOR_SERVICE.submit(() -> {
-            try {
-                var lyc = NetMusicListUtil.getLyric(NetMusic.NET_EASE_WEB_API.lyric(resourceId));
-                if(lyc == null)return;
-                Files.createDirectories(PATH);
-                Files.writeString(PATH.resolve(uuid + ".lyc.json"), lyc.toJson(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
-            } catch (Exception e) {
-                NetMusicList.LOGGER.error("出现错误：", e);
-            }
-        });
+        startLycDownload(fromLegacy(String.valueOf(resourceId)), uuid);
     }
 
-    @SuppressWarnings("all")
-    public static String pasteUrl(long resourceId){
-        if(NetMusicListUtil.hasLoginNeed()){
-            var r = LoginNeedUtil.getUrl("?id=" + resourceId);
-            if(r != null)return r;
-        }
-        try {
-            return NetMusicListUtil.resolveRedirect(new URL(String.format("https://music.163.com/song/media/outer/url?id=%s.mp3", resourceId)), 3, Map.of()).toString();
-        } catch (IOException e) {
-            return String.format("https://music.163.com/song/media/outer/url?id=%s.mp3", resourceId);
-        }
-    }
-
-    private static void addCache(long resourceId, String uuid){
+    private static void addCache(String key, String uuid){
         if(!NetMusicList.CONFIG.enableCache)return;
-        musicCache.put(String.valueOf(resourceId), uuid);
+        musicCache.put(key, uuid);
         save();
     }
 
-    public static boolean hasCache(long resourceId){
+    public static boolean hasCache(String resourceId){
         if(!NetMusicList.CONFIG.enableCache)return false;
-        return musicCache.containsKey(String.valueOf(resourceId));
+        return musicCache.containsKey(getKey(fromLegacy(resourceId)));
+    }
+
+    public static boolean hasCache(long resourceId){
+        return hasCache(String.valueOf(resourceId));
+    }
+
+    public static boolean hasCache(MusicSource source){
+        if(!NetMusicList.CONFIG.enableCache)return false;
+        return musicCache.containsKey(getKey(source));
     }
 
     public static String getCacheUUID(long resourceID){
-        return musicCache.get(String.valueOf(resourceID));
+        return musicCache.get(getKey(fromLegacy(String.valueOf(resourceID))));
+    }
+
+    public static String getCacheUUID(MusicSource source){
+        return musicCache.get(getKey(source));
+    }
+
+    public static Path getImageCache(String resourceId){
+        return getImageCache(fromLegacy(resourceId));
     }
 
     public static Path getImageCache(long resourceId){
+        return getImageCache(String.valueOf(resourceId));
+    }
+
+    public static Path getImageCache(MusicSource source){
         if(!NetMusicList.CONFIG.enableCache)return null;
-        if(!hasCache(resourceId))return null;
-        var path = PATH.resolve(musicCache.get(String.valueOf(resourceId)) + ".png");
+        if(!hasCache(source))return null;
+        var path = PATH.resolve(musicCache.get(getKey(source)) + ".png");
         if(path.toFile().isFile()){
             return path;
         }
         return null;
     }
 
+    public static String getSongCache(String resourceId){
+        return getSongCache(fromLegacy(resourceId));
+    }
+
     public static String getSongCache(long resourceId){
+        return getSongCache(String.valueOf(resourceId));
+    }
+
+    public static String getSongCache(MusicSource source){
         if(!NetMusicList.CONFIG.enableCache)return null;
-        if(!hasCache(resourceId))return null;
-        var path = PATH.resolve(musicCache.get(String.valueOf(resourceId)) + ".mp3");
+        if(!hasCache(source))return null;
+        var path = PATH.resolve(musicCache.get(getKey(source)) + ".mp3");
         if(path.toFile().isFile()){
             return path.toFile().toURI().toString();
         }
         return null;
     }
 
+    public static NetMusicListUtil.Lyric getLycCache(String resourceId){
+        return getLycCache(fromLegacy(resourceId));
+    }
+
     public static NetMusicListUtil.Lyric getLycCache(long resourceId){
+        return getLycCache(String.valueOf(resourceId));
+    }
+
+    public static NetMusicListUtil.Lyric getLycCache(MusicSource source){
         if(!NetMusicList.CONFIG.enableCache)return null;
-        if(!hasCache(resourceId))return null;
-        var path = PATH.resolve(musicCache.get(String.valueOf(resourceId)) + ".lyc.json");
+        if(!hasCache(source))return null;
+        var path = PATH.resolve(musicCache.get(getKey(source)) + ".lyc.json");
         if(path.toFile().isFile()){
             try {
                 return NetMusicListUtil.Lyric.fromJson(Files.readString(path));
@@ -232,10 +341,19 @@ public class CacheManager {
         threads.removeAll(toRemove);
     }
 
+    public static float getDownloadProgress(String resourceId){
+        return getDownloadProgress(fromLegacy(resourceId));
+    }
+
     public static float getDownloadProgress(long resourceId){
+        return getDownloadProgress(String.valueOf(resourceId));
+    }
+
+    public static float getDownloadProgress(MusicSource source){
         if(!NetMusicList.CONFIG.enableCache)return 0;
+        var key = getKey(source);
         for(FileDownloadThread thread: threads){
-            if(thread.getResourceId() == resourceId && Objects.equals(thread.getFileType(), ".mp3")){
+            if(Objects.equals(thread.getResourceId(), key) && Objects.equals(thread.getFileType(), ".mp3")){
                 return thread.getProgress();
             }
         }
@@ -246,22 +364,38 @@ public class CacheManager {
         return new ArrayList<>(threads);
     }
 
-    public static void deleteCache(long resourceId){
+    public static void deleteCache(String resourceId){
+        deleteCache(fromLegacy(resourceId));
+    }
+
+    public static void deleteCache(MusicSource source){
         if(!NetMusicList.CONFIG.enableCache)return;
-        if(!hasCache(resourceId))return;
+        var key = getKey(source);
+        if(!musicCache.containsKey(key))return;
         List<Path> paths = new ArrayList<>();
-        paths.add(PATH.resolve(musicCache.get(String.valueOf(resourceId)) + ".lyc.json"));
-        paths.add(getImageCache(resourceId));
-        paths.add(PATH.resolve(musicCache.get(String.valueOf(resourceId)) + ".mp3"));
+        paths.add(PATH.resolve(musicCache.get(key) + ".lyc.json"));
+        paths.add(PATH.resolve(musicCache.get(key) + ".png"));
+        paths.add(PATH.resolve(musicCache.get(key) + ".mp3"));
         paths.forEach(path -> {
-            if(path != null) {
-                try {
-                    Files.delete(path);
-                } catch (IOException ignored) {}
-            }
+            try {
+                Files.deleteIfExists(path);
+            } catch (IOException ignored) {}
         });
-        musicCache.remove(String.valueOf(resourceId));
+        musicCache.remove(key);
         save();
+    }
+
+    @SuppressWarnings("all")
+    public static String pasteUrl(long resourceId){
+        if(NetMusicListUtil.hasLoginNeed()){
+            var r = LoginNeedUtil.getUrl("?id=" + resourceId);
+            if(r != null)return r;
+        }
+        try {
+            return NetMusicListUtil.resolveRedirect(new URL(String.format("https://music.163.com/song/media/outer/url?id=%s.mp3", resourceId)), 3, Map.of()).toString();
+        } catch (IOException e) {
+            return String.format("https://music.163.com/song/media/outer/url?id=%s.mp3", resourceId);
+        }
     }
 
     private static final String[] HTML_STARTS = {

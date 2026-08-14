@@ -13,7 +13,7 @@ import com.gly091020.netMusicListNeoforge.client.manual.EntriesRegistry;
 import com.gly091020.netMusicListNeoforge.config.ConfigScreenGetter;
 import com.gly091020.netMusicListNeoforge.config.NetMusicListConfig;
 import com.gly091020.netMusicListNeoforge.hud.MusicInfoHud;
-import com.gly091020.netMusicListNeoforge.mixin.TickableSoundGetterMixins;
+import com.gly091020.netMusicListNeoforge.mixin.accessor.TickableSoundGetterMixins;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.SerializedName;
@@ -144,6 +144,43 @@ public class NetMusicListUtil {
     }
 
     @OnlyIn(Dist.CLIENT)
+    public static NativeImage getNativeImageFromURL(URL imageUrl) throws IOException {
+        HttpRequest request = HttpRequest.newBuilder(URI.create(imageUrl.toString()))
+                .timeout(Duration.ofSeconds(30))
+                .GET()
+                .build();
+        HttpResponse<InputStream> response;
+        try {
+            response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofInputStream());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException("图片下载被中断", e);
+        }
+        if (response.statusCode() != 200) {
+            throw new IOException("图片下载失败: HTTP " + response.statusCode());
+        }
+        try (InputStream stream = response.body()) {
+            BufferedImage bufferedImage = ImageIO.read(stream);
+            if (bufferedImage == null) {
+                throw new IOException("无法读取图片 - 不支持的格式或损坏的文件");
+            }
+            NativeImage nativeImage = new NativeImage(bufferedImage.getWidth(), bufferedImage.getHeight(), false);
+            for (int y = 0; y < bufferedImage.getHeight(); y++) {
+                for (int x = 0; x < bufferedImage.getWidth(); x++) {
+                    int argb = bufferedImage.getRGB(x, y);
+                    int a = (argb >> 24) & 0xFF;
+                    int r = (argb >> 16) & 0xFF;
+                    int g = (argb >> 8) & 0xFF;
+                    int b = argb & 0xFF;
+                    int rgba = (a << 24) | (b << 16) | (g << 8) | r;
+                    nativeImage.setPixelRGBA(x, y, rgba | 0xFF000000);
+                }
+            }
+            return nativeImage;
+        }
+    }
+
+    @OnlyIn(Dist.CLIENT)
     public static AbstractTexture getTextureFromPath(Path imagePath) throws IOException {
         try (InputStream stream = Files.newInputStream(imagePath)) {
             BufferedImage bufferedImage = ImageIO.read(stream);
@@ -172,6 +209,7 @@ public class NetMusicListUtil {
         return b;
     }
 
+    @Deprecated
     public static class Lyric {
         @SerializedName("lyric")
         private final LinkedHashMap<Float, String> lyric;

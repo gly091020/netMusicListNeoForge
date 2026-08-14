@@ -17,10 +17,13 @@ public class ClientHandler {
         ctx.enqueueWork(() -> {
             NetMusicList.LOGGER.info("[Ringer] 客户端收到播放命令 ringer={} entity={} url={}", packet.ringerId(), packet.entityId(), packet.url());
             if (Minecraft.getInstance().level == null) {
+                MusicManager.stop(packet.ringerId());
                 return;
             }
             var entity = Minecraft.getInstance().level.getEntity(packet.entityId());
             if (entity == null) {
+                // 目标实体（如刚重进时的玩家）尚未加载：先停掉旧声音，播放等后续命令
+                MusicManager.stop(packet.ringerId());
                 return;
             }
             MusicManager.stop(packet.ringerId());
@@ -30,9 +33,9 @@ public class ClientHandler {
                 MusicManager.addSound(sound);
                 return sound;
             });
-            if (entity == Minecraft.getInstance().player) {
-                MusicInfoHud.setInfo(packet.info(), packet.slot(), packet.rawUrl(), packet.ringerId());
-            }
+//            if (entity == Minecraft.getInstance().player) {
+//                MusicInfoHud.setInfo(packet.info(), packet.slot(), packet.rawUrl(), packet.ringerId());
+//            }
         });
     }
 

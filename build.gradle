@@ -224,5 +224,5 @@ modrinth {
     ]
     changelog = version_description
 
-    versionType = "release"  // 版本类型
+    versionType = "alpha"  // 版本类型
 }

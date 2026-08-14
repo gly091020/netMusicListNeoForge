@@ -9,7 +9,7 @@ import java.util.Objects;
 
 public class FileDownloadThread extends Thread {
     private final String downloadUrl;
-    private final long resourceId;
+    private final String resourceId;
     private final String threadId;
     private final Path downloadDir;
     private final String fileType;
@@ -21,7 +21,7 @@ public class FileDownloadThread extends Thread {
     private volatile boolean failed = false;
     private volatile String errorMessage = "";
 
-    public FileDownloadThread(String downloadUrl, long resourceId, String fileType, String id) {
+    public FileDownloadThread(String downloadUrl, String resourceId, String fileType, String id) {
         this.downloadUrl = downloadUrl;
         this.resourceId = resourceId;
         this.threadId = id;
@@ -122,7 +122,7 @@ public class FileDownloadThread extends Thread {
         return threadId;
     }
 
-    public long getResourceId() {
+    public String getResourceId() {
         return resourceId;
     }
 

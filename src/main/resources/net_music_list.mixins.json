@@ -25,11 +25,16 @@
   },
   "client": [
     "BurnerSongListMixin",
-    "LyricCacheMixin",
+    "accessor.CDBurnerMenuScreenAccessor",
+    "CDBurnerMenuMixin",
+    "LyricPasteMixin",
+    "MusicPlayManagerMixin",
     "NetMusicSoundLyricMixin",
-    "PlayMusicCacheMixin",
+    "PlayMusicHandleMixin",
+    "accessor.AbstractContainerScreenAccessor",
+    "accessor.ScreenAccessor",
     "SoundPausedMixin",
-    "TickableSoundGetterMixins$SoundEngineMixin",
-    "TickableSoundGetterMixins$SoundManagerMixin"
+    "accessor.TickableSoundGetterMixins$SoundEngineMixin",
+    "accessor.TickableSoundGetterMixins$SoundManagerMixin"
   ]
 }
