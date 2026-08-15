@@ -1,0 +1,469 @@
+package com.gly091020.netMusicListNeoforge.media.bilibili;
+
+import com.github.tartaricacid.netmusic.api.NetWorker;
+import com.github.tartaricacid.netmusic.api.lyric.LyricRecord;
+import com.github.tartaricacid.netmusic.item.ItemMusicCD;
+import com.gly091020.netMusicListNeoforge.NetMusicList;
+import com.gly091020.netMusicListNeoforge.api.musicSource.MusicSource;
+import com.google.gson.*;
+import it.unimi.dsi.fastutil.floats.Float2ObjectRBTreeMap;
+import it.unimi.dsi.fastutil.floats.Float2ObjectSortedMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectRBTreeMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectSortedMap;
+import org.apache.commons.lang3.StringUtils;
+import oshi.util.tuples.Pair;
+
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.URL;
+import java.net.ProxySelector;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import org.jetbrains.annotations.Nullable;
+
+public class BiliBiliUtil {
+    // Reference from Mcedia
+    private static final Gson GSON = new Gson();
+    public static final String USER_AGENT = "Mozilla/5.0";
+    private static final Pattern BVID_PATTERN = Pattern.compile("BV[0-9A-Za-z]{10}");
+    private static final Pattern FID_PATTERN = Pattern.compile("[?&]fid=(\\d+)");
+    private static final HttpClient client = HttpClient.newBuilder()
+            .proxy(ProxySelector.of((InetSocketAddress) NetWorker.getProxyFromConfig().address())).build();
+    public static final String ID = "bilibili";
+
+    /**
+     * 从 B 站视频链接中提取 BV 号。
+     * 链接必须包含 bilibili 字样，否则返回 null。
+     */
+    @Nullable
+    public static String getBvidFromUrl(String url) {
+        if (url == null || !url.toLowerCase().contains("bilibili")) {
+            return null;
+        }
+        Matcher matcher = BVID_PATTERN.matcher(url);
+        return matcher.find() ? matcher.group() : null;
+    }
+
+    /**
+     * 从 B 站收藏夹链接中提取 fid。
+     * 链接必须包含 bilibili 字样，否则返回 null。
+     */
+    @Nullable
+    public static String getFidFromUrl(String url) {
+        if (url == null || !url.toLowerCase().contains("bilibili")) {
+            return null;
+        }
+        Matcher matcher = FID_PATTERN.matcher(url);
+        return matcher.find() ? matcher.group(1) : null;
+    }
+
+    /** 判断 URL 是否属于 B 站相关域名（音频直链 CDN 等）。 */
+    public static boolean isBilibiliUrl(URL url) {
+        String host = url.getHost();
+        if (host == null) {
+            return false;
+        }
+        String lower = host.toLowerCase();
+        return lower.equals("bilibili.com") || lower.equals("bilivideo.com")
+                || lower.equals("hdslb.com") || lower.equals("b23.tv")
+                || lower.endsWith(".bilibili.com") || lower.endsWith(".bilivideo.com")
+                || lower.endsWith(".hdslb.com") || lower.endsWith(".b23.tv");
+    }
+
+    /**
+     * 为 B 站音频直链生成 ffmpeg 输入参数（请求头）。
+     * 只有 host 属于 B 站相关域名时才返回参数，否则返回空列表。
+     */
+    public static List<String> ffmpegInputArgs(URL url) {
+        if (!isBilibiliUrl(url)) {
+            return List.of();
+        }
+        // ffmpeg 的 -headers 用真实 CRLF 分隔请求头行
+        String headers = "Referer: https://www.bilibili.com/\r\n"
+                + "User-Agent: " + USER_AGENT + "\r\n"
+                + "Origin: https://www.bilibili.com\r\n";
+        return List.of("-headers", headers);
+    }
+
+    public static String fetchAudioUrl(String bvid) throws IOException, InterruptedException {
+        return fetchAudioUrl(bvid, 1, null);
+    }
+
+    public static String fetchAudioUrl(String bvid, int page, String cookie) throws IOException, InterruptedException {
+        String viewApi = "https://api.bilibili.com/x/web-interface/view?bvid=" + bvid;
+        HttpRequest.Builder viewRequestBuilder = HttpRequest.newBuilder()
+                .uri(URI.create(viewApi))
+                .header("User-Agent", USER_AGENT);
+
+        if (cookie != null && !cookie.isEmpty()) {
+            viewRequestBuilder.header("Cookie", cookie);
+        }
+
+        HttpResponse<String> viewResponse = client.send(viewRequestBuilder.build(), HttpResponse.BodyHandlers.ofString());
+        JsonObject viewJson = JsonParser.parseString(viewResponse.body()).getAsJsonObject();
+
+        if (viewJson.get("code").getAsInt() != 0) {
+            throw new IOException("Failed to get video info: " + viewJson.get("message").getAsString());
+        }
+
+        JsonObject viewData = viewJson.getAsJsonObject("data");
+        long cid;
+
+        JsonArray pagesArray = viewData.getAsJsonArray("pages");
+        if (pagesArray != null && pagesArray.size() > 1) {
+            if (page > 0 && page <= pagesArray.size()) {
+                JsonObject pageData = pagesArray.get(page - 1).getAsJsonObject();
+                cid = pageData.get("cid").getAsLong();
+            } else {
+                JsonObject pageData = pagesArray.get(0).getAsJsonObject();
+                cid = pageData.get("cid").getAsLong();
+            }
+        } else {
+            cid = viewData.get("cid").getAsLong();
+        }
+
+        String playApi = "https://api.bilibili.com/x/player/playurl?bvid=" + bvid +
+                "&cid=" + cid + "&fnval=4048";
+
+        HttpRequest.Builder playRequestBuilder = HttpRequest.newBuilder()
+                .uri(URI.create(playApi))
+                .header("User-Agent", USER_AGENT)
+                .header("Referer", "https://www.bilibili.com/");
+
+        if (cookie != null && !cookie.isEmpty()) {
+            playRequestBuilder.header("Cookie", cookie);
+        }
+
+        HttpResponse<String> playResponse = client.send(playRequestBuilder.build(), HttpResponse.BodyHandlers.ofString());
+        JsonObject playJson = JsonParser.parseString(playResponse.body()).getAsJsonObject();
+
+        if (playJson.get("code").getAsInt() != 0) {
+            throw new IOException("Bilibili API error: " + playJson.get("message").getAsString());
+        }
+
+        JsonObject data = playJson.getAsJsonObject("data");
+        if (!data.has("dash")) {
+            throw new IOException("DASH stream not available");
+        }
+
+        JsonObject dash = data.getAsJsonObject("dash");
+        JsonArray audioArray = dash.getAsJsonArray("audio");
+        if (audioArray == null || audioArray.isEmpty()) {
+            throw new IOException("No audio stream found");
+        }
+
+        JsonObject bestAudio = audioArray.get(0).getAsJsonObject();
+        for (int i = 1; i < audioArray.size(); i++) {
+            JsonObject current = audioArray.get(i).getAsJsonObject();
+            if (current.get("bandwidth").getAsInt() > bestAudio.get("bandwidth").getAsInt()) {
+                bestAudio = current;
+            }
+        }
+
+        return bestAudio.get("baseUrl").getAsString();
+    }
+
+    public static ItemMusicCD.SongInfo getMusicMediaResultFromBV(String BV) {
+        try {
+            String apiUrl = "https://api.bilibili.com/x/web-interface/view?bvid=" + BV;
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(apiUrl))
+                    .header("User-Agent", USER_AGENT)
+                    .GET()
+                    .build();
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() != 200) return null;
+
+            JsonObject json = GSON.fromJson(response.body(), JsonObject.class);
+            if (json.get("code").getAsInt() != 0) return null;
+
+            JsonObject data = json.getAsJsonObject("data");
+            String title = data.get("title").getAsString();
+            String pic = data.get("pic").getAsString();
+            long duration = data.get("duration").getAsLong();
+
+            List<String> authors = new ArrayList<>();
+            JsonObject owner = data.getAsJsonObject("owner");
+            authors.add(owner.get("name").getAsString());
+
+            JsonArray staff = data.getAsJsonArray("staff");
+            if (staff != null) {
+                for (JsonElement elem : staff) {
+                    JsonObject staffObj = elem.getAsJsonObject();
+                    authors.add(staffObj.get("name").getAsString());
+                }
+            }
+
+            return new ItemMusicCD.SongInfo(
+                    new MusicSource(ID, BV, duration).toURI(),
+                    title,
+                    Math.toIntExact(duration),
+                    StringUtils.EMPTY,
+                    false,
+                    false,
+                    authors
+            );
+
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public static String getIcon(String BV) {
+        try {
+            String apiUrl = "https://api.bilibili.com/x/web-interface/view?bvid=" + BV;
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(apiUrl))
+                    .header("User-Agent", USER_AGENT)
+                    .GET()
+                    .build();
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() != 200) return null;
+
+            JsonObject json = GSON.fromJson(response.body(), JsonObject.class);
+            if (json.get("code").getAsInt() != 0) return null;
+
+            JsonObject data = json.getAsJsonObject("data");
+            String pic = data.get("pic").getAsString();
+            return pic;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public static LyricRecord fetchLyrics(String bvid, String cookie) throws IOException, InterruptedException {
+        if (cookie == null || cookie.isEmpty()) {
+            return null;
+        }
+        List<Pair<String, String>> rawLyrics = fetchRawLyrics(bvid, cookie);
+        if (rawLyrics.isEmpty()) {
+            return null;
+        }
+        return choiceLyric(rawLyrics);
+    }
+
+    private static List<Pair<String, String>> fetchRawLyrics(String bvid, String cookie) throws IOException, InterruptedException {
+        List<Pair<String, String>> result = new ArrayList<>();
+
+        String viewUrl = "https://api.bilibili.com/x/web-interface/view?bvid=" + bvid;
+        HttpRequest.Builder viewReqBuilder = HttpRequest.newBuilder()
+                .uri(URI.create(viewUrl))
+                .header("User-Agent", USER_AGENT)
+                .header("Referer", "https://www.bilibili.com/");
+        if (cookie != null && !cookie.isEmpty()) {
+            viewReqBuilder.header("Cookie", cookie);
+        }
+        HttpResponse<String> viewResp = client.send(viewReqBuilder.build(), HttpResponse.BodyHandlers.ofString());
+        if (viewResp.statusCode() != 200) return result;
+
+        JsonObject viewJson = JsonParser.parseString(viewResp.body()).getAsJsonObject();
+        if (viewJson.get("code").getAsInt() != 0) return result;
+
+        JsonObject data = viewJson.getAsJsonObject("data");
+        long aid = data.get("aid").getAsLong();
+        long cid = data.get("cid").getAsLong();
+
+        String wbiUrl = "https://api.bilibili.com/x/player/wbi/v2?aid=" + aid + "&cid=" + cid;
+        HttpRequest.Builder wbiReqBuilder = HttpRequest.newBuilder()
+                .uri(URI.create(wbiUrl))
+                .header("User-Agent", USER_AGENT)
+                .header("Referer", "https://www.bilibili.com/");
+        if (cookie != null && !cookie.isEmpty()) {
+            wbiReqBuilder.header("Cookie", cookie);
+        }
+        HttpResponse<String> wbiResp = client.send(wbiReqBuilder.build(), HttpResponse.BodyHandlers.ofString());
+        if (wbiResp.statusCode() != 200) return result;
+
+        JsonObject wbiJson = JsonParser.parseString(wbiResp.body()).getAsJsonObject();
+        if (wbiJson.get("code").getAsInt() != 0) return result;
+
+        JsonArray subtitles = wbiJson.getAsJsonObject("data")
+                .getAsJsonObject("subtitle")
+                .getAsJsonArray("subtitles");
+        if (subtitles == null) return result;
+
+        for (JsonElement elem : subtitles) {
+            JsonObject sub = elem.getAsJsonObject();
+            String lang = sub.get("lan").getAsString();
+            if(lang.contains("ai"))continue;
+            String url = sub.get("subtitle_url").getAsString();
+            if (url.startsWith("//")) url = "https:" + url;
+
+            HttpRequest subReq = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .header("User-Agent", USER_AGENT)
+                    .build();
+            HttpResponse<String> subResp = client.send(subReq, HttpResponse.BodyHandlers.ofString());
+            if (subResp.statusCode() == 200) {
+                result.add(new Pair<>(lang, subResp.body()));
+            }
+        }
+        return result;
+    }
+
+    public static LyricRecord choiceLyric(List<Pair<String, String>> lyricsByLanguage) {
+        if (lyricsByLanguage == null || lyricsByLanguage.isEmpty()) {
+            return null;
+        }
+
+        String originalJson = null;
+        String transJson = null;
+
+        for (Pair<String, String> p : lyricsByLanguage) {
+            String lang = p.getA();
+            if ("zh".equals(lang) || "zh-CN".equals(lang) || "zh-Hans".equals(lang)) {
+                if (transJson == null) transJson = p.getB();
+            } else {
+                if (originalJson == null) originalJson = p.getB();
+            }
+        }
+
+        if (originalJson == null) {
+            originalJson = lyricsByLanguage.getFirst().getB();
+            transJson = null;
+        }
+
+        Int2ObjectSortedMap<String> originalMap = parseLyricJson(originalJson);
+        Int2ObjectSortedMap<String> transMap = parseLyricJson(transJson);
+
+        if (originalMap == null) {
+            return null;
+        }
+
+        return new LyricRecord(originalMap, transMap);
+    }
+
+    private static Int2ObjectSortedMap<String> parseLyricJson(String jsonContent) {
+        if (jsonContent == null || jsonContent.isEmpty()) return null;
+
+        try {
+            JsonObject root = JsonParser.parseString(jsonContent).getAsJsonObject();
+            JsonArray body = root.getAsJsonArray("body");
+            if (body == null || body.isEmpty()) return null;
+
+            Int2ObjectSortedMap<String> map = new Int2ObjectRBTreeMap<>();
+            for (JsonElement elem : body) {
+                JsonObject line = elem.getAsJsonObject();
+                float from = line.get("from").getAsFloat();
+                String content = line.get("content").getAsString();
+                map.put((int) (from * 20), content);
+            }
+            return map.isEmpty() ? null : map;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public static List<String> fetchFavBvids(long fid) throws Exception {
+        List<String> list = new ArrayList<>();
+        int pn = 1;
+
+        while (true) {
+
+            String url = "https://api.bilibili.com/x/v3/fav/resource/list"
+                    + "?media_id=" + fid
+                    + "&pn=" + pn
+                    + "&ps=20"
+                    + "&order=mtime"
+                    + "&platform=web";
+
+            JsonObject json = request(url);
+
+            if (json.get("code").getAsInt() != 0)
+                throw new RuntimeException(json.toString());
+
+            JsonObject data = json.getAsJsonObject("data");
+            JsonArray medias = data.getAsJsonArray("medias");
+
+            if (medias == null || medias.isEmpty())
+                break;
+
+            for (JsonElement e : medias) {
+                list.add(e.getAsJsonObject().get("bvid").getAsString());
+            }
+
+            pn++;
+
+            if(!data.get("has_more").getAsBoolean())
+                break;
+        }
+
+        return list;
+    }
+
+    public static VideoInfo fetchVideo(String bvid) throws Exception {
+        String url = "https://api.bilibili.com/x/web-interface/view?bvid=" + bvid;
+
+        JsonObject json = request(url);
+
+        if (json.get("code").getAsInt() != 0)
+            return null;
+
+        JsonObject v = json.getAsJsonObject("data");
+
+        return new VideoInfo(
+                bvid,
+                v.get("title").getAsString(),
+                v.get("pic").getAsString(),
+                v.getAsJsonObject("owner").get("name").getAsString(),
+                v.get("duration").getAsInt()
+        );
+    }
+
+    private static JsonObject request(String url) throws Exception {
+        var builder = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("User-Agent", "Mozilla/5.0")
+                .header("Referer", "https://www.bilibili.com/")
+                .GET();
+        var cookie = NetMusicList.CONFIG.bilibiliCookie;
+        if(cookie != null && !cookie.isEmpty())
+            builder = builder.header("Cookie", cookie);
+        HttpRequest request = builder.build();
+
+        HttpResponse<String> response =
+                client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+
+        return GSON.fromJson(response.body(), JsonObject.class);
+    }
+
+    public static FavInfo fetchFavInfo(long fid) throws Exception {
+        String url = "https://api.bilibili.com/x/v3/fav/folder/info?media_id=" + fid;
+
+        JsonObject json = request(url);
+
+        if (json.get("code").getAsInt() != 0)
+            throw new RuntimeException(json.toString());
+
+        JsonObject data = json.getAsJsonObject("data");
+
+        return new FavInfo(
+                data.get("title").getAsString(),
+                data.get("cover").getAsString(),
+                data.get("media_count").getAsInt(),
+                data.getAsJsonObject("upper").get("name").getAsString()
+        );
+    }
+
+    public record FavInfo(
+            String title,
+            String cover,
+            int count,
+            String author
+    ) {}
+
+    public record VideoInfo(
+            String bvid,
+            String title,
+            String cover,
+            String author,
+            int duration
+    ) {}
+}

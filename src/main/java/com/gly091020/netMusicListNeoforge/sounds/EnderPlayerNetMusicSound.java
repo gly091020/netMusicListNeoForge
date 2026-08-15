@@ -71,8 +71,12 @@ public class EnderPlayerNetMusicSound extends AbstractTickableSoundInstance {
     public @NotNull CompletableFuture<AudioStream> getStream(@NotNull SoundBufferLibrary soundBuffers, @NotNull Sound sound, boolean looping) {
         return CompletableFuture.supplyAsync(() -> {
             try {
+                if (NetMusicList.CONFIG.forceFFmpeg) {
+                    FFmpegAudioStream.applyConfig();
+                    return new FFmpegAudioStream(url);
+                }
                 return new NetMusicAudioStream(url);
-            } catch (UnsupportedAudioFileException | IOException e) {
+            } catch (Exception e) {
                 NetMusicList.LOGGER.error("出现错误：", e);
                 return null;
             }

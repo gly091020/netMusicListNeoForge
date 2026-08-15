@@ -10,9 +10,13 @@ import com.gly091020.netMusicListNeoforge.api.musicSource.ExtraMusicSourceManage
 import com.gly091020.netMusicListNeoforge.api.musicSource.IExtraMusicSource;
 import com.gly091020.netMusicListNeoforge.mixin.accessor.AbstractContainerScreenAccessor;
 import com.gly091020.netMusicListNeoforge.mixin.accessor.ScreenAccessor;
+import com.gly091020.netMusicListNeoforge.sounds.FFmpegAudioStream;
 import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.network.chat.Component;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
 import java.util.regex.Pattern;
 
 public class MSMixinFunctions {
@@ -69,5 +73,24 @@ public class MSMixinFunctions {
             return Component.translatable("gui.netmusic.cd_burner.get_info_error");
         }
         return Component.empty();
+    }
+
+    public static List<ItemMusicCD.SongInfo> tryCraftLocalDir(Path dir) {
+        try (var paths = Files.walk(dir)) {
+            return FFmpegAudioStream.probeSongInfos(paths.map(p -> p.toAbsolutePath().toString()).toList());
+        } catch (Exception e) {
+            return List.of();
+        }
+    }
+
+    public static String trimQuotes(String input) {
+        if (input == null) {
+            return null;
+        }
+        String result = input;
+        if (result.length() >= 2 && result.startsWith("\"") && result.endsWith("\"")) {
+            result = result.substring(1, result.length() - 1);
+        }
+        return result;
     }
 }

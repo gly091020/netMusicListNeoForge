@@ -50,6 +50,13 @@
   "config.net_music_list.config.select_hud.title": "Quick Select HUD",
   "config.net_music_list.config.music_info_hud.title": "Music Info HUD",
   "config.net_music_list.config.cache.title": "Cache Related",
+  "config.net_music_list.config.audio.title": "Decoding",
+  "config.net_music_list.force_ffmpeg": "Force FFmpeg decoding",
+  "config.net_music_list.force_ffmpeg.tip": "When enabled, all music is decoded with FFmpeg. FFmpeg must be installed.",
+  "config.net_music_list.ffmpeg_path": "FFmpeg Path",
+  "config.net_music_list.ffmpeg_path.tip": "Directory containing the FFmpeg executable. Leave empty to search the system PATH.",
+  "config.net_music_list.ffprobe_path": "FFprobe Path",
+  "config.net_music_list.ffprobe_path.tip": "Reserved: directory containing the FFprobe executable. Leave empty to search the system PATH.",
   "config.net_music_list.old_gui": "Enable legacy interface",
   "config.net_music_list.no_vip": "Play VIP songs without restriction",
 
@@ -132,5 +139,7 @@
   "text.netmusiclib.music_source.qq_music": "QQ Music",
   "config.net_music_list.qq_cookie": "QQ Music Cookie",
   "config.net_music_list.netease_cookie": "NetEase Cloud Music Cookie",
-  "config.net_music_list.config.cookie.title": "Cookie"
+  "config.net_music_list.config.cookie.title": "Cookie",
+  "config.net_music_list.bilibili_cookie": "Blilbili Cookie",
+  "text.netmusiclib.music_source.bilibili": "Bilibili"
 }

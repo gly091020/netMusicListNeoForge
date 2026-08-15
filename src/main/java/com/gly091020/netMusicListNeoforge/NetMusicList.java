@@ -15,6 +15,8 @@ import com.gly091020.netMusicListNeoforge.item.NetMusicListItem;
 import com.gly091020.netMusicListNeoforge.item.NetMusicListManual;
 import com.gly091020.netMusicListNeoforge.item.NetMusicPlayerItem;
 import com.gly091020.netMusicListNeoforge.item.components.MusicListComponent;
+import com.gly091020.netMusicListNeoforge.media.bilibili.BiliBiliUtil;
+import com.gly091020.netMusicListNeoforge.sounds.FFmpegAudioStream;
 import com.gly091020.netMusicListNeoforge.util.CacheManager;
 import com.gly091020.netMusicListNeoforge.util.MP3Pack;
 import com.gly091020.netMusicListNeoforge.util.NetMusicListKeyMapping;

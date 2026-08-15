@@ -24,15 +24,17 @@
     "requireAnnotations": true
   },
   "client": [
-    "accessor.CDBurnerMenuScreenAccessor",
     "CDBurnerMenuMixin",
+    "ComputerMenuScreenMixin",
     "LyricPasteMixin",
     "MusicPlayManagerMixin",
     "NetMusicSoundLyricMixin",
+    "NetMusicSoundMixin",
     "PlayMusicHandleMixin",
-    "accessor.AbstractContainerScreenAccessor",
-    "accessor.ScreenAccessor",
     "SoundPausedMixin",
+    "accessor.AbstractContainerScreenAccessor",
+    "accessor.CDBurnerMenuScreenAccessor",
+    "accessor.ScreenAccessor",
     "accessor.TickableSoundGetterMixins$SoundEngineMixin",
     "accessor.TickableSoundGetterMixins$SoundManagerMixin"
   ]

@@ -71,6 +71,10 @@ public class ConfigScreenGetter {
                 .setSaveConsumer(s -> CONFIG.qqCookie = s)
                 .setDefaultValue("")
                 .build());
+        cookie.addEntry(entryBuilder.startTextField(Component.translatable("config.net_music_list.bilibili_cookie"), CONFIG.bilibiliCookie)
+                .setSaveConsumer(s -> CONFIG.bilibiliCookie = s)
+                .setDefaultValue("")
+                .build());
 
         var hud = builder.getOrCreateCategory(Component.translatable("config.net_music_list.config.hud.title"));
         hud.addEntry(entryBuilder.startTextDescription(Component.translatable("config.net_music_list.config.select_hud.title")).build());
@@ -112,6 +116,26 @@ public class ConfigScreenGetter {
                 .setSaveConsumer(b -> CONFIG.globalCache = b)
                 .build()
         );
+
+        var audio = builder.getOrCreateCategory(Component.translatable("config.net_music_list.config.audio.title"));
+        audio.addEntry(entryBuilder.startBooleanToggle(Component.translatable("config.net_music_list.force_ffmpeg"),
+                        CONFIG.forceFFmpeg)
+                .setDefaultValue(false)
+                .setTooltip(Component.translatable("config.net_music_list.force_ffmpeg.tip"))
+                .setSaveConsumer(b -> CONFIG.forceFFmpeg = b)
+                .build());
+        audio.addEntry(entryBuilder.startTextField(Component.translatable("config.net_music_list.ffmpeg_path"),
+                        CONFIG.ffmpegPath)
+                .setDefaultValue("")
+                .setTooltip(Component.translatable("config.net_music_list.ffmpeg_path.tip"))
+                .setSaveConsumer(s -> CONFIG.ffmpegPath = s)
+                .build());
+        audio.addEntry(entryBuilder.startTextField(Component.translatable("config.net_music_list.ffprobe_path"),
+                        CONFIG.ffprobePath)
+                .setDefaultValue("")
+                .setTooltip(Component.translatable("config.net_music_list.ffprobe_path.tip"))
+                .setSaveConsumer(s -> CONFIG.ffprobePath = s)
+                .build());
 
         if(!FMLEnvironment.production || CONFIG.debug){
             var debug = builder.getOrCreateCategory(Component.literal("调试功能"));

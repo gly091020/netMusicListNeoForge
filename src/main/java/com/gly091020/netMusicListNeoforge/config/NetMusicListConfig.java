@@ -20,9 +20,19 @@ public class NetMusicListConfig implements ConfigData {
 
     public String neteaseCookie = "";
     public String qqCookie = "";
+    public String bilibiliCookie = "";
 
     public boolean enableCache = true;
     public boolean globalCache = false;
+
+    /** 强制使用 ffmpeg 解码所有音乐（需安装 ffmpeg）；关闭时使用 Java Sound 默认解码。 */
+    public boolean forceFFmpeg = false;
+
+    /** ffmpeg 可执行文件所在目录；留空则从系统 PATH 查找。 */
+    public String ffmpegPath = "";
+
+    /** ffprobe 可执行文件所在目录；预留，留空则从系统 PATH 查找。 */
+    public String ffprobePath = "";
 
     public float selectHudSize = 0.7f;
     public int selectHudCount = 5;

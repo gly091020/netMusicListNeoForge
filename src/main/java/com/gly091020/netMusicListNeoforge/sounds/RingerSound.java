@@ -91,10 +91,15 @@ public class RingerSound extends AbstractTickableSoundInstance {
         this.volume = NetMusicListUtil.globalStopMusic ? 0.0f : 4.0f;
     }
 
-    /** 当前播放位置（tick），优先使用服务端同步值，否则本地估算。 */
+    /** 当前播放位置（tick）：服务端同步值加本地平滑推进，否则纯本地估算。 */
     public int getPositionTick() {
         var serverPosition = MusicManager.getServerPosition(ringerId);
-        return serverPosition != null ? serverPosition : startTick + tick;
+        return serverPosition != null ? serverPosition : getLocalPositionTick();
+    }
+
+    /** 纯本地估算位置（tick），不包含服务端校准。 */
+    public int getLocalPositionTick() {
+        return startTick + tick;
     }
 
     /** 剩余 tick，供 HUD 进度显示（与旧接口保持一致）。 */
@@ -107,8 +112,12 @@ public class RingerSound extends AbstractTickableSoundInstance {
                                                              @NotNull Sound sound, boolean looping) {
         return CompletableFuture.supplyAsync(() -> {
             try {
+                if (NetMusicList.CONFIG.forceFFmpeg) {
+                    FFmpegAudioStream.applyConfig();
+                    return new FFmpegAudioStream(url);
+                }
                 return new NetMusicAudioStream(url);
-            } catch (UnsupportedAudioFileException | IOException e) {
+            } catch (Exception e) {
                 NetMusicList.LOGGER.error("出现错误：", e);
                 return null;
             }

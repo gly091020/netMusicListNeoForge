@@ -13,7 +13,11 @@ import java.util.UUID;
 @OnlyIn(Dist.CLIENT)
 public class MusicManager {
     private static final Map<UUID, RingerSound> SOUNDS = new HashMap<>();
-    private static final Map<UUID, Integer> SERVER_POSITIONS = new HashMap<>();
+    /** 服务端同步点：服务端权威位置 + 收到时的本地估算位置。 */
+    private static final Map<UUID, SyncPoint> SERVER_POSITIONS = new HashMap<>();
+
+    private record SyncPoint(int positionTick, int localTickAtSync) {
+    }
 
     public static void clearSound(){
         SOUNDS.values().forEach(RingerSound::stopMusic);
@@ -46,11 +50,25 @@ public class MusicManager {
     }
 
     public static void setServerPosition(UUID ringerId, int positionTick){
-        SERVER_POSITIONS.put(ringerId, positionTick);
+        RingerSound sound = SOUNDS.get(ringerId);
+        SERVER_POSITIONS.put(ringerId, new SyncPoint(positionTick,
+                sound != null ? sound.getLocalPositionTick() : -1));
     }
 
     @Nullable
     public static Integer getServerPosition(UUID ringerId){
-        return SERVER_POSITIONS.get(ringerId);
+        SyncPoint sync = SERVER_POSITIONS.get(ringerId);
+        if (sync == null) {
+            return null;
+        }
+        if (sync.localTickAtSync() < 0) {
+            return sync.positionTick();
+        }
+        RingerSound sound = SOUNDS.get(ringerId);
+        if (sound == null) {
+            return sync.positionTick();
+        }
+        // 服务端权威位置 + 本地平滑推进的 tick 数，两次同步之间进度条不再停滞
+        return sync.positionTick() + (sound.getLocalPositionTick() - sync.localTickAtSync());
     }
 }

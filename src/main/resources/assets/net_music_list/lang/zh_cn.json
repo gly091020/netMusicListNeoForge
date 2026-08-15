@@ -50,6 +50,13 @@
   "config.net_music_list.config.select_hud.title": "快速选择HUD",
   "config.net_music_list.config.music_info_hud.title": "歌曲信息HUD",
   "config.net_music_list.config.cache.title": "缓存相关",
+  "config.net_music_list.config.audio.title": "解码相关",
+  "config.net_music_list.force_ffmpeg": "强制使用 FFmpeg 解码",
+  "config.net_music_list.force_ffmpeg.tip": "开启后所有音乐一律使用 FFmpeg 解码，需安装 FFmpeg",
+  "config.net_music_list.ffmpeg_path": "FFmpeg 路径",
+  "config.net_music_list.ffmpeg_path.tip": "FFmpeg 可执行文件所在目录，留空则从系统 PATH 查找",
+  "config.net_music_list.ffprobe_path": "FFprobe 路径",
+  "config.net_music_list.ffprobe_path.tip": "预留：FFprobe 可执行文件所在目录，留空则从系统 PATH 查找",
   "config.net_music_list.old_gui": "启用旧界面",
   "config.net_music_list.no_vip": "忽略VIP直接播放",
 
@@ -132,5 +139,8 @@
   "text.netmusiclib.music_source.qq_music": "QQ音乐",
   "config.net_music_list.qq_cookie": "QQ音乐 Cookie",
   "config.net_music_list.netease_cookie": "网易云音乐 Cookie",
-  "config.net_music_list.config.cookie.title": "Cookie"
+  "config.net_music_list.config.cookie.title": "Cookie",
+  "config.net_music_list.bilibili_cookie": "Blilbili Cookie",
+
+  "text.netmusiclib.music_source.bilibili": "Bilibili"
 }
