@@ -142,5 +142,7 @@
   "config.net_music_list.config.cookie.title": "Cookie",
   "config.net_music_list.bilibili_cookie": "Blilbili Cookie",
 
-  "text.netmusiclib.music_source.bilibili": "Bilibili"
+  "text.netmusiclib.music_source.bilibili": "Bilibili",
+
+  "config.net_music_list.proxy": "代理"
 }
