@@ -3,6 +3,8 @@ package com.gly091020.netMusicListNeoforge.client;
 import com.gly091020.netMusicListNeoforge.NetMusicList;
 import com.gly091020.netMusicListNeoforge.entity.MusicPlayerModel;
 import com.gly091020.netMusicListNeoforge.entity.MusicPlayerRenderer;
+import com.gly091020.netMusicListNeoforge.client.cdpreview.CDPreviewClient;
+import com.gly091020.netMusicListNeoforge.client.cdpreview.CDPreviewIconManager;
 import com.gly091020.netMusicListNeoforge.hud.MusicInfoHud;
 import com.gly091020.netMusicListNeoforge.hud.MusicListLayer;
 import com.gly091020.netMusicListNeoforge.item.NetMusicListItem;
@@ -79,6 +81,7 @@ public class ClientEventHandler {
         CacheManager.tick();
         tickKey();
         MusicManager.tick();
+        CDPreviewIconManager.tick();
     }
 
     @SubscribeEvent
@@ -108,6 +111,7 @@ public class ClientEventHandler {
                 },
                 NetMusicList.MANUAL
         );
+        CDPreviewClient.onRegisterClientExtensions(event);
     }
 
     private static void tickKey(){

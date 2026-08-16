@@ -32,6 +32,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundSource;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.fml.ModList;
@@ -605,5 +606,12 @@ public class NetMusicListUtil {
 
     public static boolean hasBetterLogin(){
         return ModList.get().isLoaded("netmusicbetterlogin");
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public static float getVolume(){
+        var r = Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.RECORDS);
+        if(r == 1)return 4;
+        return r;
     }
 }

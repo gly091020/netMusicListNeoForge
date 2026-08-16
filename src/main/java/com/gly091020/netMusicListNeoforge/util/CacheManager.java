@@ -284,6 +284,12 @@ public class CacheManager {
         return null;
     }
 
+    /** 封面下载完成后把索引写入缓存，供 CD 预览等直接读缓存封面的功能使用 */
+    public static void addImageCache(MusicSource source, String uuid){
+        if(!NetMusicList.CONFIG.enableCache)return;
+        addCache(getKey(source), uuid);
+    }
+
     public static String getSongCache(String resourceId){
         return getSongCache(fromLegacy(resourceId));
     }

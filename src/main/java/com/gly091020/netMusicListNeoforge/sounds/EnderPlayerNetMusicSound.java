@@ -4,6 +4,7 @@ import com.github.tartaricacid.netmusic.client.audio.NetMusicAudioStream;
 import com.github.tartaricacid.netmusic.init.InitSounds;
 import com.gly091020.netMusicListNeoforge.NetMusicList;
 import com.gly091020.netMusicListNeoforge.block.EnderMusicPlayerEntity;
+import com.gly091020.netMusicListNeoforge.util.NetMusicListUtil;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.sounds.AbstractTickableSoundInstance;
@@ -34,7 +35,7 @@ public class EnderPlayerNetMusicSound extends AbstractTickableSoundInstance {
         this.pos = pos;
         this.url = songUrl;
         this.countTick = second * 20;
-        this.volume = 4.0F;
+        this.volume = NetMusicListUtil.getVolume();
         this.x = (float)pos.getX() + 0.5F;
         this.y = (float)pos.getY() + 0.5F;
         this.z = (float)pos.getZ() + 0.5F;

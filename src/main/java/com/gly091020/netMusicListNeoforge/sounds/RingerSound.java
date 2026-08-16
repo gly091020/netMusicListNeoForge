@@ -48,7 +48,7 @@ public class RingerSound extends AbstractTickableSoundInstance {
         this.songTimeTicks = songTimeTicks;
         this.slot = slot;
         this.info = info;
-        this.volume = 4.0f;
+        this.volume = NetMusicListUtil.getVolume();
         this.self = Minecraft.getInstance().player != null
                 && entity.getUUID().equals(Minecraft.getInstance().player.getUUID());
         if (self) {

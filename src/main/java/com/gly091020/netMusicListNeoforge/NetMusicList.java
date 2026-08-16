@@ -1,6 +1,7 @@
 package com.gly091020.netMusicListNeoforge;
 
 import com.github.tartaricacid.netmusic.init.InitItems;
+import com.gly091020.netMusicListNeoforge.client.cdpreview.CDPreviewClient;
 import com.gly091020.netMusicListNeoforge.media.NetMusicListMedias;
 import com.gly091020.netMusicListNeoforge.api.musicSource.ExtraMusicSourceManager;
 import com.gly091020.netMusicListNeoforge.block.EnderMusicPlayer;
@@ -125,6 +126,8 @@ public class NetMusicList {
         if(FMLEnvironment.dist.isClient()){
             NetMusicListKeyMapping.init();
             modEventBus.addListener(NetMusicListKeyMapping::registerKeyBindings);
+            modEventBus.addListener(CDPreviewClient::onRegisterKeyMappings);
+            modEventBus.addListener(CDPreviewClient::onModifyBakingResult);
         }
         modEventBus.addListener(NetMusicList::gatherData);
         modEventBus.addListener(NetMusicList::registerEntityAttributes);

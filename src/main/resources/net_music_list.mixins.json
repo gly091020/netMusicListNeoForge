@@ -34,6 +34,7 @@
     "PlayMusicHandleMixin",
     "SoundPausedMixin",
     "accessor.AbstractContainerScreenAccessor",
+    "accessor.AbstractSoundInstanceAccessor",
     "accessor.CDBurnerMenuScreenAccessor",
     "accessor.ScreenAccessor",
     "accessor.TickableSoundGetterMixins$SoundEngineMixin",
